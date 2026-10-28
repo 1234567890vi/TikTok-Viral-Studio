@@ -106,14 +106,14 @@ fun DownloaderScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "التحميل الخارق Ultra Downloader",
+                            text = "تحميل",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
                             )
                         )
                         Text(
-                            text = "تحميل مباشر بدون علامة مائية بدقة 4K / Full HD عبر NDK & Python",
+                            text = "تحميل مباشر بدون علامة مائية بدقة 4K / Full HD",
                             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
                         )
                     }

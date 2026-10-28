@@ -154,7 +154,7 @@ fun ForceUpdateScreen(
                         Spacer(modifier = Modifier.height(6.dp))
 
                         Text(
-                            text = config?.updateMessageAr ?: "لضمان استمرار عمل محرك التحميل الخارق بدقة 4K بدون انقطاع، يجب تحديث التطبيق الآن.",
+                            text = config?.updateMessageAr ?: "لضمان استمرار عمل محرك التحميل بدقة 4K بدون انقطاع، يجب تحديث التطبيق الآن.",
                             style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary),
                             textAlign = TextAlign.Center
                         )
