@@ -34,8 +34,9 @@ jobs:
 
       - name: Accept Android SDK Licenses & Verify NDK
         run: |
-          echo "Accepting Android SDK licenses..."
+          echo "Accepting Android SDK licenses and ensuring Android 36 platform..."
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" || true
           echo "Available NDKs:"
           ls -la $ANDROID_HOME/ndk/ || true
           echo "Available CMake:"

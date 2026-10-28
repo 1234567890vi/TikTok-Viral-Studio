@@ -6,13 +6,13 @@ plugins {
 
 android {
   namespace = "com.creator.tiktokstudio"
-  compileSdk = 35
+  compileSdk = 36
   ndkVersion = "26.1.10909125"
 
   defaultConfig {
     applicationId = "com.creator.tiktokstudio"
     minSdk = 26
-    targetSdk = 35
+    targetSdk = 36
     versionCode = 1
     versionName = "1.0.0"
 
