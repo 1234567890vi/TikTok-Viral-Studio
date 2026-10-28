@@ -5,3 +5,4 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object SplashNavKey : NavKey
 @Serializable data object MainNavKey : NavKey
+@Serializable data object ForceUpdateNavKey : NavKey

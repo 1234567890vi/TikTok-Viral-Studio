@@ -14,6 +14,9 @@
     <!-- Notifications for Golden posting times -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- In-app mandatory remote update APK installation -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application
         android:name=".TikTokStudioApp"
         android:allowBackup="true"

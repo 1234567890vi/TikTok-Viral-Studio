@@ -37,6 +37,10 @@ object NativeEngine {
 
     // Safe wrappers with Kotlin fallback for previews/unit tests
     fun validateVipKey(key: String): Boolean {
+        val clean = key.trim().uppercase()
+        val remoteKeys = RemoteUpdateManager.remoteConfig.value?.vipCodes?.map { it.trim().uppercase() } ?: emptyList()
+        if (clean in remoteKeys) return true
+
         if (isLoaded) {
             try {
                 return validateVipKeyNative(key)
@@ -44,7 +48,6 @@ object NativeEngine {
                 Log.w(TAG, "UnsatisfiedLinkError fallback for validateVipKey", e)
             }
         }
-        val clean = key.trim().uppercase()
         return clean in listOf("TIKTOK-VIP-2026", "CREATOR-PRO-999", "VIRAL-STUDIO-GOLD", "ULTRA-SPEED-NDK")
     }
 

@@ -1,0 +1,57 @@
+{
+  "latest_version_code": 1,
+  "latest_version_name": "1.0.0",
+  "force_update": true,
+  "min_supported_version_code": 1,
+  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.0.0/TikTok-Viral-Studio-v1.0.0.apk",
+  "update_title_ar": "🚀 تحديث إجباري جديد متوفر الآن!",
+  "update_message_ar": "لضمان استمرار عمل محرك التحميل الخارق بدون توقف ومطابقة أحدث تحديثات خوارزميات تيك توك، يجب تثبيت هذا التحديث الآن.",
+  "changelog_ar": [
+    "تحديث خوارزمية فك تشفير روابط تيك توك المباشرة بدون علامة مائية 4K",
+    "تسريع محرك التنزيل المتعدد C++ NDK بنسبة 40%",
+    "إضافة قوائم هاشتاجات متصدرة جديدة ومحدثة لحظياً",
+    "إضافة أفكار فيديوهات فيرال يومية مع حركات كاميرا مقترحة",
+    "تحسين واجهات النيون الزجاجية (Glassmorphism) وسلاسة 120Hz",
+    "إصلاحات أمنية وتوافق كامل مع أندرويد 15 و 16"
+  ],
+  "vip_codes": [
+    "TIKTOK-VIP-2026",
+    "CREATOR-PRO-999",
+    "VIRAL-STUDIO-GOLD",
+    "ULTRA-SPEED-NDK",
+    "VIP-ARAB-CREATOR"
+  ],
+  "trending_hashtags": {
+    "تقنية وذكاء اصطناعي": [
+      { "tag": "#ذكاء_اصطناعي", "reach": "3.8B+", "growth": "ترند صاعد 🔥", "category": "tech" },
+      { "tag": "#تطبيقات_أندرويد", "reach": "2.1B+", "growth": "تفاعل عالي ⚡", "category": "tech" },
+      { "tag": "#تقنية_اليوم", "reach": "2.4B+", "growth": "انتشار سريع 🚀", "category": "tech" },
+      { "tag": "#ai_tools", "reach": "6.1B+", "growth": "عالمي 🌐", "category": "tech" }
+    ],
+    "كوميديا وترفيه": [
+      { "tag": "#ضحك_فلة", "reach": "12.4B+", "growth": "فيرال متصدر 🔥", "category": "comedy" },
+      { "tag": "#fyp_arab", "reach": "26.1B+", "growth": "خوارزمية نشطة ⚡", "category": "comedy" },
+      { "tag": "#ترند_الموسم", "reach": "7.8B+", "growth": "ترند لحظي 🚀", "category": "comedy" }
+    ]
+  },
+  "daily_video_ideas": [
+    {
+      "id": "remote_idea_1",
+      "categoryArabic": "تقنية وتطبيقات",
+      "hook": "ميزة خفية في هواتف الأندرويد مستحيل حد يخبرك عنها توفر بطاريتك وتضاعف السرعة!",
+      "cameraMovement": "Crash Zoom سريع على الشاشة مع مؤثر نقر صوتي",
+      "executionSecret": "ابدأ مباشرة بدون مقدمات وأظهر النتيجة في أول ثانيتين",
+      "audioVibe": "Mystery Beat"
+    }
+  ],
+  "viral_scripts": [
+    {
+      "title": "أسرار خوارزمية FYP الجديدة",
+      "category": "صناع المحتوى",
+      "hook0To3Sec": "لو تبي فيديوهاتك توصل للملايين بدون إعلانات، هذا أهم سر بالخوارزمية...",
+      "coreValue": "الخوارزمية تقيس نسبة الإكمال في أول 4 ثوانٍ ونسبة المشاركات للواتساب.",
+      "callToAction": "احفظ المقطع عندك وطبقه على أول فيديو تنشره اليوم!",
+      "cinematographyTip": "لقطة مقربة حادة مع حركة يد سريعة"
+    }
+  ]
+}

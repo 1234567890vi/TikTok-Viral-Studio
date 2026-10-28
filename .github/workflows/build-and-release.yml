@@ -54,6 +54,14 @@ jobs:
       - name: Prepare Release APK
         run: |
           mkdir -p release-output
+          # Determine release tag name
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG_NAME="${{ github.ref_name }}"
+          else
+            TAG_NAME="v1.0.0"
+          fi
+          echo "Processing release for tag: $TAG_NAME"
+
           # Locate the assembled release APK
           APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
@@ -61,34 +69,38 @@ jobs:
             exit 1
           fi
           echo "Found APK at: $APK_FILE"
-          cp "$APK_FILE" release-output/TikTok-Viral-Studio-v1.0.0.apk
+
+          # Copy to tag-named APK and ensure standard release APK link
+          cp "$APK_FILE" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
+          cp "$APK_FILE" "release-output/TikTok-Viral-Studio-v1.0.0.apk"
           ls -la release-output/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TikTok-Viral-Studio-v1.0.0
-          path: release-output/TikTok-Viral-Studio-v1.0.0.apk
+          name: TikTok-Viral-Studio-APK
+          path: release-output/*
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
-          name: "Creator & TikTok Viral Studio v1.0.0"
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}"
           body: |
-            ## 🚀 Creator & TikTok Viral Studio (v1.0.0)
+            ## 🚀 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }})
             
             تطبيق أندرويد احترافي فائق السرعة لصناع المحتوى وتحميل فيديوهات تيك توك بدون علامة مائية.
             
             ### ✨ أبرز الميزات:
+            - **نظام التحديث الإجباري السحابي (Remote Config & Mandatory Update)**: تحديث فوري مباشر من داخل التطبيق ومزامنة الهاشتاجات وأكواد الـ VIP عن بُعد.
             - **التحميل الخارق 4K/Full HD**: تحميل مباشر بدون أي علامات مائية مع استخراج صوت MP3.
             - **بنية هجينة متقدمة**: واجهات Jetpack Compose بـ 120Hz، ومحرك C++ NDK، ومحرك Python.
             - **أدوات صناع المحتوى**: أوقات النشر الذهبية، الهاشتاجات المتصدرة بنسخ بنقرة واحدة، بطاقات أفكار الفيديوهات اليومية، زخرفة البايو، وحاسبة الأرباح.
-            - **جناح الـ VIP الملكي**: مولد السكريبتات الفيرال (Hook + Core + CTA) ومحلل خوارزميات FYP المتقدم.
+            - **جناح الـ VIP الملكي**: مولد السكريبتات الفيرال ومحلل خوارزميات FYP المتقدم.
             
             ### 📥 التحميل والتثبيت:
-            - قم بتحميل ملف `TikTok-Viral-Studio-v1.0.0.apk` المرفق أدناه وتثبيته مباشرة على هاتفك.
-          files: release-output/TikTok-Viral-Studio-v1.0.0.apk
+            - قم بتحميل ملف الـ APK المرفق أدناه وتثبيته مباشرة على هاتفك.
+          files: release-output/*
           draft: false
           prerelease: false
           generate_release_notes: true
