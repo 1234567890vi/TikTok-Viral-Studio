@@ -1,0 +1,93 @@
+name: Build and Release Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK & CMake
+        run: |
+          echo "Installing Android NDK and CMake..."
+          yes | sdkmanager --licenses > /dev/null || true
+          yes | sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null || true
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Prepare Release APK
+        run: |
+          mkdir -p release-output
+          # Find the generated release APK and copy it with standard name
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "Release APK not found directly in release folder, searching entire output..."
+            APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
+          echo "Found APK at: $APK_PATH"
+          cp "$APK_PATH" release-output/TikTok-Viral-Studio-v1.0.0.apk
+          ls -la release-output/
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TikTok-Viral-Studio-v1.0.0
+          path: release-output/TikTok-Viral-Studio-v1.0.0.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
+          name: "Creator & TikTok Viral Studio v1.0.0"
+          body: |
+            ## 🚀 Creator & TikTok Viral Studio (v1.0.0)
+            
+            تطبيق أندرويد احترافي فائق السرعة لصناع المحتوى وتحميل فيديوهات تيك توك بدون علامة مائية.
+            
+            ### ✨ أبرز الميزات:
+            - **التحميل الخارق 4K/Full HD**: تحميل مباشر بدون أي علامات مائية مع استخراج صوت MP3.
+            - **بنية هجينة متقدمة**: واجهات Jetpack Compose بـ 120Hz، ومحرك C++ NDK، ومحرك Python.
+            - **أدوات صناع المحتوى**: أوقات النشر الذهبية، الهاشتاجات المتصدرة بنسخ بنقرة واحدة، بطاقات أفكار الفيديوهات اليومية، زخرفة البايو، وحاسبة الأرباح.
+            - **جناح الـ VIP الملكي**: مولد السكريبتات الفيرال (Hook + Core + CTA) ومحلل خوارزميات FYP المتقدم.
+            
+            ### 📥 التحميل والتثبيت:
+            - قم بتحميل ملف `TikTok-Viral-Studio-v1.0.0.apk` المرفق أدناه وتثبيته مباشرة على هاتفك.
+          files: release-output/TikTok-Viral-Studio-v1.0.0.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
