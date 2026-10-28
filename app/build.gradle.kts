@@ -13,8 +13,8 @@ android {
     applicationId = "com.creator.tiktokstudio"
     minSdk = 26
     targetSdk = 36
-    versionCode = 2
-    versionName = "1.1.0"
+    versionCode = 3
+    versionName = "1.2.0"
 
     externalNativeBuild {
       cmake {
@@ -28,6 +28,15 @@ android {
     }
   }
 
+  signingConfigs {
+    create("release") {
+      storeFile = file("release.keystore")
+      storePassword = "tiktokstudio123"
+      keyAlias = "studio_key"
+      keyPassword = "tiktokstudio123"
+    }
+  }
+
   externalNativeBuild {
     cmake {
       path = file("src/main/cpp/CMakeLists.txt")
@@ -37,8 +46,11 @@ android {
   buildTypes {
     release {
       isMinifyEnabled = false
-      signingConfig = signingConfigs.getByName("debug")
+      signingConfig = signingConfigs.getByName("release")
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    }
+    debug {
+      signingConfig = signingConfigs.getByName("release")
     }
   }
 
