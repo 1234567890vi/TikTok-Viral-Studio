@@ -26,21 +26,23 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android NDK & CMake
+      - name: Accept Android SDK Licenses & Verify NDK
         run: |
-          echo "Installing Android NDK and CMake..."
-          yes | sdkmanager --licenses > /dev/null || true
-          yes | sdkmanager --install "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null || true
+          echo "Accepting Android SDK licenses..."
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          echo "Available NDKs:"
+          ls -la $ANDROID_HOME/ndk/ || true
+          echo "Available CMake:"
+          ls -la $ANDROID_HOME/cmake/ || true
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
@@ -51,17 +53,17 @@ jobs:
       - name: Prepare Release APK
         run: |
           mkdir -p release-output
-          # Find the generated release APK and copy it with standard name
-          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          if [ -z "$APK_PATH" ]; then
-            echo "Release APK not found directly in release folder, searching entire output..."
-            APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          # Locate the assembled release APK
+          APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "Error: No APK file generated!"
+            exit 1
           fi
-          echo "Found APK at: $APK_PATH"
-          cp "$APK_PATH" release-output/TikTok-Viral-Studio-v1.0.0.apk
+          echo "Found APK at: $APK_FILE"
+          cp "$APK_FILE" release-output/TikTok-Viral-Studio-v1.0.0.apk
           ls -la release-output/
 
-      - name: Upload APK as Workflow Artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TikTok-Viral-Studio-v1.0.0
