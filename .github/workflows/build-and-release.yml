@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v1.8.0"
+            TAG_NAME="v1.9.0"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v1.8.0.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v1.9.0.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v1.8.0.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v1.9.0.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,25 +101,25 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.8.0' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.8.0' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.9.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.9.0' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.8.0' }})
+            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.9.0' }})
             
-            تحديث خوارزميات المعالجة الحية والترجمة التفاعلية الشاملة 100%:
-            - **مربع الخوارزميات الحي والمتحرك (Live Algorithm Execution Box)**: مؤقت رقمي ودائري تفاعلي (3.0s Timer) مع شريط متصاعد من 0% إلى 100% باللون السماوي والوردي.
-            - **رسومات رادار وموجات رقمية حية (Canvas Sine Waves & Matrix Nodes)**: محاكاة بصرية مبهرة لمعالجة البيانات الخارقة أثناء فحص الروابط أو التحميل.
-            - **4 مراحل خوارزمية ذكية متتابعة**: تتحول أيقوناتها حركياً من دوران 🔄 إلى علامة صح خضراء متوهجة ✅ (فك التشفير، استخراج البيانات، عزل العلامة المائية، والتحقق النهائي 100%).
-            - **مزامنة ذكية تامة**: عرض النتائج النهائية بانتقال انسيابي مبهر (Fade-in & Expand) بعد اكتمال المؤقت بنجاح.
-            - **ترجمة تفاعلية شاملة بنسبة 100% (Full Reactive Localization)**: تغطية شاملة لكافة النصوص والبطاقات والإحصائيات والأزرار في التطبيق باللغات (العربية 🇸🇦، الإنجليزية 🇺🇸، الفرنسية 🇫🇷) مع قلب اتجاه الواجهة (RTL / LTR) فورياً.
+            تحديث شامل لتطبيق الإدارة (Admin App) وميزة التحديث التلقائي OTA:
+            - **فاحص ومحدث الإصدار التلقائي داخل تطبيق الإدارة (Admin OTA In-App Updater)**: التحقق اللحظي من توفر تحديثات جديدة عبر `remote_config.json`، مع نافذة تحديث نيونية تفاعلية وتحميل وتثبيت الإصدار بضغطة زر واحدة.
+            - **تأمين وتحسين شاشة تسجيل الدخول الإدارية**: اعتماد رمز الدخول `Admin2026` ودعم لوحة المفاتيح الأبجدية الرقمية.
+            - **تحسين تحليلات الجلسات النشطة (Active Sessions Analytics)**: عرض مباشر لطراز الجهاز والمصنع، نظام أندرويد، إصدار التطبيق، وحالة الطاقة المفصلة (شحن فوري ⚡ / نسبة استهلاك البطارية 🔋)، وزمن آخر ظهور.
+            - **إعدادات حالة الخدمة المركزية**: وضع التشغيل العادي 🟢، وضع الصيانة 🛠️، إيقاف الخدمة الشامل 🛑، إرسال إشعارات فورية للنظام (Broadcast Alert) 📢، وإعادة التشغيل الإجبارية 🔄 لجميع الأجهزة.
+            - **توقيع دائم موحد**: تم بناء وتوقيع الحزم باستخدام `app/release.keystore` الثابت لضمان التوافق التام بدون أي تعارض حزم.
             
-            ### 📦 الملفات المتاحة للتحميل المباشر:
+            ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v1.8.0.apk`
+               - `TikTok-Viral-Studio-v1.9.0.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v1.8.0.apk`
-               - `TikTok-Studio-Admin.apk` (رمز المرور الافتراضي: `2026`)
+               - `TikTok-Studio-Admin-v1.9.0.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false
           prerelease: false

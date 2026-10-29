@@ -59,14 +59,15 @@ fun AdminLoginScreen(
     )
 
     fun attemptLogin() {
-        if (passwordInput == "2026") {
+        val entered = passwordInput.trim()
+        if (entered.equals("Admin2026", ignoreCase = true) || entered == "2026") {
             if (rememberMe) {
                 prefs.edit().putBoolean("is_logged_in", true).putBoolean("remember_admin", true).apply()
             }
             onLoginSuccess()
         } else {
             hasError = true
-            Toast.makeText(context, "كلمة السر غير صحيحة!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "كلمة المرور غير صحيحة!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -156,7 +157,7 @@ fun AdminLoginScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("رمز المرور السري للأدمن") },
-                    placeholder = { Text("أدخل كلمة المرور (افتراضي: 2026)") },
+                    placeholder = { Text("أدخل كلمة المرور (Admin2026)") },
                     leadingIcon = {
                         Icon(Icons.Default.Lock, contentDescription = null, tint = RoyalGold)
                     },
@@ -171,7 +172,7 @@ fun AdminLoginScreen(
                     },
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.NumberPassword,
+                        keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(onDone = { attemptLogin() }),

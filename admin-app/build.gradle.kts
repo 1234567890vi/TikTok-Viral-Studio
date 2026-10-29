@@ -8,13 +8,13 @@ android {
   namespace = "com.creator.tiktokstudio.admin"
   compileSdk = 36
 
-  defaultConfig {
-    applicationId = "com.creator.tiktokstudio.admin"
-    minSdk = 26
-    targetSdk = 36
-    versionCode = 9
-    versionName = "1.8.0"
-  }
+    defaultConfig {
+        applicationId = "com.creator.tiktokstudio.admin"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 10
+        versionName = "1.9.0"
+    }
 
   signingConfigs {
     create("release") {

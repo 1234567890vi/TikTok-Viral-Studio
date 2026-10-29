@@ -1,17 +1,20 @@
 {
-  "latest_version_code": 9,
-  "latest_version_name": "1.8.0",
+  "latest_version_code": 10,
+  "latest_version_name": "1.9.0",
   "force_update": true,
-  "min_supported_version_code": 9,
-  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.8.0/TikTok-Viral-Studio-v1.8.0.apk",
-  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.8.0/TikTok-Studio-Admin-v1.8.0.apk",
-  "update_title_ar": "⚡ تحديث خارق v1.8.0: خوارزميات حية وترجمة كاملة 100%",
-  "update_message_ar": "إضافة مربع الخوارزميات الحي والمتحرك بمؤقت 3 ثوانٍ وموجات رادار نيونية، وحل مشكلة الترجمة التفاعلية بالكامل لجميع اللغات.",
+  "min_supported_version_code": 10,
+  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.9.0/TikTok-Viral-Studio-v1.9.0.apk",
+  "admin_latest_version_code": 10,
+  "admin_latest_version_name": "1.9.0",
+  "admin_apk_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.9.0/TikTok-Studio-Admin-v1.9.0.apk",
+  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.9.0/TikTok-Studio-Admin-v1.9.0.apk",
+  "update_title_ar": "⚡ تحديث شامل v1.9.0: ترقية تطبيق الإدارة والتحكم اللحظي",
+  "update_message_ar": "تحديث نظام الإدارة السحابي ودعم التحديث التلقائي المباشر (In-App OTA) لجميع التطبيقات.",
   "changelog_ar": [
-    "إضافة مربع الخوارزميات الحي والمتحرك (Live Algorithm Execution Box) بمؤقت 3.0 ثوانٍ تفاعلي ورسومات رادار نيونية",
-    "4 مراحل معالجة خوارزمية ذكية تتتابع حركياً من الدوران 🔄 إلى علامة الصح الخضراء ✅",
-    "ترجمة شاملة بنسبة 100% لكافة النصوص، الأزرار، والبطاقات والإحصائيات باللغات الثلاث (العربية 🇸🇦، الإنجليزية 🇺🇸، الفرنسية 🇫🇷)",
-    "ضبط وتزامن اتجاه الواجهة (RTL / LTR) ديناميكياً وفورياً عند اختيار اللغة"
+    "إضافة فاحص ومحدث الإصدار التلقائي داخل تطبيق الإدارة (Admin OTA Updater) بنقرة زر",
+    "تحديث شاشة تسجيل الدخول الإدارية (رمز الدخول Admin2026) مع دعم كلمة المرور الأبجدية الرقمية",
+    "تحسين بطاقات إحصائيات الجلسات النشطة (Active Sessions Analytics: طراز الجهاز، حالة الطاقة والشحن، إصدار التطبيق)",
+    "تعزيز إعدادات حالة الخدمة العامة (وضع التشغيل العادي، وضع الصيانة، وإشعارات النظام الفورية)"
   ],
   "vip_codes": [
     "TIKTOK-VIP-2026",

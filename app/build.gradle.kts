@@ -9,12 +9,12 @@ android {
   compileSdk = 36
   ndkVersion = "26.1.10909125"
 
-  defaultConfig {
-    applicationId = "com.creator.tiktokstudio"
-    minSdk = 26
-    targetSdk = 36
-    versionCode = 9
-    versionName = "1.8.0"
+    defaultConfig {
+        applicationId = "com.creator.tiktokstudio"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 10
+        versionName = "1.9.0"
 
     externalNativeBuild {
       cmake {
