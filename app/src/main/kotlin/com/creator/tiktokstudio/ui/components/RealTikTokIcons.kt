@@ -30,6 +30,7 @@ fun RealDiamondIcon(
     size: Dp = 18.dp
 ) {
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -171,6 +172,7 @@ fun RealEyeViewerIcon(
     }
 
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -260,6 +262,7 @@ fun RealHeartLikeIcon(
             .size(size)
             .scale(pulseScale)
     ) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -318,6 +321,7 @@ fun RealBoxingGloveIcon(
     }
 
     Canvas(modifier = modifier.size(size).scale(flamePulse)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -395,6 +399,7 @@ fun RealCrownIcon(
     size: Dp = 20.dp
 ) {
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -468,6 +473,7 @@ fun RealTrophyIcon(
     }
 
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -550,6 +556,7 @@ fun RealBattleSwordsIcon(
     size: Dp = 18.dp
 ) {
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -589,6 +596,7 @@ fun RealClockIcon(
     size: Dp = 16.dp
 ) {
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 
@@ -636,6 +644,7 @@ fun RealChatBubbleIcon(
     size: Dp = 16.dp
 ) {
     Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
         val w = this.size.width
         val h = this.size.height
 

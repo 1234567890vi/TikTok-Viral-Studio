@@ -23,64 +23,67 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import com.creator.tiktokstudio.core.LiveStreamService
-import okhttp3.OkHttpClient
-import java.util.concurrent.TimeUnit
 
 @OptIn(UnstableApi::class)
-private fun buildUltraLowLatencyPlayer(context: Context, streamUrl: String): ExoPlayer {
-    val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(6, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .addInterceptor { chain ->
-            val req = chain.request().newBuilder()
-                .header("User-Agent", LiveStreamService.BROWSER_USER_AGENT)
-                .header("Referer", "https://www.tiktok.com/")
-                .header("Origin", "https://www.tiktok.com")
-                .build()
-            chain.proceed(req)
-        }
-        .build()
-
-    val dataSourceFactory = OkHttpDataSource.Factory(okHttpClient)
-    val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
-
-    // Ultra-Low Latency Buffering Settings
-    val loadControl = DefaultLoadControl.Builder()
-        .setBufferDurationsMs(
-            500,  // minBufferMs = 500
-            2000, // maxBufferMs = 2000
-            250,  // bufferForPlaybackMs = 250
-            500   // bufferForPlaybackAfterRebufferMs = 500
-        )
-        .setPrioritizeTimeOverSizeThresholds(true)
-        .build()
-
-    return ExoPlayer.Builder(context)
-        .setMediaSourceFactory(mediaSourceFactory)
-        .setLoadControl(loadControl)
-        .build()
-        .apply {
-            repeatMode = Player.REPEAT_MODE_ONE
-            val mediaItem = MediaItem.Builder()
-                .setUri(streamUrl)
-                .setLiveConfiguration(
-                    MediaItem.LiveConfiguration.Builder()
-                        .setTargetOffsetMs(500)
-                        .setMaxPlaybackSpeed(1.04f)
-                        .setMinPlaybackSpeed(0.96f)
-                        .build()
+private fun buildUltraLowLatencyPlayer(context: Context, streamUrl: String): ExoPlayer? {
+    if (streamUrl.isBlank() || (!streamUrl.startsWith("http://") && !streamUrl.startsWith("https://"))) {
+        return null
+    }
+    return try {
+        val dataSourceFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent(LiveStreamService.BROWSER_USER_AGENT)
+            .setConnectTimeoutMs(6000)
+            .setReadTimeoutMs(10000)
+            .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(
+                mapOf(
+                    "Referer" to "https://www.tiktok.com/",
+                    "Origin" to "https://www.tiktok.com"
                 )
-                .build()
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = true
-        }
+            )
+
+        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+
+        // Ultra-Low Latency Buffering Settings
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                500,  // minBufferMs = 500
+                2000, // maxBufferMs = 2000
+                250,  // bufferForPlaybackMs = 250
+                500   // bufferForPlaybackAfterRebufferMs = 500
+            )
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
+
+        ExoPlayer.Builder(context)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .setLoadControl(loadControl)
+            .build()
+            .apply {
+                repeatMode = Player.REPEAT_MODE_ONE
+                val mediaItem = MediaItem.Builder()
+                    .setUri(streamUrl)
+                    .setLiveConfiguration(
+                        MediaItem.LiveConfiguration.Builder()
+                            .setTargetOffsetMs(500)
+                            .setMaxPlaybackSpeed(1.04f)
+                            .setMinPlaybackSpeed(0.96f)
+                            .build()
+                    )
+                    .build()
+                setMediaItem(mediaItem)
+                prepare()
+                playWhenReady = true
+            }
+    } catch (_: Throwable) {
+        null
+    }
 }
 
 @OptIn(UnstableApi::class)
@@ -93,6 +96,24 @@ fun LiveVideoPlayer(
     hostName: String = "",
     opponentName: String = ""
 ) {
+    val isHostValid = streamUrl.isNotBlank() && (streamUrl.startsWith("http://") || streamUrl.startsWith("https://"))
+    val hasOpponentStream = isPkActive && !opponentStreamUrl.isNullOrBlank() &&
+        (opponentStreamUrl.startsWith("http://") || opponentStreamUrl.startsWith("https://"))
+
+    if (!isHostValid) {
+        Box(
+            modifier = modifier.background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "لا يوجد بث مباشر نشط حالياً",
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+        }
+        return
+    }
+
     val context = LocalContext.current
 
     // Host Player instance
@@ -102,12 +123,13 @@ fun LiveVideoPlayer(
 
     DisposableEffect(hostPlayer) {
         onDispose {
-            hostPlayer.release()
+            try {
+                hostPlayer?.release()
+            } catch (_: Throwable) {}
         }
     }
 
     // Opponent Player instance (for Split-Screen PK battles)
-    val hasOpponentStream = isPkActive && !opponentStreamUrl.isNullOrBlank()
     val opponentPlayer = remember(context, opponentStreamUrl, hasOpponentStream) {
         if (hasOpponentStream && opponentStreamUrl != null) {
             buildUltraLowLatencyPlayer(context, opponentStreamUrl)
@@ -118,7 +140,9 @@ fun LiveVideoPlayer(
 
     DisposableEffect(opponentPlayer) {
         onDispose {
-            opponentPlayer?.release()
+            try {
+                opponentPlayer?.release()
+            } catch (_: Throwable) {}
         }
     }
 
@@ -127,7 +151,7 @@ fun LiveVideoPlayer(
             .background(Color.Black)
             .graphicsLayer { clip = true }
     ) {
-        if (hasOpponentStream && opponentPlayer != null) {
+        if (hasOpponentStream && opponentPlayer != null && hostPlayer != null) {
             // Split-Screen PK Battle (60FPS Side-by-Side Surface Rendering)
             Row(modifier = Modifier.fillMaxSize()) {
                 // Host Video Panel (Left / Primary)
@@ -141,24 +165,30 @@ fun LiveVideoPlayer(
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
                         factory = { ctx ->
-                            PlayerView(ctx).apply {
-                                layoutParams = FrameLayout.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                                ).apply {
-                                    gravity = android.view.Gravity.CENTER
+                            try {
+                                PlayerView(ctx).apply {
+                                    layoutParams = FrameLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT
+                                    ).apply {
+                                        gravity = android.view.Gravity.CENTER
+                                    }
+                                    player = hostPlayer
+                                    useController = false
+                                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                                 }
-                                player = hostPlayer
-                                useController = false
-                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                            } catch (_: Throwable) {
+                                FrameLayout(ctx)
                             }
                         },
                         update = { playerView ->
-                            if (playerView.player != hostPlayer) {
-                                playerView.player = hostPlayer
-                            }
+                            try {
+                                if (playerView.player != hostPlayer) {
+                                    playerView.player = hostPlayer
+                                }
+                            } catch (_: Throwable) {}
                         }
                     )
                     // Host Neon Tag
@@ -188,24 +218,30 @@ fun LiveVideoPlayer(
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
                         factory = { ctx ->
-                            PlayerView(ctx).apply {
-                                layoutParams = FrameLayout.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                                ).apply {
-                                    gravity = android.view.Gravity.CENTER
+                            try {
+                                PlayerView(ctx).apply {
+                                    layoutParams = FrameLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        ViewGroup.LayoutParams.MATCH_PARENT
+                                    ).apply {
+                                        gravity = android.view.Gravity.CENTER
+                                    }
+                                    player = opponentPlayer
+                                    useController = false
+                                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                                 }
-                                player = opponentPlayer
-                                useController = false
-                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                            } catch (_: Throwable) {
+                                FrameLayout(ctx)
                             }
                         },
                         update = { playerView ->
-                            if (playerView.player != opponentPlayer) {
-                                playerView.player = opponentPlayer
-                            }
+                            try {
+                                if (playerView.player != opponentPlayer) {
+                                    playerView.player = opponentPlayer
+                                }
+                            } catch (_: Throwable) {}
                         }
                     )
                     // Opponent Neon Tag
@@ -224,31 +260,49 @@ fun LiveVideoPlayer(
                     }
                 }
             }
-        } else {
+        } else if (hostPlayer != null) {
             // Fullscreen Single Stream
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
-                    PlayerView(ctx).apply {
-                        layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        ).apply {
-                            gravity = android.view.Gravity.CENTER
+                    try {
+                        PlayerView(ctx).apply {
+                            layoutParams = FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            ).apply {
+                                gravity = android.view.Gravity.CENTER
+                            }
+                            player = hostPlayer
+                            useController = false
+                            resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                            setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                            setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                         }
-                        player = hostPlayer
-                        useController = false
-                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                        setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                        setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                    } catch (_: Throwable) {
+                        FrameLayout(ctx)
                     }
                 },
                 update = { playerView ->
-                    if (playerView.player != hostPlayer) {
-                        playerView.player = hostPlayer
-                    }
+                    try {
+                        if (playerView.player != hostPlayer) {
+                            playerView.player = hostPlayer
+                        }
+                    } catch (_: Throwable) {}
                 }
             )
+        } else {
+            // Placeholder when player could not be built
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "تعذر تحميل مشغل الفيديو",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }

@@ -82,6 +82,7 @@ fun CircularDownloadProgress(
         ) {
             val trackColor = DarkSurfaceElevated
             Canvas(modifier = Modifier.size(150.dp)) {
+                if (size.width <= 0f || size.height <= 0f || size.width.isNaN() || size.height.isNaN()) return@Canvas
                 // Background track
                 drawArc(
                     color = trackColor,

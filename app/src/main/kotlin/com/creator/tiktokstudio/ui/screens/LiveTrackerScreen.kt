@@ -208,14 +208,6 @@ fun LiveTrackerScreen(
         }
     }
 
-    // Default load demo room if not loaded
-    LaunchedEffect(Unit) {
-        if (roomData == null && !isProcessing) {
-            val res = LiveStreamService.fetchLiveRoom("@tiktok_hero_live")
-            res.onSuccess { roomData = it }
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -317,6 +309,70 @@ fun LiveTrackerScreen(
                         modifier = Modifier.fillMaxWidth(),
                         targetDurationMs = 3000L
                     )
+                }
+            }
+
+            // Section 2.5: Idle State / Guide Card when no room is loaded
+            if (roomData == null && !isProcessing) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .border(1.dp, GlassBorder, RoundedCornerShape(20.dp)),
+                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = NeonCyan.copy(alpha = 0.12f),
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    RealEyeViewerIcon(size = 28.dp, isPulsing = false)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "تتبع البث المباشر والجولات (PK Battle)",
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "أدخل اسم مستخدم الحساب أو رابطه واضغط على 'بدء التتبع المباشر' لمراقبة البث لحظياً وبدون أي تأخير.",
+                                color = TextSecondary,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 18.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = {
+                                    roomData = LiveStreamService.createDemoRoom("tiktok_hero_live")
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan.copy(alpha = 0.15f)),
+                                border = BorderStroke(1.dp, NeonCyan),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Bolt, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "تشغيل البث التجريبي التفاعلي (Interactive Demo)",
+                                    color = NeonCyan,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -863,8 +919,8 @@ fun PkBattleScoreBar(
                     .clip(RoundedCornerShape(15.dp))
                     .background(DarkSurfaceElevated)
             ) {
-                val totalScore = (hostScore + opponentScore).coerceAtLeast(1L)
-                val hostFraction = (hostScore.toFloat() / totalScore.toFloat()).coerceIn(0.15f, 0.85f)
+                val total = (hostScore + opponentScore).coerceAtLeast(1L)
+                val hostFraction = if (hostScore == 0L && opponentScore == 0L) 0.5f else (hostScore.toFloat() / total.toFloat()).coerceIn(0.05f, 0.95f)
 
                 Row(modifier = Modifier.fillMaxSize()) {
                     // Host Side (Red)
@@ -894,7 +950,7 @@ fun PkBattleScoreBar(
                     // Opponent Side (Blue)
                     Box(
                         modifier = Modifier
-                            .weight(1f - hostFraction)
+                            .weight((1f - hostFraction).coerceIn(0.05f, 0.95f))
                             .fillMaxHeight()
                             .background(
                                 Brush.horizontalGradient(listOf(Color(0xFF2979FF), Color(0xFF00B0FF)))
@@ -1129,14 +1185,29 @@ fun LivePlayerWithOverlays(
             contentAlignment = Alignment.Center
         ) {
             // Hardware SurfaceView ExoPlayer in full 9:16
-            LiveVideoPlayer(
-                streamUrl = streamUrl,
-                opponentStreamUrl = opponentStreamUrl,
-                isPkActive = isPkActive,
-                hostName = hostName,
-                opponentName = opponentName,
-                modifier = Modifier.fillMaxSize()
-            )
+            if (streamUrl.isNotBlank() && (streamUrl.startsWith("http://") || streamUrl.startsWith("https://"))) {
+                LiveVideoPlayer(
+                    streamUrl = streamUrl,
+                    opponentStreamUrl = opponentStreamUrl,
+                    isPkActive = isPkActive,
+                    hostName = hostName,
+                    opponentName = opponentName,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF0F0F14)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "البث المباشر غير متصل حالياً",
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+                }
+            }
 
             // Opponent camera PIP overlay if in PK and single stream
             if (isPkActive && opponentStreamUrl.isNullOrBlank() && opponentAvatar.isNotBlank()) {
@@ -1255,6 +1326,7 @@ fun TopContributorsSection(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(max = 280.dp)
             .clip(RoundedCornerShape(16.dp))
             .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
             .graphicsLayer { clip = true },
@@ -1296,6 +1368,7 @@ fun LiveCommentsSection(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(max = 280.dp)
             .clip(RoundedCornerShape(16.dp))
             .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
             .graphicsLayer { clip = true },

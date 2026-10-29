@@ -12,6 +12,7 @@ import urllib.parse
 import urllib.error
 import ssl
 import datetime
+import time
 import http.cookiejar
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -908,8 +909,11 @@ class TikTokWebcastAsyncClient:
         try:
             # Check for GZIP magic header (0x1F, 0x8B)
             if len(raw_data) >= 2 and raw_data[0] == 0x1F and raw_data[1] == 0x8B:
-                import gzip
-                data = gzip.decompress(raw_data)
+                try:
+                    import gzip
+                    data = gzip.decompress(raw_data)
+                except Exception:
+                    data = raw_data
             else:
                 data = raw_data
 

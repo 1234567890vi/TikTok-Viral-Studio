@@ -174,6 +174,7 @@ fun AlgorithmExecutionBox(
                     .border(1.dp, GlassBorder.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
+                    if (size.width <= 0f || size.height <= 0f || size.width.isNaN() || size.height.isNaN()) return@Canvas
                     val width = size.width
                     val height = size.height
                     val midY = height / 2f
@@ -234,6 +235,7 @@ fun AlgorithmExecutionBox(
                 modifier = Modifier.size(92.dp)
             ) {
                 Canvas(modifier = Modifier.size(86.dp)) {
+                    if (size.width <= 0f || size.height <= 0f || size.width.isNaN() || size.height.isNaN()) return@Canvas
                     // Background track ring
                     drawArc(
                         color = trackSurfaceColor,
