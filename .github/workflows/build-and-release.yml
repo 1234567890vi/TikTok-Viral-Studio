@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v2.3.1"
+            TAG_NAME="v2.3.2"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.3.1.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.3.2.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.3.1.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.3.2.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,31 +101,24 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.1' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.1' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.2' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.2' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.1' }})
+            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.2' }})
             
-            تحديث تصميمي وتقني احترافي: أيقونات رسومية 3D/Vector حقيقية، شريط إحصاءات ثلاثي، وفيديو طولي 9:16 بدون أي بيانات وهمية:
-            - **مكتبة أيقونات رسومية حقيقية (RealTikTokIcons.kt)**: استبدال كافة الإيموجيات النصية بأيقونات Custom Vector / 3D Canvas فائقة الدقة:
-              * `RealDiamondIcon`: جوهرة ألماس تيك توك مضلعة ثلاثية الأبعاد بتدرج سماوي وأزرق متوهج مع بريق داخلي.
-              * `RealEyeViewerIcon`: عين احترافية منحوتة مع مؤشر بث نابض بالحركة (Pulsing Live Dot).
-              * `RealHeartLikeIcon`: قلب تيك توك التفاعلي مع حركة نبض عند زيادة التكبيس.
-              * `RealBoxingGloveIcon` & `RealCrownIcon`: قفاز ملاكمة مشتعل وتاج ذهبي ملكي للجولات.
-              * `RealTrophyIcon`: كؤوس وميداليات المراتب الثلاث الأولى بالذهب والفضة والبرونز.
-            - **الخانات الإحصائية الثلاث (Top Telemetry Bar)**: بطاقات زجاجية أعلى الفيديو المباشر تعرض الأرقام الحقيقية لحظياً (المشاهدون الآن، إجمالي اللايكات، ومجموع الألماس).
-            - **فيديو طولي كامل بنسبة (9:16)**: يملأ الشاشة بنسبة متناسقة وبدون أي هوامش سوداء فارغة.
-            - **حذف كامل للبيانات الوهمية (Zero Mock Data)**: إزالة كافة الأسماء والبيانات الافتراضية والاعتماد الحصري على تدفق بيانات البث المباشر الفعلي.
-            - **تتبع الجولات الحقيقي (1v1 / 2v2)**: كشف نمط التحدي الفعلي مع عرض الداعمين الحقيقيين ونقاط الألماس المكتسبة.
-            - **تحديث سحابي لتطبيق الإدارة (:admin-app)**: فاحص التحديثات السحابي OTA المدمج داخل لوحة الإدارة وتثبيت التحديثات بنقرة زر واحدة.
-            - **توافق تام للحزم**: توقيع الحزم بنفس المفتاح الثابت `app/release.keystore`.
+            تحديث فائق الدقة: إزالة كاملة للهدايا والداعمين العشوائيين وربط حقيقي للايكات 6.3M والشات الحي 100% Real Data:
+            - **إزالة مولد الهدايا العشوائي (Zero Random Mock Generator)**: إزالة تامة لأي حلقة تولد رسائل وهمية ("داعم #23"، "Rose x13"، "Lion x4"، "COMBO x4") - لا تظهر الهدايا والكومبو إلا بوصول أحداث سيرفر حقيقية WebcastGiftMessage.
+            - **ربط دقيق للايكات الحقيقية (Real 6.3M Likes)**: ربط مباشر مع `liveRoomStats.likeCount` و `webcast/room/info` دون استبدالها برقم المتابعين أو قيم عشوائية.
+            - **ربط قائمة كبار الداعمين بالكوينز الحقيقية**: سحب قائمة المتصدرين مباشرة من Webcast Online Audience Ranklist مع الحسابات والأفاتار الحقيقي ومجموع النقاط.
+            - **عرض فيديو طولي مركزي (9:16)**: معالجة الهوامش السوداء العلوية بالكامل وملء إطار العرض في المنتصف بأداء 60FPS.
+            - **تحديث سحابي لتطبيق الإدارة (:admin-app)** وتطبيق المستخدمين (:app) مع التوقيع بالمفتاح الثابت المعتمد.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.3.1.apk`
+               - `TikTok-Viral-Studio-v2.3.2.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.3.1.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.3.2.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false

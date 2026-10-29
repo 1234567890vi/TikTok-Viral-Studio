@@ -114,6 +114,12 @@ fun LiveTrackerScreen(
                 }
                 is WebcastLiveEvent.Gift -> {
                     lastGiftCombo = event
+                    coroutineScope.launch {
+                        delay(3500L)
+                        if (lastGiftCombo?.id == event.id) {
+                            lastGiftCombo = null
+                        }
+                    }
                     totalDiamonds = event.totalDiamonds
                     liveCommentsList = (listOf(
                         LiveComment(
@@ -1024,7 +1030,10 @@ fun LivePlayerWithOverlays(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
             // Hardware SurfaceView ExoPlayer in full 9:16
             LiveVideoPlayer(
                 streamUrl = streamUrl,
@@ -1073,39 +1082,47 @@ fun LivePlayerWithOverlays(
                 }
             }
 
-            // Real-Time Combo Strike Overlay
-            if (lastComboEvent != null) {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color.Black.copy(alpha = 0.80f),
-                    border = BorderStroke(1.dp, GoldVip),
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(12.dp)
-                        .graphicsLayer { clip = true }
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            // Real-Time Genuine Combo Strike Overlay (Only active when real gift is received)
+            AnimatedVisibility(
+                visible = lastComboEvent != null,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut(),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(12.dp)
+            ) {
+                if (lastComboEvent != null) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color.Black.copy(alpha = 0.85f),
+                        border = BorderStroke(1.dp, GoldVip),
+                        modifier = Modifier.graphicsLayer { clip = true }
                     ) {
-                        RealWebcastGiftBadge(
-                            giftName = lastComboEvent.giftName,
-                            iconUrl = lastComboEvent.iconUrl,
-                            size = 28.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "COMBO ×${lastComboEvent.comboCount}",
-                                fontWeight = FontWeight.Bold,
-                                color = GoldVip,
-                                fontSize = 12.sp
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            RealWebcastGiftBadge(
+                                giftName = lastComboEvent.giftName,
+                                iconUrl = lastComboEvent.iconUrl,
+                                size = 28.dp
                             )
-                            Text(
-                                text = lastComboEvent.giftName,
-                                color = TextPrimary,
-                                fontSize = 10.sp
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "COMBO ×${lastComboEvent.comboCount}",
+                                    fontWeight = FontWeight.Bold,
+                                    color = GoldVip,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "${lastComboEvent.nickname}: ${lastComboEvent.giftName}",
+                                    color = TextPrimary,
+                                    fontSize = 10.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }

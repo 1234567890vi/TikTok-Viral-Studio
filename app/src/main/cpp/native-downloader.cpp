@@ -347,6 +347,25 @@ Java_com_creator_tiktokstudio_core_NativeEngine_decompressGzipNative(
     return outArray;
 }
 
+static std::string escapeJsonString(const std::string& input) {
+    std::ostringstream ss;
+    for (char c : input) {
+        if (c == '"') ss << "\\\"";
+        else if (c == '\\') ss << "\\\\";
+        else if (c == '\b') ss << "\\b";
+        else if (c == '\f') ss << "\\f";
+        else if (c == '\n') ss << "\\n";
+        else if (c == '\r') ss << "\\r";
+        else if (c == '\t') ss << "\\t";
+        else if (static_cast<unsigned char>(c) < 32) {
+            // skip control characters
+        } else {
+            ss << c;
+        }
+    }
+    return ss.str();
+}
+
 JNIEXPORT jstring JNICALL
 Java_com_creator_tiktokstudio_core_NativeEngine_parseWebcastFrameNative(
         JNIEnv* env,
@@ -363,6 +382,12 @@ Java_com_creator_tiktokstudio_core_NativeEngine_parseWebcastFrameNative(
     std::string text(decompressed.begin(), decompressed.end());
 
     std::string eventType = "UNKNOWN";
+    std::string nickname = "";
+    std::string content = "";
+    std::string giftName = "";
+    int comboCount = 1;
+    long diamondCount = 1;
+
     if (text.find("WebcastChatMessage") != std::string::npos) {
         eventType = "WebcastChatMessage";
     } else if (text.find("WebcastGiftMessage") != std::string::npos) {
@@ -377,6 +402,66 @@ Java_com_creator_tiktokstudio_core_NativeEngine_parseWebcastFrameNative(
         eventType = "WebcastLinkMicArmies";
     }
 
+    // Extract genuine UTF-8 strings from decompressed protobuf payload
+    std::vector<std::string> strings;
+    std::string cur;
+    for (size_t i = 0; i < decompressed.size(); ++i) {
+        unsigned char c = decompressed[i];
+        if (c >= 32 && c <= 126) {
+            cur += static_cast<char>(c);
+        } else if (c >= 0xC0) {
+            cur += static_cast<char>(c);
+        } else if ((c & 0xC0) == 0x80 && !cur.empty()) {
+            cur += static_cast<char>(c);
+        } else {
+            if (cur.length() >= 2 && cur.length() <= 120) {
+                if (cur.find("Webcast") == std::string::npos &&
+                    cur.find("tiktok") == std::string::npos &&
+                    cur.find("http") == std::string::npos &&
+                    cur.find(".proto") == std::string::npos &&
+                    cur.find("Room") == std::string::npos) {
+                    strings.push_back(cur);
+                }
+            }
+            cur.clear();
+        }
+    }
+
+    if (eventType == "WebcastChatMessage") {
+        if (strings.size() >= 2) {
+            nickname = strings[0];
+            content = strings[1];
+        } else if (strings.size() == 1) {
+            content = strings[0];
+            nickname = "مشاهد";
+        }
+    } else if (eventType == "WebcastGiftMessage") {
+        for (const auto& s : strings) {
+            if (s == "Rose" || s == "Lion" || s == "Whale" || s == "Universe" ||
+                s == "Heart" || s == "Crown" || s == "Diamond" || s == "TikTok" ||
+                s == "Fire" || s == "Rocket" || s == "Gift") {
+                giftName = s;
+                break;
+            }
+        }
+        if (giftName.empty()) {
+            giftName = "Rose";
+        }
+        for (const auto& s : strings) {
+            if (s != giftName && s.length() >= 2 && s.length() <= 30) {
+                nickname = s;
+                break;
+            }
+        }
+        if (nickname.empty()) {
+            nickname = "داعم";
+        }
+        if (giftName == "Lion") { diamondCount = 29999; }
+        else if (giftName == "Universe") { diamondCount = 44999; }
+        else if (giftName == "Whale") { diamondCount = 2150; }
+        else { diamondCount = 1; }
+    }
+
     auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -384,7 +469,19 @@ Java_com_creator_tiktokstudio_core_NativeEngine_parseWebcastFrameNative(
     jsonOut << "{\"event_type\":\"" << eventType << "\","
             << "\"raw_len\":" << len << ","
             << "\"decompressed_len\":" << decompressed.size() << ","
-            << "\"timestamp_ms\":" << nowMs << "}";
+            << "\"timestamp_ms\":" << nowMs;
+    if (!nickname.empty()) {
+        jsonOut << ",\"nickname\":\"" << escapeJsonString(nickname) << "\"";
+    }
+    if (!content.empty()) {
+        jsonOut << ",\"content\":\"" << escapeJsonString(content) << "\"";
+    }
+    if (!giftName.empty()) {
+        jsonOut << ",\"gift_name\":\"" << escapeJsonString(giftName) << "\"";
+        jsonOut << ",\"diamond_count\":" << diamondCount;
+        jsonOut << ",\"combo_count\":" << comboCount;
+    }
+    jsonOut << "}";
 
     return env->NewStringUTF(jsonOut.str().c_str());
 }

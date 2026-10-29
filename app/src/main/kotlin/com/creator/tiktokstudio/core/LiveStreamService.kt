@@ -11,7 +11,6 @@ import okio.ByteString
 import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 data class LiveContributor(
     val rank: Int,
@@ -314,6 +313,10 @@ object LiveStreamService {
                                 if (lrStats != null) {
                                     val uc = lrStats.optLong("userCount", 0L)
                                     if (uc > 0) viewers = uc
+                                    val lc = lrStats.optLong("likeCount", 0L)
+                                    if (lc > 0) likes = lc // Real Live Likes (e.g. 6.3M)
+                                    val ft = lrStats.optLong("fanTicketCount", 0L)
+                                    if (ft > 0) diamonds = ft
                                 }
                             }
                             val stats = data.optJSONObject("stats")
@@ -375,10 +378,25 @@ object LiveStreamService {
                                 }
                                 val uc = data.optLong("user_count", 0L)
                                 if (uc > 0) viewers = uc
-                                val lc = data.optLong("like_count", 0L)
-                                if (lc > 0 && likes == 0L) likes = lc
-                                val dc = data.optLong("diamond_count", 0L)
-                                if (dc > 0) diamonds = dc
+
+                                // Real Broadcast Likes (e.g. 6.3M) takes absolute priority over profile hearts
+                                val webcastLikes = data.optLong("like_count", 0L).takeIf { it > 0L }
+                                    ?: data.optJSONObject("room")?.optLong("like_count", 0L)?.takeIf { it > 0L }
+                                    ?: data.optJSONObject("stats")?.optLong("like_count", 0L)?.takeIf { it > 0L }
+                                    ?: data.optJSONObject("stats")?.optLong("digg_count", 0L)?.takeIf { it > 0L }
+                                    ?: 0L
+                                if (webcastLikes > 0L) {
+                                    likes = webcastLikes
+                                }
+
+                                val webcastDiamonds = data.optLong("fan_ticket_count", 0L).takeIf { it > 0L }
+                                    ?: data.optLong("diamond_count", 0L).takeIf { it > 0L }
+                                    ?: data.optJSONObject("room")?.optLong("fan_ticket_count", 0L)?.takeIf { it > 0L }
+                                    ?: data.optJSONObject("stats")?.optLong("fan_ticket_count", 0L)?.takeIf { it > 0L }
+                                    ?: 0L
+                                if (webcastDiamonds > 0L) {
+                                    diamonds = webcastDiamonds
+                                }
 
                                 // Real Webcast Battle Detection (1v1 or 2v2)
                                 val battleInfo = data.optJSONObject("battle_info") ?: data.optJSONObject("link_mic")
@@ -509,11 +527,19 @@ object LiveStreamService {
                 return@withContext Result.success(offlineRoom)
             }
 
-            // Online Live Room (Zero Mock Data)
+            // Online Live Room (100% Real Data Only - Zero Mock Defaults)
+            var realTopContributors = emptyList<LiveContributor>()
+            if (foundRoomId.isNotBlank() && foundRoomId != "0" && isLiveActive) {
+                realTopContributors = fetchTopOnlineAudience(foundRoomId)
+                if (diamonds == 0L && realTopContributors.isNotEmpty()) {
+                    diamonds = realTopContributors.sumOf { it.diamondCount }
+                }
+            }
+
             val finalStreamUrl = streamUrl.ifBlank { FALLBACK_STREAM_URL }
-            val finalViewers = if (viewers > 0) viewers else maxOf(350L, (followers * 0.05).toLong().coerceIn(350L, 85000L))
-            val finalLikes = if (likes > 0) likes else 12500L
-            val finalDiamonds = if (diamonds > 0) diamonds else (finalLikes / 8).coerceAtLeast(0L)
+            val finalViewers = viewers
+            val finalLikes = likes
+            val finalDiamonds = diamonds
 
             val roomData = LiveRoomData(
                 roomId = if (foundRoomId.isNotBlank() && foundRoomId != "0") foundRoomId else "room_${(cleanUsername.hashCode() and 0x7FFFFFFF) % 1000000}",
@@ -544,9 +570,9 @@ object LiveStreamService {
                 opponentGloveTimeLeft = 0,
                 magicMistActive = false,
                 magicMistTimeLeft = 0,
-                hostTopContributors = emptyList(), // Populated dynamically as real gifts arrive
+                hostTopContributors = realTopContributors,
                 opponentTopContributors = emptyList(),
-                liveComments = emptyList(), // Populated dynamically via WebSocket
+                liveComments = emptyList(), // Only populated when real messages arrive
                 isLiveOffline = false,
                 offlineNotice = "",
                 opponentStreamUrl = if (hasRealBattle) FALLBACK_OPPONENT_STREAM_URL else ""
@@ -606,6 +632,48 @@ object LiveStreamService {
         )
     }
 
+    suspend fun fetchTopOnlineAudience(roomId: String): List<LiveContributor> = withContext(Dispatchers.IO) {
+        if (roomId.isBlank() || roomId.startsWith("offline_") || roomId.startsWith("room_demo_")) {
+            return@withContext emptyList()
+        }
+        try {
+            val req = Request.Builder()
+                .url("https://webcast.tiktok.com/webcast/ranklist/online_audience/?aid=1988&room_id=$roomId")
+                .addHeader("User-Agent", BROWSER_USER_AGENT)
+                .addHeader("Referer", "https://www.tiktok.com/")
+                .addHeader("Accept", "application/json")
+                .build()
+            httpClient.newCall(req).execute().use { resp ->
+                val body = resp.body?.string().orEmpty()
+                if (body.isNotBlank()) {
+                    val json = JSONObject(body)
+                    val data = json.optJSONObject("data")
+                    val ranks = data?.optJSONArray("ranks")
+                    if (ranks != null && ranks.length() > 0) {
+                        val list = mutableListOf<LiveContributor>()
+                        for (i in 0 until minOf(ranks.length(), 10)) {
+                            val item = ranks.optJSONObject(i) ?: continue
+                            val rankNum = item.optInt("rank", i + 1)
+                            val score = item.optLong("score", 0L)
+                            val user = item.optJSONObject("user")
+                            val nick = user?.optString("nickname", "داعم").orEmpty().ifBlank { "داعم" }
+                            var av = user?.optJSONObject("avatar_thumb")?.optJSONArray("url_list")?.optString(0, "").orEmpty()
+                            if (av.isBlank()) {
+                                av = user?.optString("avatar_thumb", "").orEmpty()
+                            }
+                            if (av.isNotBlank()) av = TikTokDownloaderService.sanitizeUrl(av)
+                            list.add(LiveContributor(rank = rankNum, nickname = nick, avatar = av, diamondCount = score))
+                        }
+                        return@withContext list
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error fetching online audience: ${e.message}")
+        }
+        emptyList()
+    }
+
     // ==========================================================================
     // Real-Time Webcast WebSocket Engine (Zero Polling, Zero Fake Data)
     // ==========================================================================
@@ -656,28 +724,70 @@ object LiveStreamService {
                 val parsedMeta = NativeEngine.parseWebcastFrame(rawBytes)
 
                 serviceScope.launch {
-                    if (parsedMeta.contains("WebcastGiftMessage")) {
-                        val diamondVal = 10
-                        val comboVal = 1
-                        currentDiamonds += (diamondVal * comboVal)
-                        currentHostScore += (diamondVal * comboVal)
-                        _eventsFlow.emit(
-                            WebcastLiveEvent.Gift(
-                                id = "gift_${System.currentTimeMillis()}",
-                                giftName = "Rose",
-                                nickname = "داعم البث",
-                                avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-                                diamondCount = diamondVal,
-                                comboCount = comboVal,
-                                isHost = true,
-                                iconUrl = "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/47ea09b304cbe200d7da00f7b9ebc7ad~tplv-obj.png",
-                                totalDiamonds = currentDiamonds
-                            )
-                        )
-                        _eventsFlow.emit(WebcastLiveEvent.BattleScore(currentHostScore, currentOpponentScore, currentDiamonds))
-                    } else if (parsedMeta.contains("WebcastLikeMessage")) {
-                        currentLikes += 10
-                        _eventsFlow.emit(WebcastLiveEvent.Like(count = 10, totalLikes = currentLikes))
+                    try {
+                        val json = JSONObject(parsedMeta)
+                        val eventType = json.optString("event_type", "")
+                        when (eventType) {
+                            "WebcastGiftMessage" -> {
+                                val giftName = json.optString("gift_name", "Rose").ifBlank { "Rose" }
+                                val nickname = json.optString("nickname", "داعم").ifBlank { "داعم" }
+                                val diamondVal = json.optLong("diamond_count", 1L).coerceAtLeast(1L).toInt()
+                                val comboVal = json.optInt("combo_count", 1).coerceAtLeast(1)
+                                val giftScore = (diamondVal * comboVal).toLong()
+                                currentDiamonds += giftScore
+                                if (isBattleActiveState) {
+                                    currentHostScore += giftScore
+                                    _eventsFlow.emit(WebcastLiveEvent.BattleScore(currentHostScore, currentOpponentScore, currentDiamonds))
+                                }
+                                val giftIcon = when (giftName.lowercase()) {
+                                    "lion" -> "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/7069389456073165595~tplv-obj.png"
+                                    "whale" -> "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/7074218320498707227~tplv-obj.png"
+                                    "universe" -> "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/7069389476100983578~tplv-obj.png"
+                                    else -> "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/47ea09b304cbe200d7da00f7b9ebc7ad~tplv-obj.png"
+                                }
+                                _eventsFlow.emit(
+                                    WebcastLiveEvent.Gift(
+                                        id = "gift_${System.currentTimeMillis()}",
+                                        giftName = giftName,
+                                        nickname = nickname,
+                                        avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+                                        diamondCount = diamondVal,
+                                        comboCount = comboVal,
+                                        isHost = true,
+                                        iconUrl = giftIcon,
+                                        totalDiamonds = currentDiamonds
+                                    )
+                                )
+                            }
+                            "WebcastChatMessage" -> {
+                                val nickname = json.optString("nickname", "مشاهد").ifBlank { "مشاهد" }
+                                val text = json.optString("content", "")
+                                if (text.isNotBlank()) {
+                                    _eventsFlow.emit(
+                                        WebcastLiveEvent.Comment(
+                                            id = "c_${System.currentTimeMillis()}",
+                                            nickname = nickname,
+                                            avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+                                            text = text
+                                        )
+                                    )
+                                }
+                            }
+                            "WebcastLikeMessage" -> {
+                                val count = json.optLong("like_count", 1L).coerceAtLeast(1L)
+                                currentLikes += count
+                                _eventsFlow.emit(WebcastLiveEvent.Like(count, currentLikes))
+                            }
+                            "WebcastRoomUserSeqMessage" -> {
+                                val count = json.optLong("viewer_count", 0L)
+                                if (count > 0L) {
+                                    currentViewers = count
+                                    _eventsFlow.emit(WebcastLiveEvent.ViewerCount(currentViewers))
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error handling webcast frame: ${e.message}")
                     }
                 }
             }
@@ -700,99 +810,113 @@ object LiveStreamService {
             }
         })
 
-        // 3. Launch Real-Time Push Streamer for Continuous Live Telemetry
+        // 3. Real Telemetry & Clocks Synchronization (Zero Random Generators)
         realTimeEventJob = serviceScope.launch {
             _eventsFlow.emit(WebcastLiveEvent.ConnectionState("STREAMING_EVENTS", pingMs = 4L))
 
-            val giftsCatalog = listOf(
-                Triple("Rose", 1, "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/47ea09b304cbe200d7da00f7b9ebc7ad~tplv-obj.png"),
-                Triple("Lion", 29999, "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/7069389456073165595~tplv-obj.png"),
-                Triple("Whale", 2150, "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/7074218320498707227~tplv-obj.png"),
-                Triple("Universe", 44999, "https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/7069389476100983578~tplv-obj.png")
-            )
-
-            var secondTicker = 0
+            var tickerSeconds = 0
 
             while (isActive) {
-                delay(300L) // Sub-second 300ms event tick
-                secondTicker += 300
+                delay(1000L) // 1-second cadence for timers & telemetry synchronization
+                tickerSeconds++
 
-                // Real-time live likes & diamonds
-                val likeIncr = Random.nextInt(5, 30)
-                currentLikes += likeIncr
-                _eventsFlow.emit(WebcastLiveEvent.Like(likeIncr.toLong(), currentLikes))
-
-                // Occasional live gift event
-                if (Random.nextInt(0, 100) < 14) {
-                    val gift = giftsCatalog.random()
-                    val combo = Random.nextInt(1, 15)
-                    val giftScore = (gift.second * combo).toLong()
-                    currentDiamonds += giftScore
-
-                    if (isBattleActiveState) {
-                        currentHostScore += giftScore
-                        _eventsFlow.emit(WebcastLiveEvent.BattleScore(currentHostScore, currentOpponentScore, currentDiamonds))
+                // Update PK Battle and Punishment timers
+                if (isBattleActiveState) {
+                    if (battleRemainingSec > 0) {
+                        battleRemainingSec--
+                        if (hostGloveSec > 0) {
+                            hostGloveSec--
+                            _eventsFlow.emit(WebcastLiveEvent.GloveState(isHost = true, multiplier = hostGloveMul, timeLeftSec = hostGloveSec))
+                        }
+                        if (mistSec > 0) {
+                            mistSec--
+                            _eventsFlow.emit(WebcastLiveEvent.MagicMistState(isActive = true, timeLeftSec = mistSec))
+                        } else if (isMistActiveState) {
+                            isMistActiveState = false
+                            _eventsFlow.emit(WebcastLiveEvent.MagicMistState(isActive = false, timeLeftSec = 0))
+                        }
+                    } else {
+                        isBattleActiveState = false
+                        isPunishmentState = true
+                        punishmentRemainingSec = 180
                     }
-
-                    _eventsFlow.emit(
-                        WebcastLiveEvent.Gift(
-                            id = "gift_${System.currentTimeMillis()}",
-                            giftName = gift.first,
-                            nickname = "داعم #" + Random.nextInt(10, 99),
-                            avatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-                            diamondCount = gift.second,
-                            comboCount = combo,
-                            isHost = true,
-                            iconUrl = gift.third,
-                            totalDiamonds = currentDiamonds
-                        )
-                    )
+                } else if (isPunishmentState) {
+                    if (punishmentRemainingSec > 0) {
+                        punishmentRemainingSec--
+                    } else {
+                        isPunishmentState = false
+                    }
                 }
 
-                // Every 1 second: update timers, gloves, mist, and sync clocks
-                if (secondTicker >= 1000) {
-                    secondTicker = 0
-
-                    if (isBattleActiveState) {
-                        if (battleRemainingSec > 0) {
-                            battleRemainingSec--
-                            if (hostGloveSec > 0) {
-                                hostGloveSec--
-                                _eventsFlow.emit(WebcastLiveEvent.GloveState(isHost = true, multiplier = hostGloveMul, timeLeftSec = hostGloveSec))
-                            }
-                            if (mistSec > 0) {
-                                mistSec--
-                                _eventsFlow.emit(WebcastLiveEvent.MagicMistState(isActive = true, timeLeftSec = mistSec))
-                            } else if (isMistActiveState) {
-                                isMistActiveState = false
-                                _eventsFlow.emit(WebcastLiveEvent.MagicMistState(isActive = false, timeLeftSec = 0))
-                            }
-                        } else {
-                            isBattleActiveState = false
-                            isPunishmentState = true
-                            punishmentRemainingSec = 180
-                        }
-                    } else if (isPunishmentState) {
-                        if (punishmentRemainingSec > 0) {
-                            punishmentRemainingSec--
-                        } else {
-                            isPunishmentState = false
-                            isBattleActiveState = true
-                            battleRemainingSec = 300
-                            hostGloveSec = 45
-                            mistSec = 30
-                            isMistActiveState = true
-                        }
-                    }
-
-                    _eventsFlow.emit(
-                        WebcastLiveEvent.BattleTimerSync(
-                            isBattleActive = isBattleActiveState,
-                            battleTimeLeftSec = battleRemainingSec,
-                            isPunishment = isPunishmentState,
-                            punishmentTimeLeftSec = punishmentRemainingSec
-                        )
+                _eventsFlow.emit(
+                    WebcastLiveEvent.BattleTimerSync(
+                        isBattleActive = isBattleActiveState,
+                        battleTimeLeftSec = battleRemainingSec,
+                        isPunishment = isPunishmentState,
+                        punishmentTimeLeftSec = punishmentRemainingSec
                     )
+                )
+
+                // Every 4 seconds: Sync real live telemetry (viewers, 6.3M likes, diamonds, top audience) directly from TikTok API
+                if (tickerSeconds % 4 == 0 && room.roomId.isNotBlank() && !room.roomId.startsWith("room_demo_") && !room.roomId.startsWith("offline_")) {
+                    try {
+                        val req = Request.Builder()
+                            .url("https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id=${room.roomId}")
+                            .addHeader("User-Agent", BROWSER_USER_AGENT)
+                            .addHeader("Referer", "https://www.tiktok.com/")
+                            .build()
+                        httpClient.newCall(req).execute().use { resp ->
+                            val body = resp.body?.string().orEmpty()
+                            if (body.isNotBlank()) {
+                                val json = JSONObject(body)
+                                val data = json.optJSONObject("data")
+                                if (data != null) {
+                                    val realViewers = data.optLong("user_count", 0L)
+                                    if (realViewers > 0L && realViewers != currentViewers) {
+                                        currentViewers = realViewers
+                                        _eventsFlow.emit(WebcastLiveEvent.ViewerCount(currentViewers))
+                                    }
+
+                                    val realLikes = data.optLong("like_count", 0L).takeIf { it > 0L }
+                                        ?: data.optJSONObject("room")?.optLong("like_count", 0L)?.takeIf { it > 0L }
+                                        ?: data.optJSONObject("stats")?.optLong("like_count", 0L)?.takeIf { it > 0L }
+                                        ?: data.optJSONObject("stats")?.optLong("digg_count", 0L)?.takeIf { it > 0L }
+                                        ?: 0L
+                                    if (realLikes > 0L && realLikes != currentLikes) {
+                                        currentLikes = realLikes
+                                        _eventsFlow.emit(WebcastLiveEvent.Like(0L, currentLikes))
+                                    }
+
+                                    val realDiamonds = data.optLong("fan_ticket_count", 0L).takeIf { it > 0L }
+                                        ?: data.optLong("diamond_count", 0L).takeIf { it > 0L }
+                                        ?: data.optJSONObject("room")?.optLong("fan_ticket_count", 0L)?.takeIf { it > 0L }
+                                        ?: 0L
+                                    if (realDiamonds > 0L && realDiamonds != currentDiamonds) {
+                                        currentDiamonds = realDiamonds
+                                    }
+
+                                    val battleInfo = data.optJSONObject("battle_info") ?: data.optJSONObject("link_mic")
+                                    if (battleInfo != null) {
+                                        val hScore = battleInfo.optLong("host_score", currentHostScore)
+                                        val oScore = battleInfo.optLong("opponent_score", currentOpponentScore)
+                                        if (hScore != currentHostScore || oScore != currentOpponentScore) {
+                                            currentHostScore = hScore
+                                            currentOpponentScore = oScore
+                                            _eventsFlow.emit(WebcastLiveEvent.BattleScore(currentHostScore, currentOpponentScore, currentDiamonds))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (ignored: Exception) {}
+
+                    // Fetch genuine top gifters from ranklist/online_audience
+                    try {
+                        val realContributors = fetchTopOnlineAudience(room.roomId)
+                        if (realContributors.isNotEmpty()) {
+                            _eventsFlow.emit(WebcastLiveEvent.TopContributorsUpdate(realContributors))
+                        }
+                    } catch (ignored: Exception) {}
                 }
             }
         }

@@ -145,10 +145,13 @@ fun LiveVideoPlayer(
                                 layoutParams = FrameLayout.LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
-                                )
+                                ).apply {
+                                    gravity = android.view.Gravity.CENTER
+                                }
                                 player = hostPlayer
                                 useController = false
                                 resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                                 setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                             }
                         },
@@ -189,10 +192,13 @@ fun LiveVideoPlayer(
                                 layoutParams = FrameLayout.LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT
-                                )
+                                ).apply {
+                                    gravity = android.view.Gravity.CENTER
+                                }
                                 player = opponentPlayer
                                 useController = false
                                 resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                                 setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                             }
                         },
@@ -227,10 +233,13 @@ fun LiveVideoPlayer(
                         layoutParams = FrameLayout.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
-                        )
+                        ).apply {
+                            gravity = android.view.Gravity.CENTER
+                        }
                         player = hostPlayer
                         useController = false
                         resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                        setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                         setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     }
                 },

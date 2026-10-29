@@ -505,6 +505,12 @@ def extract_tiktok_live(input_str: str) -> dict:
                     uc = int(lr_stats.get("userCount", 0))
                     if uc > 0:
                         viewers = uc
+                    lc = int(lr_stats.get("likeCount", 0))
+                    if lc > 0:
+                        likes = lc
+                    ft = int(lr_stats.get("fanTicketCount", 0))
+                    if ft > 0:
+                        diamonds = ft
 
                 stats = data.get("stats", {})
                 if stats:
@@ -514,7 +520,19 @@ def extract_tiktok_live(input_str: str) -> dict:
     except Exception:
         pass
 
-    # If room_id is found, query webcast room details for stream URLs
+    # If room_id is found, query webcast room details for stream URLs & real metrics
+    real_contributors = []
+    has_real_battle = False
+    detected_battle_mode = "1v1"
+    battle_seconds_left = 0
+    punishment_seconds_left = 0
+    is_real_punishment = False
+    real_host_score = 0
+    real_opponent_score = 0
+    real_opponent_name = ""
+    real_opponent_unique_id = ""
+    real_opponent_avatar = ""
+
     if room_id and room_id != "0":
         try:
             api_endpoint = f"https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id={room_id}"
@@ -555,11 +573,65 @@ def extract_tiktok_live(input_str: str) -> dict:
                     uc = int(data.get("user_count", 0))
                     if uc > 0:
                         viewers = uc
-                    lc = int(data.get("like_count", 0))
-                    if lc > 0 and likes == 0:
-                        likes = lc
+
+                    # Real Live Broadcast Likes (e.g. 6.3M) priority mapping
+                    webcast_likes = int(data.get("like_count", 0) or data.get("room", {}).get("like_count", 0) or data.get("stats", {}).get("like_count", 0) or data.get("stats", {}).get("digg_count", 0) or 0)
+                    if webcast_likes > 0:
+                        likes = webcast_likes
+
+                    webcast_diamonds = int(data.get("fan_ticket_count", 0) or data.get("diamond_count", 0) or data.get("room", {}).get("fan_ticket_count", 0) or 0)
+                    if webcast_diamonds > 0:
+                        diamonds = webcast_diamonds
+
+                    # Check real battle state
+                    battle_info = data.get("battle_info") or data.get("link_mic")
+                    if battle_info:
+                        b_status = battle_info.get("battle_status", 0)
+                        if b_status in (1, 2):
+                            has_real_battle = True
+                            detected_battle_mode = "2v2" if battle_info.get("battle_type") == 2 else "1v1"
+                            battle_seconds_left = battle_info.get("battle_time_left", 240)
+                            punishment_seconds_left = battle_info.get("punishment_time_left", 180)
+                            is_real_punishment = (b_status == 2)
+                            rival = battle_info.get("rival_user") or battle_info.get("channel_user") or {}
+                            real_opponent_name = rival.get("nickname", "منافس البث")
+                            real_opponent_unique_id = rival.get("display_id") or rival.get("unique_id", "pk_rival")
+                            r_av = rival.get("avatar_thumb") or rival.get("avatar_medium", "")
+                            if r_av:
+                                real_opponent_avatar = sanitize_url(r_av)
+                            real_host_score = int(battle_info.get("host_score", 0))
+                            real_opponent_score = int(battle_info.get("opponent_score", 0))
         except Exception:
             pass
+
+        # Query real online audience / top gifters
+        try:
+            aud_endpoint = f"https://webcast.tiktok.com/webcast/ranklist/online_audience/?aid=1988&room_id={room_id}"
+            aud_req = urllib.request.Request(
+                aud_endpoint,
+                headers={
+                    "User-Agent": USER_AGENT,
+                    "Referer": "https://www.tiktok.com/",
+                    "Accept": "application/json"
+                }
+            )
+            with urllib.request.urlopen(aud_req, context=create_ssl_context(), timeout=6) as resp:
+                aud_data = json.loads(resp.read().decode("utf-8")).get("data", {})
+                for idx, r in enumerate(aud_data.get("ranks", [])[:10]):
+                    u_info = r.get("user", {})
+                    av_list = u_info.get("avatar_thumb", {}).get("url_list", [])
+                    u_av = av_list[0] if av_list else u_info.get("avatar_thumb", "")
+                    real_contributors.append({
+                        "rank": r.get("rank", idx + 1),
+                        "nickname": u_info.get("nickname", "داعم"),
+                        "avatar": sanitize_url(u_av) if u_av else "",
+                        "score": int(r.get("score", 0))
+                    })
+        except Exception:
+            pass
+
+        if real_contributors and diamonds == 0:
+            diamonds = sum(c["score"] for c in real_contributors)
 
     # Channel 3: HTML Rehydration Parse
     if not is_live or not stream_url:
@@ -640,15 +712,16 @@ def extract_tiktok_live(input_str: str) -> dict:
         }
 
     final_stream_url = stream_url if stream_url else "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-    final_viewers = viewers if viewers > 0 else max(1200, int(followers * 0.08))
-    final_likes = likes if likes > 0 else 185000
+    final_viewers = viewers
+    final_likes = likes
+    final_diamonds = diamonds
 
     return {
         "success": True,
         "is_live_offline": False,
         "offline_notice": "",
         "room_id": room_id if room_id and room_id != "0" else f"room_{abs(hash(clean_username)) % 100000000}",
-        "title": title or f"🔴 بث مباشر رسمي لتحديات التيك توك - @{clean_username}",
+        "title": title or f"بث مباشر رسمي - @{clean_username}",
         "stream_url": final_stream_url,
         "host_name": host_nickname,
         "host_unique_id": clean_username,
@@ -656,39 +729,28 @@ def extract_tiktok_live(input_str: str) -> dict:
         "viewer_count": final_viewers,
         "likes_count": final_likes,
         "follower_count": followers,
-        "is_pk_active": True,
-        "is_punishment_time": False,
-        "battle_time_left_sec": 285,
-        "punishment_time_left_sec": 180,
-        "host_score": 24800,
-        "opponent_name": "سلطان التحديات 👑",
-        "opponent_unique_id": "sultan_pk",
-        "opponent_avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150",
-        "opponent_score": 21950,
-        "host_glove_active": True,
-        "host_glove_multiplier": 3,
-        "host_glove_time_left": 42,
+        "total_diamonds": final_diamonds,
+        "is_pk_active": has_real_battle,
+        "battle_mode": detected_battle_mode,
+        "is_punishment_time": is_real_punishment,
+        "battle_time_left_sec": battle_seconds_left,
+        "punishment_time_left_sec": punishment_seconds_left,
+        "host_score": real_host_score,
+        "opponent_name": real_opponent_name,
+        "opponent_unique_id": real_opponent_unique_id,
+        "opponent_avatar": real_opponent_avatar,
+        "opponent_score": real_opponent_score,
+        "host_glove_active": False,
+        "host_glove_multiplier": 1,
+        "host_glove_time_left": 0,
         "opponent_glove_active": False,
         "opponent_glove_multiplier": 1,
         "opponent_glove_time_left": 0,
-        "magic_mist_active": True,
-        "magic_mist_time_left": 24,
-        "host_top_contributors": [
-            {"rank": 1, "nickname": "الداعم الذهبي 🦁", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", "score": 11500},
-            {"rank": 2, "nickname": "فارس العرب ⚡", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", "score": 7200},
-            {"rank": 3, "nickname": "صقر الخليج 🦅", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100", "score": 4100}
-        ],
-        "opponent_top_contributors": [
-            {"rank": 1, "nickname": "أسد دبي 💎", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", "score": 9800},
-            {"rank": 2, "nickname": "سيف النصر ⚔️", "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100", "score": 6400},
-            {"rank": 3, "nickname": "أمير الليل 🌟", "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100", "score": 3900}
-        ],
-        "live_comments": [
-            {"id": "c1", "nickname": "فارس العرب", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", "text": "كفووووو القفاز شغال ×3 يا أبطال شدوووووو 🔥🔥🔥", "is_gift": False},
-            {"id": "c2", "nickname": "الداعم الذهبي", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", "text": "أرسل أسد تيك توك 🦁🦁", "is_gift": True, "gift_name": "Lion"},
-            {"id": "c3", "nickname": "سارة المحاربة", "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100", "text": "الغيمة السحرية نزلت لا توقفوووون ☁️⚡", "is_gift": False},
-            {"id": "c4", "nickname": "أبو فهد", "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100", "text": "تكبييييس يا جماعة 10 آلاف لايك في دقيقة ❤️❤️", "is_gift": False}
-        ]
+        "magic_mist_active": False,
+        "magic_mist_time_left": 0,
+        "host_top_contributors": real_contributors,
+        "opponent_top_contributors": [],
+        "live_comments": [] # Populated in real-time strictly via WebSocket frames
     }
 
 # ==============================================================================
