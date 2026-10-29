@@ -80,10 +80,11 @@ fun CircularDownloadProgress(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(170.dp)
         ) {
+            val trackColor = DarkSurfaceElevated
             Canvas(modifier = Modifier.size(150.dp)) {
                 // Background track
                 drawArc(
-                    color = DarkSurfaceElevated,
+                    color = trackColor,
                     startAngle = -90f,
                     sweepAngle = 360f,
                     useCenter = false,
