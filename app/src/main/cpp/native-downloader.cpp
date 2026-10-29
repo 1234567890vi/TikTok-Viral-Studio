@@ -6,10 +6,96 @@
 #include <android/log.h>
 #include <algorithm>
 #include <cctype>
+#include <zlib.h>
+#include <mutex>
+#include <deque>
+#include <chrono>
 
 #define TAG "TikTokStudioNDK"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+
+// High-Speed Native Ring Buffer for incoming WebSocket frames
+class NativeRingBuffer {
+private:
+    std::mutex m_mutex;
+    std::deque<std::vector<uint8_t>> m_queue;
+    size_t m_capacity;
+
+public:
+    explicit NativeRingBuffer(size_t capacity = 100) : m_capacity(capacity) {}
+
+    void setCapacity(size_t capacity) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_capacity = capacity > 10 ? capacity : 100;
+        while (m_queue.size() > m_capacity) {
+            m_queue.pop_front();
+        }
+    }
+
+    bool push(std::vector<uint8_t>&& frame) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (m_queue.size() >= m_capacity) {
+            m_queue.pop_front(); // drop oldest frame to maintain zero latency
+        }
+        m_queue.push_back(std::move(frame));
+        return true;
+    }
+
+    bool pop(std::vector<uint8_t>& outFrame) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (m_queue.empty()) {
+            return false;
+        }
+        outFrame = std::move(m_queue.front());
+        m_queue.pop_front();
+        return true;
+    }
+
+    size_t size() {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        return m_queue.size();
+    }
+};
+
+static NativeRingBuffer g_webcastRingBuffer(200);
+
+// Fast GZIP Decompression via standard zlib
+static std::vector<uint8_t> decompressGzipBytes(const uint8_t* data, size_t len) {
+    if (!data || len < 2) return {};
+    if (data[0] != 0x1F || data[1] != 0x8B) {
+        return std::vector<uint8_t>(data, data + len);
+    }
+
+    z_stream strm;
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = len;
+    strm.next_in = const_cast<Bytef*>(data);
+
+    if (inflateInit2(&strm, 16 + MAX_WBITS) != Z_OK) {
+        return std::vector<uint8_t>(data, data + len);
+    }
+
+    std::vector<uint8_t> out;
+    char buffer[16384];
+    int ret;
+    do {
+        strm.avail_out = sizeof(buffer);
+        strm.next_out = reinterpret_cast<Bytef*>(buffer);
+        ret = inflate(&strm, Z_NO_FLUSH);
+        if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) {
+            inflateEnd(&strm);
+            return std::vector<uint8_t>(data, data + len);
+        }
+        size_t have = sizeof(buffer) - strm.avail_out;
+        out.insert(out.end(), buffer, buffer + have);
+    } while (ret != Z_STREAM_END && strm.avail_out == 0);
+
+    inflateEnd(&strm);
+    return out;
+}
 
 // Simple native SHA-256 implementation for VIP key cryptographic verification
 namespace crypto {
@@ -215,6 +301,92 @@ Java_com_creator_tiktokstudio_core_NativeEngine_sanitizeFilenameNative(
     std::ostringstream out;
     out << "TikTokStudio_" << sanitized << "." << ext;
     return env->NewStringUTF(out.str().c_str());
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_creator_tiktokstudio_core_NativeEngine_initWebcastRingBufferNative(
+        JNIEnv* /* env */,
+        jobject /* this */,
+        jint capacity) {
+    g_webcastRingBuffer.setCapacity(static_cast<size_t>(capacity));
+    return JNI_TRUE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_creator_tiktokstudio_core_NativeEngine_pushWebcastFrameNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jbyteArray jBytes) {
+    if (jBytes == nullptr) return JNI_FALSE;
+    jsize len = env->GetArrayLength(jBytes);
+    if (len <= 0) return JNI_FALSE;
+
+    std::vector<uint8_t> buffer(len);
+    env->GetByteArrayRegion(jBytes, 0, len, reinterpret_cast<jbyte*>(buffer.data()));
+
+    return g_webcastRingBuffer.push(std::move(buffer)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_creator_tiktokstudio_core_NativeEngine_decompressGzipNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jbyteArray jBytes) {
+    if (jBytes == nullptr) return nullptr;
+    jsize len = env->GetArrayLength(jBytes);
+    if (len <= 0) return nullptr;
+
+    std::vector<uint8_t> buffer(len);
+    env->GetByteArrayRegion(jBytes, 0, len, reinterpret_cast<jbyte*>(buffer.data()));
+
+    std::vector<uint8_t> decompressed = decompressGzipBytes(buffer.data(), buffer.size());
+    if (decompressed.empty()) return nullptr;
+
+    jbyteArray outArray = env->NewByteArray(static_cast<jsize>(decompressed.size()));
+    env->SetByteArrayRegion(outArray, 0, static_cast<jsize>(decompressed.size()), reinterpret_cast<const jbyte*>(decompressed.data()));
+    return outArray;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_creator_tiktokstudio_core_NativeEngine_parseWebcastFrameNative(
+        JNIEnv* env,
+        jobject /* this */,
+        jbyteArray jBytes) {
+    if (jBytes == nullptr) return env->NewStringUTF("{}");
+    jsize len = env->GetArrayLength(jBytes);
+    if (len <= 0) return env->NewStringUTF("{}");
+
+    std::vector<uint8_t> buffer(len);
+    env->GetByteArrayRegion(jBytes, 0, len, reinterpret_cast<jbyte*>(buffer.data()));
+
+    std::vector<uint8_t> decompressed = decompressGzipBytes(buffer.data(), buffer.size());
+    std::string text(decompressed.begin(), decompressed.end());
+
+    std::string eventType = "UNKNOWN";
+    if (text.find("WebcastChatMessage") != std::string::npos) {
+        eventType = "WebcastChatMessage";
+    } else if (text.find("WebcastGiftMessage") != std::string::npos) {
+        eventType = "WebcastGiftMessage";
+    } else if (text.find("WebcastLikeMessage") != std::string::npos) {
+        eventType = "WebcastLikeMessage";
+    } else if (text.find("WebcastRoomUserSeqMessage") != std::string::npos) {
+        eventType = "WebcastRoomUserSeqMessage";
+    } else if (text.find("WebcastLinkMicBattle") != std::string::npos) {
+        eventType = "WebcastLinkMicBattle";
+    } else if (text.find("WebcastLinkMicArmies") != std::string::npos) {
+        eventType = "WebcastLinkMicArmies";
+    }
+
+    auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+
+    std::ostringstream jsonOut;
+    jsonOut << "{\"event_type\":\"" << eventType << "\","
+            << "\"raw_len\":" << len << ","
+            << "\"decompressed_len\":" << decompressed.size() << ","
+            << "\"timestamp_ms\":" << nowMs << "}";
+
+    return env->NewStringUTF(jsonOut.str().c_str());
 }
 
 } // extern "C"

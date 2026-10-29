@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v2.1.2"
+            TAG_NAME="v2.2.0"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.1.2.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.2.0.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.1.2.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.2.0.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,25 +101,26 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.1.2' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.1.2' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.2.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.2.0' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.1.2' }})
+            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.2.0' }})
             
-            تحديث استثنائي وحل جذري لمشكلة تتبع البث المباشر (Live Room Resolution):
-            - **نظام كشف واكتشاف متعدد القنوات (Multi-Fallback Live Resolver)**: يجمع بين TikWM API و TikTok Webcast Direct Room API و HTML Rehydration لضمان استخراج رابط البث الحي بدون حظر أو أخطاء.
-            - **حل نهائي لخطأ "الحساب غير موجود أو خاص"**: عند فتح بث حي، يتم جلب رابط البث المباشر (HLS / FLV) فوراً وتشغيله بدون تقطيع 60FPS.
-            - **بطاقة صانع المحتوى الحقيقية للحسابات غير المتصلة (Offline Creators)**: إظهار بيانات الحساب الواقعية (المتابعون، الإعجابات، الأفاتار) مع إشعار دقيق بأن الحساب أوفلاين في هذه اللحظة، مع إمكانية بدء جولة تجريبية تفاعلية.
-            - **تنظيف وتجريد اليوزرات من المحارف الخفية (Invisible Unicode Stripping)**: دعم إدخال @username أو username بدون روابط مع تنظيف كامل للأحرف غير المرئية.
+            ترقية معمارية شاملة: البث اللحظي المدفوع بالأحداث (Zero-Latency WebSocket & Protobuf Event-Driven Architecture):
+            - **إلغاء التحديث الدوري (No Polling)**: استبدال الـ HTTP Polling بقناة WebSocket مباشرة وتدفق أحداث فوري (0ms Latency) يغذي الواجهة بلغة Kotlin SharedFlow.
+            - **معالجة فائقة السرعة عبر C++ NDK**: مسار معالجة منخفض المستوى (Native Ring Buffer & Gzip Parser) لفك تشفير الإطارات الثنائية القادمة من البث في النانو ثانية وتمريرها عبر JNI بدون أي عبء على الذاكرة أو Garbage Collection.
+            - **تحديث أحداث الجولة اللحظية**: رصد فوري للتعليقات، الهدايا، ضربات الكومبو المتتالية (Combos)، عداد اللايكات، نقاط الجولة، القفازات المشتعلة، الغيمة السحرية، ومزامنة ساعة وقت الحكم بدقة 100%.
+            - **مشغل Media3 ExoPlayer فائق الكمون المنخفض (Ultra-Low Latency Media3 Pipeline)**: تهيئة Buffering (500ms - 2000ms) وتزامن مباشر عبر OkHttpDataSource.Factory بمعدل 60FPS ثابت.
+            - **دعم تقسيم الشاشة التفاعلي (Split-Screen PK)**: عرض بث المضيف والخصم معاً جنبًا إلى جنب بأعلى سلاسة.
             - **تحديث سحابي لتطبيق الإدارة (:admin-app)**: فاحص التحديثات السحابي OTA المدمج داخل لوحة الإدارة وتثبيت التحديثات بنقرة زر واحدة.
             - **توافق تام للحزم**: توقيع الحزم بنفس المفتاح الثابت `app/release.keystore`.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.1.2.apk`
+               - `TikTok-Viral-Studio-v2.2.0.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.1.2.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.2.0.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false

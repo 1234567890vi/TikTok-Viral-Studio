@@ -16,4 +16,5 @@ find_library(
 target_link_libraries(
     tiktokstudio
     ${log-lib}
+    z
 )

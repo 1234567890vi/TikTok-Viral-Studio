@@ -35,6 +35,18 @@ object NativeEngine {
     @JvmStatic
     external fun sanitizeFilenameNative(rawTitle: String, ext: String): String
 
+    @JvmStatic
+    external fun initWebcastRingBufferNative(capacity: Int): Boolean
+
+    @JvmStatic
+    external fun pushWebcastFrameNative(data: ByteArray): Boolean
+
+    @JvmStatic
+    external fun decompressGzipNative(compressed: ByteArray): ByteArray?
+
+    @JvmStatic
+    external fun parseWebcastFrameNative(data: ByteArray): String
+
     // Safe wrappers with Kotlin fallback for previews/unit tests
     fun validateVipKey(key: String): Boolean {
         val clean = key.trim().uppercase()
@@ -86,5 +98,49 @@ object NativeEngine {
         }
         val safe = rawTitle.replace(Regex("[^a-zA-Z0-9_\\-\\s\\u0600-\\u06FF]"), "_").take(50)
         return "TikTokStudio_${if (safe.isBlank()) "video" else safe}.$ext"
+    }
+
+    fun initRingBuffer(capacity: Int = 200): Boolean {
+        if (isLoaded) {
+            try {
+                return initWebcastRingBufferNative(capacity)
+            } catch (e: UnsatisfiedLinkError) {
+                Log.w(TAG, "UnsatisfiedLinkError fallback for initRingBuffer", e)
+            }
+        }
+        return true
+    }
+
+    fun pushWebcastFrame(data: ByteArray): Boolean {
+        if (isLoaded) {
+            try {
+                return pushWebcastFrameNative(data)
+            } catch (e: UnsatisfiedLinkError) {
+                Log.w(TAG, "UnsatisfiedLinkError fallback for pushWebcastFrame", e)
+            }
+        }
+        return true
+    }
+
+    fun decompressGzip(compressed: ByteArray): ByteArray? {
+        if (isLoaded) {
+            try {
+                return decompressGzipNative(compressed)
+            } catch (e: UnsatisfiedLinkError) {
+                Log.w(TAG, "UnsatisfiedLinkError fallback for decompressGzip", e)
+            }
+        }
+        return null
+    }
+
+    fun parseWebcastFrame(data: ByteArray): String {
+        if (isLoaded) {
+            try {
+                return parseWebcastFrameNative(data)
+            } catch (e: UnsatisfiedLinkError) {
+                Log.w(TAG, "UnsatisfiedLinkError fallback for parseWebcastFrame", e)
+            }
+        }
+        return "{}"
     }
 }

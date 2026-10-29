@@ -1,0 +1,6 @@
+# TikTok Live Stream & Real-Time Event Extraction Dependencies
+TikTokLive>=3.0.0
+websocket-client>=1.7.0
+aiohttp>=3.9.0
+protobuf>=4.25.0
+httpx>=0.27.0
