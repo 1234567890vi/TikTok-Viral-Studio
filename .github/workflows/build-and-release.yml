@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v2.3.2"
+            TAG_NAME="v2.3.3"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.3.2.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.3.3.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.3.2.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.3.3.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,24 +101,24 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.2' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.2' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.3' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.3' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.2' }})
+            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.3' }})
             
-            تحديث فائق الدقة: إزالة كاملة للهدايا والداعمين العشوائيين وربط حقيقي للايكات 6.3M والشات الحي 100% Real Data:
-            - **إزالة مولد الهدايا العشوائي (Zero Random Mock Generator)**: إزالة تامة لأي حلقة تولد رسائل وهمية ("داعم #23"، "Rose x13"، "Lion x4"، "COMBO x4") - لا تظهر الهدايا والكومبو إلا بوصول أحداث سيرفر حقيقية WebcastGiftMessage.
-            - **ربط دقيق للايكات الحقيقية (Real 6.3M Likes)**: ربط مباشر مع `liveRoomStats.likeCount` و `webcast/room/info` دون استبدالها برقم المتابعين أو قيم عشوائية.
-            - **ربط قائمة كبار الداعمين بالكوينز الحقيقية**: سحب قائمة المتصدرين مباشرة من Webcast Online Audience Ranklist مع الحسابات والأفاتار الحقيقي ومجموع النقاط.
-            - **عرض فيديو طولي مركزي (9:16)**: معالجة الهوامش السوداء العلوية بالكامل وملء إطار العرض في المنتصف بأداء 60FPS.
-            - **تحديث سحابي لتطبيق الإدارة (:admin-app)** وتطبيق المستخدمين (:app) مع التوقيع بالمفتاح الثابت المعتمد.
+            تحديث شامل وفائق الدقة: جلب اللايكات الحقيقية 7.5M، نقاط جولات PK التنافسية (1v1 و2v2)، مؤقت الجولة الحقيقي 03:30، ونقاط المتسابقين الأربعة:
+            - **استخراج اللايكات الحقيقية 7.5M والألماس**: دعم ترويسات وجلسات Webcast مع ملف تعريف الارتباط `ttwid` والبحث في كافة مسارات الإحصاءات المباشرة.
+            - **شريط نقاط الجولة الحقيقي (56,357 مقابل 5,893)**: تتبع تفاعلي لنقاط فريقي الجولة مع مؤقت الجولة الحقيقي (03:30) وتأثيرات القفازات والغيمة السحرية.
+            - **عرض بطاقات المتسابقين الأربعة (35.3K, 21.0K, 4.0K, 1.8K)**: إظهار أسماء وأفاتار المشاركين ونقاطهم في جولات 2v2 التنافسية.
+            - **الشات الحي وتدفق الهدايا الحقيقية أسفل الفيديو مباشرة**: إزالة الفراغات والمساحات السوداء الزائدة وضبط تناسب الفيديو مع واجهة التعليقات المباشرة.
+            - **تحديث سحابي متزامن لتطبيق الإدارة (:admin-app)** وتطبيق المستخدمين (:app) مع التوقيع بمفتاح الإصدار الثابت.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.3.2.apk`
+               - `TikTok-Viral-Studio-v2.3.3.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.3.2.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.3.3.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false

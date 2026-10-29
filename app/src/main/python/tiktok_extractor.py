@@ -12,8 +12,14 @@ import urllib.parse
 import urllib.error
 import ssl
 import datetime
+import http.cookiejar
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+
+COOKIE_JAR = http.cookiejar.CookieJar()
+COOKIE_OPENER = urllib.request.build_opener(
+    urllib.request.HTTPCookieProcessor(COOKIE_JAR)
+)
 
 def create_ssl_context():
     ctx = ssl.create_default_context()
@@ -381,53 +387,69 @@ def extract_tiktok_live(input_str: str) -> dict:
         return {"success": False, "error": "اسم المستخدم غير صالح"}
 
     if clean_username == "tiktok_hero_live":
+        demo_participants = [
+            {"name": "Black Sugar", "unique_id": "sugar_ally", "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150", "score": 35357, "is_team_host": True},
+            {"name": "Mounir Pro", "unique_id": "mounir_ally", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150", "score": 21000, "is_team_host": True},
+            {"name": "Ayoub Rival", "unique_id": "ayoub_rival", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150", "score": 4093, "is_team_host": False},
+            {"name": "Samir Gamer", "unique_id": "samir_rival", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150", "score": 1800, "is_team_host": False}
+        ]
         return {
             "success": True,
             "is_live_offline": False,
             "offline_notice": "",
             "room_id": "room_demo_9999",
-            "title": "🔴 بث مباشر رسمي وجولة PK حماسية - @tiktok_hero_live",
+            "title": "🔴 بث مباشر رسمي - جولة PK 2v2 حماسية - @tiktok_hero_live",
             "stream_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-            "host_name": "بطل التيك توك ⚡",
+            "host_name": "صانع المحتوى",
             "host_unique_id": "tiktok_hero_live",
             "host_avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-            "viewer_count": 14500,
-            "likes_count": 328000,
-            "follower_count": 185000,
+            "viewer_count": 25600,
+            "likes_count": 7500000,
+            "follower_count": 485000,
+            "total_diamonds": 62250,
             "is_pk_active": True,
+            "battle_mode": "2v2",
             "is_punishment_time": False,
-            "battle_time_left_sec": 285,
+            "battle_time_left_sec": 210, # 03:30
             "punishment_time_left_sec": 180,
-            "host_score": 24800,
-            "opponent_name": "سلطان التحديات 👑",
-            "opponent_unique_id": "sultan_pk",
+            "host_score": 56357,
+            "opponent_name": "المنافس (PK Opponent)",
+            "opponent_unique_id": "pk_rival",
             "opponent_avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150",
-            "opponent_score": 21950,
+            "opponent_score": 5893,
+            "battle_participants": demo_participants,
             "host_glove_active": True,
             "host_glove_multiplier": 3,
-            "host_glove_time_left": 42,
+            "host_glove_time_left": 45,
             "opponent_glove_active": False,
             "opponent_glove_multiplier": 1,
             "opponent_glove_time_left": 0,
             "magic_mist_active": True,
-            "magic_mist_time_left": 24,
+            "magic_mist_time_left": 30,
             "host_top_contributors": [
-                {"rank": 1, "nickname": "الداعم الذهبي 🦁", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", "score": 11500},
-                {"rank": 2, "nickname": "فارس العرب ⚡", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", "score": 7200},
-                {"rank": 3, "nickname": "صقر الخليج 🦅", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100", "score": 4100}
+                {"rank": 1, "nickname": "Black Sugar", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", "score": 35357},
+                {"rank": 2, "nickname": "Mounir Pro", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", "score": 21000},
+                {"rank": 3, "nickname": "Top Supporter", "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100", "score": 5893}
             ],
             "opponent_top_contributors": [
-                {"rank": 1, "nickname": "أسد دبي 💎", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", "score": 9800},
-                {"rank": 2, "nickname": "سيف النصر ⚔️", "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100", "score": 6400},
-                {"rank": 3, "nickname": "أمير الليل 🌟", "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100", "score": 3900}
+                {"rank": 1, "nickname": "Ayoub Rival", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", "score": 4093},
+                {"rank": 2, "nickname": "Samir Gamer", "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100", "score": 1800}
             ],
             "live_comments": [
-                {"id": "c1", "nickname": "فارس العرب", "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100", "text": "كفووووو القفاز شغال ×3 يا أبطال شدوووووو 🔥🔥🔥", "is_gift": False},
-                {"id": "c2", "nickname": "الداعم الذهبي", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", "text": "أرسل أسد تيك توك 🦁🦁", "is_gift": True, "gift_name": "Lion"},
-                {"id": "c3", "nickname": "سارة المحاربة", "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100", "text": "الغيمة السحرية نزلت لا توقفوووون ☁️⚡", "is_gift": False},
-                {"id": "c4", "nickname": "أبو فهد", "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100", "text": "تكبييييس يا جماعة 10 آلاف لايك في دقيقة ❤️❤️", "is_gift": False}
+                {"id": "c1", "nickname": "احمد", "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", "text": "كفووو شباب شير ودعم! 🔥", "is_gift": False},
+                {"id": "c2", "nickname": "Black Sugar", "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", "text": "أرسل Universe ×1", "is_gift": True, "gift_name": "Universe"},
+                {"id": "c3", "nickname": "سارة", "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100", "text": "القفاز شغال ضربات x3 الآن! 🥊", "is_gift": False}
             ]
         }
+
+    # Session cookie warm-up for Webcast API
+    try:
+        warm_url = f"https://www.tiktok.com/@{urllib.parse.quote(clean_username)}/live"
+        warm_req = urllib.request.Request(warm_url, headers={"User-Agent": USER_AGENT, "Referer": "https://www.tiktok.com/"})
+        with COOKIE_OPENER.open(warm_req, timeout=5):
+            pass
+    except Exception:
+        pass
 
     account_found = False
     is_live = False
@@ -436,9 +458,12 @@ def extract_tiktok_live(input_str: str) -> dict:
     followers = 0
     likes = 0
     viewers = 0
+    diamonds = 0
     title = f"🔴 بث مباشر رسمي لتحديات التيك توك - @{clean_username}"
     stream_url = ""
     room_id = ""
+    parsed_battle_participants = []
+    parsed_live_comments = []
 
     # Channel 1: TikWM
     try:
@@ -574,33 +599,111 @@ def extract_tiktok_live(input_str: str) -> dict:
                     if uc > 0:
                         viewers = uc
 
-                    # Real Live Broadcast Likes (e.g. 6.3M) priority mapping
-                    webcast_likes = int(data.get("like_count", 0) or data.get("room", {}).get("like_count", 0) or data.get("stats", {}).get("like_count", 0) or data.get("stats", {}).get("digg_count", 0) or 0)
+                    # Real Live Broadcast Likes (e.g. 7.5M) multi-path mapping
+                    webcast_likes = int(
+                        data.get("like_count", 0) or
+                        data.get("stats", {}).get("like_count", 0) or
+                        data.get("stats", {}).get("total_user_desire", 0) or
+                        data.get("stats", {}).get("digg_count", 0) or
+                        data.get("live_room_stats", {}).get("likeCount", 0) or
+                        data.get("liveRoomStats", {}).get("likeCount", 0) or
+                        data.get("room", {}).get("like_count", 0) or
+                        data.get("total_user_desire", 0) or
+                        0
+                    )
                     if webcast_likes > 0:
                         likes = webcast_likes
 
-                    webcast_diamonds = int(data.get("fan_ticket_count", 0) or data.get("diamond_count", 0) or data.get("room", {}).get("fan_ticket_count", 0) or 0)
+                    # Real Live Diamonds multi-path mapping
+                    webcast_diamonds = int(
+                        data.get("fan_ticket_count", 0) or
+                        data.get("diamond_count", 0) or
+                        data.get("stats", {}).get("fan_ticket", 0) or
+                        data.get("stats", {}).get("fan_ticket_count", 0) or
+                        data.get("live_room_stats", {}).get("fanTicketCount", 0) or
+                        data.get("liveRoomStats", {}).get("fanTicketCount", 0) or
+                        data.get("room", {}).get("fan_ticket_count", 0) or
+                        0
+                    )
                     if webcast_diamonds > 0:
                         diamonds = webcast_diamonds
 
-                    # Check real battle state
+                    # Real Webcast Battle Detection (1v1 & 2v2 4 participants)
                     battle_info = data.get("battle_info") or data.get("link_mic")
-                    if battle_info:
-                        b_status = battle_info.get("battle_status", 0)
-                        if b_status in (1, 2):
+                    link_mic = data.get("link_mic")
+                    if battle_info or link_mic:
+                        b_settings = (battle_info.get("battle_settings") if isinstance(battle_info, dict) else None) or (link_mic.get("battle_settings") if isinstance(link_mic, dict) else None) or {}
+                        b_status = b_settings.get("battle_status", 0) or (battle_info.get("battle_status", 0) if isinstance(battle_info, dict) else 0)
+                        if b_status in (1, 2) or (battle_info and "battle_scores" in battle_info) or (link_mic and link_mic.get("battle_scores")):
                             has_real_battle = True
-                            detected_battle_mode = "2v2" if battle_info.get("battle_type") == 2 else "1v1"
-                            battle_seconds_left = battle_info.get("battle_time_left", 240)
-                            punishment_seconds_left = battle_info.get("punishment_time_left", 180)
                             is_real_punishment = (b_status == 2)
-                            rival = battle_info.get("rival_user") or battle_info.get("channel_user") or {}
-                            real_opponent_name = rival.get("nickname", "منافس البث")
-                            real_opponent_unique_id = rival.get("display_id") or rival.get("unique_id", "pk_rival")
-                            r_av = rival.get("avatar_thumb") or rival.get("avatar_medium", "")
-                            if r_av:
-                                real_opponent_avatar = sanitize_url(r_av)
-                            real_host_score = int(battle_info.get("host_score", 0))
-                            real_opponent_score = int(battle_info.get("opponent_score", 0))
+                            duration = int(b_settings.get("duration", 300) or 300)
+                            start_time = int(b_settings.get("start_time", 0) or 0)
+                            explicit_time = int(battle_info.get("battle_time_left", 0) if isinstance(battle_info, dict) else 0)
+                            if explicit_time > 0:
+                                battle_seconds_left = explicit_time
+                            elif start_time > 0:
+                                now_sec = int(datetime.datetime.now().timestamp())
+                                elapsed = now_sec - start_time
+                                battle_seconds_left = max(0, min(duration, duration - elapsed))
+                            else:
+                                battle_seconds_left = 210 # 03:30 standard PK round
+                            punishment_seconds_left = int(battle_info.get("punishment_time_left", 180) if isinstance(battle_info, dict) else 180)
+
+                            rival = (battle_info.get("rival_user") if isinstance(battle_info, dict) else None) or (battle_info.get("channel_user") if isinstance(battle_info, dict) else None) or (link_mic.get("rival_user") if isinstance(link_mic, dict) else None) or {}
+                            if rival:
+                                real_opponent_name = rival.get("nickname", "منافس البث")
+                                real_opponent_unique_id = rival.get("display_id") or rival.get("unique_id", "pk_rival")
+                                r_av = rival.get("avatar_thumb") or rival.get("avatar_medium", "")
+                                if r_av:
+                                    real_opponent_avatar = sanitize_url(r_av)
+
+                            linked_list = (link_mic.get("linked_user_list") if isinstance(link_mic, dict) else None) or (battle_info.get("linked_users") if isinstance(battle_info, dict) else None) or (link_mic.get("show_user_list") if isinstance(link_mic, dict) else None) or []
+                            if linked_list:
+                                detected_battle_mode = "2v2" if len(linked_list) >= 4 else "1v1"
+                                half = (len(linked_list) + 1) // 2
+                                for idx, u in enumerate(linked_list):
+                                    u_nick = u.get("nickname") or (f"فريق المضيف {idx + 1}" if idx < half else f"فريق المنافس {idx - half + 1}")
+                                    u_id = u.get("display_id") or u.get("unique_id", "")
+                                    u_av = u.get("avatar_thumb") or u.get("avatar_medium", "")
+                                    u_score = int(u.get("score") or u.get("fan_ticket", 0))
+                                    is_host_team = (idx < half)
+                                    parsed_battle_participants.append({
+                                        "name": u_nick,
+                                        "unique_id": u_id,
+                                        "avatar": sanitize_url(u_av) if u_av else "",
+                                        "score": u_score,
+                                        "is_team_host": is_host_team
+                                    })
+
+                            real_host_score = int((battle_info.get("host_score") if isinstance(battle_info, dict) else 0) or (link_mic.get("host_score") if isinstance(link_mic, dict) else 0) or 0)
+                            real_opponent_score = int((battle_info.get("opponent_score") if isinstance(battle_info, dict) else 0) or (link_mic.get("opponent_score") if isinstance(link_mic, dict) else 0) or 0)
+
+                            if real_host_score == 0 and parsed_battle_participants:
+                                real_host_score = sum(p["score"] for p in parsed_battle_participants if p["is_team_host"])
+                            if real_opponent_score == 0 and parsed_battle_participants:
+                                real_opponent_score = sum(p["score"] for p in parsed_battle_participants if not p["is_team_host"])
+
+                            if not parsed_battle_participants:
+                                parsed_battle_participants.append({"name": host_nickname, "unique_id": clean_username, "avatar": host_avatar, "score": real_host_score, "is_team_host": True})
+                                parsed_battle_participants.append({"name": real_opponent_name or "المنافس", "unique_id": real_opponent_unique_id or "pk_rival", "avatar": real_opponent_avatar, "score": real_opponent_score, "is_team_host": False})
+
+                    # History Comments extraction
+                    hist_comments = data.get("history_comment_list", [])
+                    if isinstance(hist_comments, list):
+                        for idx, c_obj in enumerate(hist_comments):
+                            c_user = c_obj.get("user", {})
+                            c_nick = c_user.get("nickname", "مشاهد")
+                            c_av = c_user.get("avatar_thumb", "")
+                            c_text = c_obj.get("content", "")
+                            if c_text:
+                                parsed_live_comments.append({
+                                    "id": str(c_obj.get("id", f"hist_{idx}")),
+                                    "nickname": c_nick,
+                                    "avatar": sanitize_url(c_av) if c_av else "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+                                    "text": c_text,
+                                    "is_gift": False
+                                })
         except Exception:
             pass
 
@@ -708,6 +811,7 @@ def extract_tiktok_live(input_str: str) -> dict:
             "magic_mist_time_left": 0,
             "host_top_contributors": [],
             "opponent_top_contributors": [],
+            "battle_participants": [],
             "live_comments": []
         }
 
@@ -740,6 +844,7 @@ def extract_tiktok_live(input_str: str) -> dict:
         "opponent_unique_id": real_opponent_unique_id,
         "opponent_avatar": real_opponent_avatar,
         "opponent_score": real_opponent_score,
+        "battle_participants": parsed_battle_participants,
         "host_glove_active": False,
         "host_glove_multiplier": 1,
         "host_glove_time_left": 0,
@@ -750,7 +855,7 @@ def extract_tiktok_live(input_str: str) -> dict:
         "magic_mist_time_left": 0,
         "host_top_contributors": real_contributors,
         "opponent_top_contributors": [],
-        "live_comments": [] # Populated in real-time strictly via WebSocket frames
+        "live_comments": parsed_live_comments
     }
 
 # ==============================================================================

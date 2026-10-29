@@ -65,6 +65,7 @@ fun LiveTrackerScreen(
     var isPunishment by remember { mutableStateOf(false) }
     var hostScore by remember { mutableLongStateOf(0L) }
     var opponentScore by remember { mutableLongStateOf(0L) }
+    var battleParticipants by remember { mutableStateOf<List<BattleParticipant>>(emptyList()) }
     var gloveTimeLeft by remember { mutableIntStateOf(0) }
     var mistTimeLeft by remember { mutableIntStateOf(0) }
     var isMistActive by remember { mutableStateOf(false) }
@@ -81,6 +82,7 @@ fun LiveTrackerScreen(
         if (current != null && !current.isLiveOffline) {
             hostScore = current.hostScore
             opponentScore = current.opponentScore
+            battleParticipants = current.battleParticipants
             battleTimeLeft = current.battleTimeLeftSec
             punishmentTimeLeft = current.punishmentTimeLeftSec
             isPkActive = current.isPkActive
@@ -144,6 +146,9 @@ fun LiveTrackerScreen(
                     hostScore = event.hostScore
                     opponentScore = event.opponentScore
                     if (event.totalDiamonds > 0L) totalDiamonds = event.totalDiamonds
+                    if (event.participants.isNotEmpty()) {
+                        battleParticipants = event.participants
+                    }
                 }
                 is WebcastLiveEvent.GloveState -> {
                     gloveTimeLeft = event.timeLeftSec
@@ -509,6 +514,7 @@ fun LiveTrackerScreen(
                                 punishmentTimeLeft = punishmentTimeLeft,
                                 battleMode = battleMode,
                                 opponentName = currentRoom.opponentName.ifBlank { "منافس الجولة" },
+                                participants = if (battleParticipants.isNotEmpty()) battleParticipants else currentRoom.battleParticipants,
                                 strings = strings
                             )
                         }
@@ -773,6 +779,7 @@ fun PkBattleScoreBar(
     battleMode: String,
     opponentName: String,
     strings: AppStrings,
+    participants: List<BattleParticipant> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val mistFogAlpha by rememberInfiniteTransition(label = "mistFog").animateFloat(
@@ -948,6 +955,49 @@ fun PkBattleScoreBar(
                 }
             }
 
+            // 4-Participant Score Badges (2v2 Team 1 vs Team 2)
+            if (participants.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Team 1 (Red / Host Side) Badges
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        participants.filter { it.isTeamHost }.take(2).forEach { p ->
+                            ParticipantBadge(participant = p, isTeamHost = true)
+                            Spacer(modifier = Modifier.width(4.dp))
+                        }
+                    }
+
+                    // Collision "VS" Badge
+                    Text(
+                        text = "VS",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black,
+                        color = GoldVip,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+
+                    // Team 2 (Blue / Opponent Side) Badges
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        participants.filter { !it.isTeamHost }.take(2).forEach { p ->
+                            Spacer(modifier = Modifier.width(4.dp))
+                            ParticipantBadge(participant = p, isTeamHost = false)
+                        }
+                    }
+                }
+            }
+
             // Active Gloves & Badges Row
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -1008,6 +1058,49 @@ fun PkBattleScoreBar(
 }
 
 @Composable
+private fun ParticipantBadge(
+    participant: BattleParticipant,
+    isTeamHost: Boolean
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (isTeamHost) DangerRed.copy(alpha = 0.18f) else Color(0xFF2979FF).copy(alpha = 0.18f),
+        border = BorderStroke(1.dp, if (isTeamHost) DangerRed.copy(alpha = 0.6f) else Color(0xFF2979FF).copy(alpha = 0.6f))
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+        ) {
+            if (participant.avatar.isNotBlank()) {
+                AsyncImage(
+                    model = participant.avatar,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Text(
+                text = participant.name.take(9),
+                fontSize = 9.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = formatMetric(participant.score),
+                fontSize = 9.5.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = if (isTeamHost) NeonPink else NeonCyan
+            )
+        }
+    }
+}
+
+@Composable
 fun LivePlayerWithOverlays(
     streamUrl: String,
     opponentStreamUrl: String?,
@@ -1023,7 +1116,8 @@ fun LivePlayerWithOverlays(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(9f / 16f) // Full 9:16 Portrait Aspect Ratio
+            .heightIn(min = 340.dp, max = 460.dp)
+            .aspectRatio(9f / 13.5f, matchHeightConstraintsFirst = false)
             .clip(RoundedCornerShape(20.dp))
             .border(1.5.dp, GlassBorder, RoundedCornerShape(20.dp))
             .graphicsLayer { clip = true },
