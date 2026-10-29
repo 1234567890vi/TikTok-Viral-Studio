@@ -1083,46 +1083,40 @@ fun LivePlayerWithOverlays(
             }
 
             // Real-Time Genuine Combo Strike Overlay (Only active when real gift is received)
-            AnimatedVisibility(
-                visible = lastComboEvent != null,
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-            ) {
-                if (lastComboEvent != null) {
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.Black.copy(alpha = 0.85f),
-                        border = BorderStroke(1.dp, GoldVip),
-                        modifier = Modifier.graphicsLayer { clip = true }
+            if (lastComboEvent != null) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.Black.copy(alpha = 0.85f),
+                    border = BorderStroke(1.dp, GoldVip),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .graphicsLayer { clip = true }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) {
-                            RealWebcastGiftBadge(
-                                giftName = lastComboEvent.giftName,
-                                iconUrl = lastComboEvent.iconUrl,
-                                size = 28.dp
+                        RealWebcastGiftBadge(
+                            giftName = lastComboEvent.giftName,
+                            iconUrl = lastComboEvent.iconUrl,
+                            size = 28.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "COMBO ×${lastComboEvent.comboCount}",
+                                fontWeight = FontWeight.Bold,
+                                color = GoldVip,
+                                fontSize = 12.sp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = "COMBO ×${lastComboEvent.comboCount}",
-                                    fontWeight = FontWeight.Bold,
-                                    color = GoldVip,
-                                    fontSize = 12.sp
-                                )
-                                Text(
-                                    text = "${lastComboEvent.nickname}: ${lastComboEvent.giftName}",
-                                    color = TextPrimary,
-                                    fontSize = 10.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                            Text(
+                                text = "${lastComboEvent.nickname}: ${lastComboEvent.giftName}",
+                                color = TextPrimary,
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }

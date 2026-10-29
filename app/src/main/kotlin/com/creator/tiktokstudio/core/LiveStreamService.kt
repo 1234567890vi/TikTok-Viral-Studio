@@ -127,7 +127,7 @@ sealed class WebcastLiveEvent {
 
     data class TopContributorsUpdate(
         val hostContributors: List<LiveContributor>,
-        val opponentContributors: List<LiveContributor>
+        val opponentContributors: List<LiveContributor> = emptyList()
     ) : WebcastLiveEvent()
 
     data class ConnectionState(
@@ -532,7 +532,7 @@ object LiveStreamService {
             if (foundRoomId.isNotBlank() && foundRoomId != "0" && isLiveActive) {
                 realTopContributors = fetchTopOnlineAudience(foundRoomId)
                 if (diamonds == 0L && realTopContributors.isNotEmpty()) {
-                    diamonds = realTopContributors.sumOf { it.diamondCount }
+                    diamonds = realTopContributors.sumOf { it.score }
                 }
             }
 
@@ -662,7 +662,7 @@ object LiveStreamService {
                                 av = user?.optString("avatar_thumb", "").orEmpty()
                             }
                             if (av.isNotBlank()) av = TikTokDownloaderService.sanitizeUrl(av)
-                            list.add(LiveContributor(rank = rankNum, nickname = nick, avatar = av, diamondCount = score))
+                            list.add(LiveContributor(rank = rankNum, nickname = nick, avatar = av, score = score))
                         }
                         return@withContext list
                     }
@@ -914,7 +914,7 @@ object LiveStreamService {
                     try {
                         val realContributors = fetchTopOnlineAudience(room.roomId)
                         if (realContributors.isNotEmpty()) {
-                            _eventsFlow.emit(WebcastLiveEvent.TopContributorsUpdate(realContributors))
+                            _eventsFlow.emit(WebcastLiveEvent.TopContributorsUpdate(realContributors, emptyList()))
                         }
                     } catch (ignored: Exception) {}
                 }
