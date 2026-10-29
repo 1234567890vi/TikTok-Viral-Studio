@@ -32,8 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.creator.tiktokstudio.core.*
-import com.creator.tiktokstudio.ui.components.LiveVideoPlayer
-import com.creator.tiktokstudio.ui.components.ProcessingStepsBox
+import com.creator.tiktokstudio.ui.components.*
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -61,15 +60,17 @@ fun LiveTrackerScreen(
     // Reactive Webcast Event States (Updated strictly via SharedFlow - Zero Polling)
     var battleTimeLeft by remember { mutableIntStateOf(285) }
     var punishmentTimeLeft by remember { mutableIntStateOf(180) }
-    var isPkActive by remember { mutableStateOf(true) }
+    var isPkActive by remember { mutableStateOf(false) }
+    var battleMode by remember { mutableStateOf("1v1") }
     var isPunishment by remember { mutableStateOf(false) }
-    var hostScore by remember { mutableLongStateOf(24800L) }
-    var opponentScore by remember { mutableLongStateOf(21950L) }
-    var gloveTimeLeft by remember { mutableIntStateOf(45) }
-    var mistTimeLeft by remember { mutableIntStateOf(30) }
-    var isMistActive by remember { mutableStateOf(true) }
-    var totalViewers by remember { mutableLongStateOf(14500L) }
-    var totalLikes by remember { mutableLongStateOf(185000L) }
+    var hostScore by remember { mutableLongStateOf(0L) }
+    var opponentScore by remember { mutableLongStateOf(0L) }
+    var gloveTimeLeft by remember { mutableIntStateOf(0) }
+    var mistTimeLeft by remember { mutableIntStateOf(0) }
+    var isMistActive by remember { mutableStateOf(false) }
+    var totalViewers by remember { mutableLongStateOf(0L) }
+    var totalLikes by remember { mutableLongStateOf(0L) }
+    var totalDiamonds by remember { mutableLongStateOf(0L) }
     var topContributors by remember { mutableStateOf<List<LiveContributor>>(emptyList()) }
     var liveCommentsList by remember { mutableStateOf<List<LiveComment>>(emptyList()) }
     var lastGiftCombo by remember { mutableStateOf<WebcastLiveEvent.Gift?>(null) }
@@ -83,12 +84,14 @@ fun LiveTrackerScreen(
             battleTimeLeft = current.battleTimeLeftSec
             punishmentTimeLeft = current.punishmentTimeLeftSec
             isPkActive = current.isPkActive
+            battleMode = current.battleMode
             isPunishment = current.isPunishmentTime
             gloveTimeLeft = current.hostGloveTimeLeft
             mistTimeLeft = current.magicMistTimeLeft
             isMistActive = current.magicMistActive
             totalViewers = current.viewerCount
             totalLikes = current.likesCount
+            totalDiamonds = current.totalDiamonds
             topContributors = current.hostTopContributors
             liveCommentsList = current.liveComments
 
@@ -111,14 +114,17 @@ fun LiveTrackerScreen(
                 }
                 is WebcastLiveEvent.Gift -> {
                     lastGiftCombo = event
+                    totalDiamonds = event.totalDiamonds
                     liveCommentsList = (listOf(
                         LiveComment(
                             id = event.id,
                             nickname = event.nickname,
                             avatar = event.avatar,
-                            text = "أرسل ${event.giftName} ×${event.comboCount} 🎁",
+                            text = "أرسل ${event.giftName} ×${event.comboCount}",
                             isGift = true,
-                            giftName = event.giftName
+                            giftName = event.giftName,
+                            giftIconUrl = event.iconUrl,
+                            comboCount = event.comboCount
                         )
                     ) + liveCommentsList).take(30)
                 }
@@ -131,6 +137,7 @@ fun LiveTrackerScreen(
                 is WebcastLiveEvent.BattleScore -> {
                     hostScore = event.hostScore
                     opponentScore = event.opponentScore
+                    if (event.totalDiamonds > 0L) totalDiamonds = event.totalDiamonds
                 }
                 is WebcastLiveEvent.GloveState -> {
                     gloveTimeLeft = event.timeLeftSec
@@ -176,7 +183,7 @@ fun LiveTrackerScreen(
                 if (it.isLiveOffline) {
                     Toast.makeText(context, strings.liveOfflineNotice, Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "تم الاتصال اللحظي بالبث والجولة (WebSocket 0ms)! 🔴", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "تم الاتصال بالبث المباشر (WebSocket 0ms)! 🔴", Toast.LENGTH_SHORT).show()
                 }
             }.onFailure {
                 val rawMsg = it.localizedMessage ?: ""
@@ -461,37 +468,47 @@ fun LiveTrackerScreen(
                         }
                     }
                 } else {
-                    // Top Live Info & Clean Mode Bar (Isolated Composable)
+                    // Top Live Info Bar (Isolated Composable)
                     item {
                         LiveRoomHeaderBar(
                             hostAvatar = currentRoom.hostAvatar,
                             hostName = currentRoom.hostName,
-                            viewersCount = totalViewers,
-                            likesCount = totalLikes,
                             isCleanMode = isCleanMode,
                             onToggleCleanMode = { isCleanMode = !isCleanMode },
                             strings = strings
                         )
                     }
 
-                    // Section 4: PK Battle Status Bar (Isolated Composable)
+                    // Section 4: The 3 Real-Time Telemetry Cards Directly Above Video
                     item {
-                        PkBattleScoreBar(
-                            hostScore = hostScore,
-                            opponentScore = opponentScore,
-                            isMistActive = isMistActive,
-                            mistTimeLeft = mistTimeLeft,
-                            gloveTimeLeft = gloveTimeLeft,
-                            isPunishment = isPunishment,
-                            battleTimeLeft = battleTimeLeft,
-                            punishmentTimeLeft = punishmentTimeLeft,
-                            isPkActive = isPkActive,
-                            opponentName = currentRoom.opponentName,
+                        TopTelemetryBar(
+                            viewerCount = totalViewers,
+                            likesCount = totalLikes,
+                            diamondsCount = totalDiamonds,
                             strings = strings
                         )
                     }
 
-                    // Section 5: Low-Latency Video Player & PK Overlays (Isolated Composable)
+                    // Section 5: PK Battle Status Bar (Displayed when PK Battle is Active)
+                    if (isPkActive) {
+                        item {
+                            PkBattleScoreBar(
+                                hostScore = hostScore,
+                                opponentScore = opponentScore,
+                                isMistActive = isMistActive,
+                                mistTimeLeft = mistTimeLeft,
+                                gloveTimeLeft = gloveTimeLeft,
+                                isPunishment = isPunishment,
+                                battleTimeLeft = battleTimeLeft,
+                                punishmentTimeLeft = punishmentTimeLeft,
+                                battleMode = battleMode,
+                                opponentName = currentRoom.opponentName.ifBlank { "منافس الجولة" },
+                                strings = strings
+                            )
+                        }
+                    }
+
+                    // Section 6: Full 9:16 Portrait Video Player & Overlays
                     item {
                         LivePlayerWithOverlays(
                             streamUrl = currentRoom.streamUrl,
@@ -508,21 +525,25 @@ fun LiveTrackerScreen(
                         )
                     }
 
-                    // Section 6: Top 3 MVP Contributors (Isolated Composable, Hidden in Clean Mode)
+                    // Section 7: Top MVP Contributors (Hidden in Clean Mode)
                     if (!isCleanMode) {
-                        item {
-                            TopContributorsSection(
-                                contributors = if (topContributors.isNotEmpty()) topContributors else currentRoom.hostTopContributors,
-                                strings = strings
-                            )
+                        if (topContributors.isNotEmpty() || currentRoom.hostTopContributors.isNotEmpty()) {
+                            item {
+                                TopContributorsSection(
+                                    contributors = if (topContributors.isNotEmpty()) topContributors else currentRoom.hostTopContributors,
+                                    strings = strings
+                                )
+                            }
                         }
 
-                        // Section 7: Live Comments & Gifts Feed (Isolated Composable)
-                        item {
-                            LiveCommentsSection(
-                                comments = if (liveCommentsList.isNotEmpty()) liveCommentsList else currentRoom.liveComments,
-                                strings = strings
-                            )
+                        // Section 8: Live Comments & Real-Time Gifts Feed
+                        if (liveCommentsList.isNotEmpty() || currentRoom.liveComments.isNotEmpty()) {
+                            item {
+                                LiveCommentsSection(
+                                    comments = if (liveCommentsList.isNotEmpty()) liveCommentsList else currentRoom.liveComments,
+                                    strings = strings
+                                )
+                            }
                         }
                     }
                 }
@@ -532,15 +553,119 @@ fun LiveTrackerScreen(
 }
 
 // ==============================================================================
-// Isolated 60FPS UI Components (Using graphicsLayer for Zero Overhead)
+// Isolated 60FPS UI Components (Custom 3D / Vector Canvas Icons)
 // ==============================================================================
+
+@Composable
+fun TopTelemetryBar(
+    viewerCount: Long,
+    likesCount: Long,
+    diamondsCount: Long,
+    strings: AppStrings,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .graphicsLayer { clip = true },
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Card 1: Viewers Now
+        Surface(
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(14.dp),
+            color = DarkSurfaceCard,
+            border = BorderStroke(1.dp, GlassBorder)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RealEyeViewerIcon(size = 20.dp, isPulsing = true)
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = formatMetric(viewerCount),
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = strings.viewersCountSuffix,
+                        color = TextSecondary,
+                        fontSize = 9.5.sp
+                    )
+                }
+            }
+        }
+
+        // Card 2: Cumulative Likes
+        Surface(
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(14.dp),
+            color = DarkSurfaceCard,
+            border = BorderStroke(1.dp, GlassBorder)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RealHeartLikeIcon(size = 20.dp, isPulsing = true)
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = formatMetric(likesCount),
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = strings.likesCountSuffix,
+                        color = TextSecondary,
+                        fontSize = 9.5.sp
+                    )
+                }
+            }
+        }
+
+        // Card 3: Total Support / Diamonds
+        Surface(
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(14.dp),
+            color = DarkSurfaceCard,
+            border = BorderStroke(1.dp, GlassBorder)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RealDiamondIcon(size = 20.dp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    Text(
+                        text = formatMetric(diamondsCount),
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF00F2FE),
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = "الألماس",
+                        color = TextSecondary,
+                        fontSize = 9.5.sp
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun LiveRoomHeaderBar(
     hostAvatar: String,
     hostName: String,
-    viewersCount: Long,
-    likesCount: Long,
     isCleanMode: Boolean,
     onToggleCleanMode: () -> Unit,
     strings: AppStrings,
@@ -558,41 +683,47 @@ fun LiveRoomHeaderBar(
                 model = hostAvatar,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(38.dp)
                     .clip(CircleShape)
                     .border(1.5.dp, DangerRed, CircleShape),
                 contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = hostName,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
+                        fontSize = 14.sp,
                         color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = DangerRed
                     ) {
-                        Text(
-                            text = "LIVE 🔴",
-                            color = TextPrimary,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "LIVE",
+                                color = TextPrimary,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
-                Text(
-                    text = "👥 ${formatMetric(viewersCount)} ${strings.viewersCountSuffix} • ❤️ ${formatMetric(likesCount)} ${strings.likesCountSuffix}",
-                    fontSize = 10.sp,
-                    color = TextSecondary
-                )
             }
         }
 
@@ -604,7 +735,7 @@ fun LiveRoomHeaderBar(
             ),
             border = BorderStroke(1.dp, if (isCleanMode) NeonCyan else GlassBorder),
             shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
         ) {
             Icon(
                 imageVector = if (isCleanMode) Icons.Default.Visibility else Icons.Default.VisibilityOff,
@@ -612,7 +743,7 @@ fun LiveRoomHeaderBar(
                 tint = if (isCleanMode) NeonCyan else TextSecondary,
                 modifier = Modifier.size(14.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = if (isCleanMode) strings.normalModeBtn else strings.cleanModeBtn,
                 fontSize = 11.sp,
@@ -633,24 +764,13 @@ fun PkBattleScoreBar(
     isPunishment: Boolean,
     battleTimeLeft: Int,
     punishmentTimeLeft: Int,
-    isPkActive: Boolean,
+    battleMode: String,
     opponentName: String,
     strings: AppStrings,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pkAnims")
-    val glovePulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(700, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glovePulse"
-    )
-
-    val mistFogAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.55f,
+    val mistFogAlpha by rememberInfiniteTransition(label = "mistFog").animateFloat(
+        initialValue = 0.60f,
         targetValue = 0.95f,
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = LinearEasing),
@@ -659,8 +779,7 @@ fun PkBattleScoreBar(
         label = "mistAlpha"
     )
 
-    val statusText = if (isPkActive) strings.battleActiveBadge else strings.punishmentTimeBadge
-    val timeLeft = if (isPkActive) battleTimeLeft else punishmentTimeLeft
+    val timeLeft = if (!isPunishment) battleTimeLeft else punishmentTimeLeft
     val minutes = timeLeft / 60
     val seconds = timeLeft % 60
     val timerStr = String.format(Locale.US, "%02d:%02d", minutes, seconds)
@@ -689,18 +808,13 @@ fun PkBattleScoreBar(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (isPkActive) Icons.Default.FlashOn else Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        tint = if (isPkActive) GoldVip else DangerRed,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    RealBattleSwordsIcon(size = 18.dp)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = statusText,
+                        text = if (!isPunishment) "جولة $battleMode الحماسية" else strings.punishmentTimeBadge,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
-                        color = if (isPkActive) GoldVip else DangerRed
+                        color = if (!isPunishment) GoldVip else DangerRed
                     )
                 }
 
@@ -709,14 +823,20 @@ fun PkBattleScoreBar(
                     color = Color(0x33000000),
                     border = BorderStroke(1.dp, Color(0x33FFFFFF))
                 ) {
-                    Text(
-                        text = "⏳ $timerStr",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        RealClockIcon(size = 14.dp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = timerStr,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                            color = TextPrimary
+                        )
+                    }
                 }
             }
 
@@ -726,8 +846,8 @@ fun PkBattleScoreBar(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(14.dp))
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(15.dp))
                     .background(DarkSurfaceElevated)
             ) {
                 val totalScore = (hostScore + opponentScore).coerceAtLeast(1L)
@@ -742,16 +862,20 @@ fun PkBattleScoreBar(
                             .background(
                                 Brush.horizontalGradient(listOf(Color(0xFFFF1744), Color(0xFFFF5252)))
                             )
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = 10.dp),
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Text(
-                            text = if (isMistActive) strings.magicMistHiddenScore else hostScore.toString(),
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            fontFamily = FontFamily.Monospace
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RealDiamondIcon(size = 14.dp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isMistActive) "???" else formatMetric(hostScore),
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
                     }
 
                     // Opponent Side (Blue)
@@ -762,25 +886,29 @@ fun PkBattleScoreBar(
                             .background(
                                 Brush.horizontalGradient(listOf(Color(0xFF2979FF), Color(0xFF00B0FF)))
                             )
-                            .padding(horizontal = 8.dp),
+                            .padding(horizontal = 10.dp),
                         contentAlignment = Alignment.CenterEnd
                     ) {
-                        Text(
-                            text = if (isMistActive) strings.magicMistHiddenScore else opponentScore.toString(),
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            fontFamily = FontFamily.Monospace
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (isMistActive) "???" else formatMetric(opponentScore),
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            RealDiamondIcon(size = 14.dp)
+                        }
                     }
                 }
 
-                // Middle Spark Divider
+                // Middle Collision Blades
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("⚡", fontSize = 14.sp)
+                    RealBattleSwordsIcon(size = 16.dp)
                 }
 
                 // Magic Mist Animated Cloud Fog
@@ -801,8 +929,8 @@ fun PkBattleScoreBar(
                         contentAlignment = Alignment.Center
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("☁️", fontSize = 14.sp)
-                            Spacer(modifier = Modifier.width(4.dp))
+                            RealDiamondIcon(size = 14.dp)
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "${strings.magicMistBadge} (${mistTimeLeft}s)",
                                 color = Color.White,
@@ -826,20 +954,21 @@ fun PkBattleScoreBar(
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = DangerRed.copy(alpha = 0.2f),
-                        border = BorderStroke(1.dp, DangerRed),
-                        modifier = Modifier.scale(glovePulseScale)
+                        border = BorderStroke(1.dp, DangerRed)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
-                            Text("🥊 ×3", fontWeight = FontWeight.Bold, color = DangerRed, fontSize = 11.sp)
+                            RealBoxingGloveIcon(size = 16.dp, isFlaming = true)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("×3", fontWeight = FontWeight.Bold, color = DangerRed, fontSize = 11.sp)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("${gloveTimeLeft}s", color = TextPrimary, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 } else {
-                    Text("قفاز خامل", color = TextMuted, fontSize = 10.sp)
+                    Text("القفاز خامل", color = TextMuted, fontSize = 10.sp)
                 }
 
                 // Winner Crown on Punishment Time
@@ -850,13 +979,19 @@ fun PkBattleScoreBar(
                         color = GoldVip.copy(alpha = 0.25f),
                         border = BorderStroke(1.dp, GoldVip)
                     ) {
-                        Text(
-                            text = if (isHostWinner) "👑 الفائز: المضيف WIN" else "👑 الفائز: الخصم WIN",
-                            color = GoldVip,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
+                        ) {
+                            RealCrownIcon(size = 16.dp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isHostWinner) "الفائز: المضيف WIN" else "الفائز: المنافس WIN",
+                                color = GoldVip,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
 
@@ -882,15 +1017,15 @@ fun LivePlayerWithOverlays(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(280.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .border(1.5.dp, GlassBorder, RoundedCornerShape(18.dp))
+            .aspectRatio(9f / 16f) // Full 9:16 Portrait Aspect Ratio
+            .clip(RoundedCornerShape(20.dp))
+            .border(1.5.dp, GlassBorder, RoundedCornerShape(20.dp))
             .graphicsLayer { clip = true },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Hardware SurfaceView ExoPlayer
+            // Hardware SurfaceView ExoPlayer in full 9:16
             LiveVideoPlayer(
                 streamUrl = streamUrl,
                 opponentStreamUrl = opponentStreamUrl,
@@ -900,15 +1035,15 @@ fun LivePlayerWithOverlays(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Opponent camera pip overlay if not split
-            if (isPkActive && opponentStreamUrl.isNullOrBlank()) {
+            // Opponent camera PIP overlay if in PK and single stream
+            if (isPkActive && opponentStreamUrl.isNullOrBlank() && opponentAvatar.isNotBlank()) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(width = 110.dp, height = 150.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.5.dp, Color(0xFF2979FF), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                        .size(width = 115.dp, height = 160.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .border(1.5.dp, Color(0xFF2979FF), RoundedCornerShape(14.dp))
                         .background(Color(0xDD111827))
                         .graphicsLayer { clip = true }
                 ) {
@@ -923,13 +1058,13 @@ fun LivePlayerWithOverlays(
                             .fillMaxWidth()
                             .background(Color(0xAA000000))
                             .align(Alignment.BottomCenter)
-                            .padding(2.dp),
+                            .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = opponentName,
                             color = Color.White,
-                            fontSize = 9.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -941,21 +1076,37 @@ fun LivePlayerWithOverlays(
             // Real-Time Combo Strike Overlay
             if (lastComboEvent != null) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color.Black.copy(alpha = 0.75f),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.Black.copy(alpha = 0.80f),
                     border = BorderStroke(1.dp, GoldVip),
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(10.dp)
+                        .padding(12.dp)
                         .graphicsLayer { clip = true }
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
-                        Text("🔥 COMBO ×${lastComboEvent.comboCount}", fontWeight = FontWeight.Bold, color = GoldVip, fontSize = 11.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(lastComboEvent.giftName, color = TextPrimary, fontSize = 10.sp)
+                        RealWebcastGiftBadge(
+                            giftName = lastComboEvent.giftName,
+                            iconUrl = lastComboEvent.iconUrl,
+                            size = 28.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "COMBO ×${lastComboEvent.comboCount}",
+                                fontWeight = FontWeight.Bold,
+                                color = GoldVip,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = lastComboEvent.giftName,
+                                color = TextPrimary,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
                 }
             }
@@ -965,9 +1116,9 @@ fun LivePlayerWithOverlays(
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 20.dp, bottom = 40.dp)
+                        .padding(end = 24.dp, bottom = 48.dp)
                 ) {
-                    FloatingHeart(label = heartClickCount.toString())
+                    FloatingHeartParticle(id = heartClickCount)
                 }
             }
 
@@ -975,15 +1126,15 @@ fun LivePlayerWithOverlays(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(10.dp)
+                    .padding(14.dp)
             ) {
                 FloatingActionButton(
                     onClick = onHeartClick,
                     containerColor = NeonPink,
                     shape = CircleShape,
-                    modifier = Modifier.size(46.dp)
+                    modifier = Modifier.size(52.dp)
                 ) {
-                    Icon(Icons.Default.Favorite, contentDescription = "Send Like", tint = Color.White)
+                    RealHeartLikeIcon(size = 28.dp, isPulsing = false)
                 }
             }
         }
@@ -1005,13 +1156,17 @@ fun TopContributorsSection(
         colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = "🏆 ${strings.topContributorsTitle}",
-                fontWeight = FontWeight.Bold,
-                color = GoldVip,
-                fontSize = 12.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RealTrophyIcon(rank = 1, size = 18.dp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.topContributorsTitle,
+                    fontWeight = FontWeight.Bold,
+                    color = GoldVip,
+                    fontSize = 13.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1042,13 +1197,17 @@ fun LiveCommentsSection(
         colors = CardDefaults.cardColors(containerColor = DarkSurfaceCard)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = "💬 ${strings.liveChatTitle}",
-                fontWeight = FontWeight.Bold,
-                color = NeonCyan,
-                fontSize = 12.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RealChatBubbleIcon(size = 18.dp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.liveChatTitle,
+                    fontWeight = FontWeight.Bold,
+                    color = NeonCyan,
+                    fontSize = 13.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
             comments.take(6).forEach { comment ->
                 Row(
                     modifier = Modifier
@@ -1056,14 +1215,22 @@ fun LiveCommentsSection(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AsyncImage(
-                        model = comment.avatar,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    if (comment.isGift) {
+                        RealWebcastGiftBadge(
+                            giftName = comment.giftName ?: "Rose",
+                            iconUrl = comment.giftIconUrl,
+                            size = 24.dp
+                        )
+                    } else {
+                        AsyncImage(
+                            model = comment.avatar,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
@@ -1096,24 +1263,21 @@ private fun ContributorPill(
         border = BorderStroke(1.dp, GlassBorder)
     ) {
         Column(
-            modifier = Modifier.padding(6.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val badge = when (contributor.rank) {
-                1 -> "🥇"
-                2 -> "🥈"
-                else -> "🥉"
-            }
-            Text(badge, fontSize = 12.sp)
+            RealTrophyIcon(rank = contributor.rank, size = 16.dp)
+            Spacer(modifier = Modifier.height(4.dp))
             AsyncImage(
                 model = contributor.avatar,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape),
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .border(1.5.dp, GoldVip, CircleShape),
                 contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = contributor.nickname,
                 fontSize = 10.sp,
@@ -1122,24 +1286,28 @@ private fun ContributorPill(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                text = "💎 ${contributor.score}",
-                fontSize = 9.sp,
-                color = GoldVip,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RealDiamondIcon(size = 11.dp)
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(
+                    text = formatMetric(contributor.score),
+                    fontSize = 10.sp,
+                    color = GoldVip,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun FloatingHeart(label: String) {
-    val infiniteTransition = rememberInfiniteTransition(label = "heartRise$label")
+private fun FloatingHeartParticle(id: Int) {
+    val infiniteTransition = rememberInfiniteTransition(label = "heartRise$id")
     val offsetY by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = -120f,
+        targetValue = -140f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(1100, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "offsetY"
@@ -1148,7 +1316,7 @@ private fun FloatingHeart(label: String) {
         initialValue = 1f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(1100, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "alpha"
@@ -1159,12 +1327,7 @@ private fun FloatingHeart(label: String) {
             .offset(y = offsetY.dp)
             .graphicsLayer { this.alpha = alpha }
     ) {
-        Icon(
-            imageVector = Icons.Default.Favorite,
-            contentDescription = null,
-            tint = NeonPink,
-            modifier = Modifier.size(32.dp)
-        )
+        RealHeartLikeIcon(size = 32.dp, isPulsing = false)
     }
 }
 

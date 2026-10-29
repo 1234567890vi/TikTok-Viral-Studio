@@ -148,6 +148,7 @@ fun LiveVideoPlayer(
                                 )
                                 player = hostPlayer
                                 useController = false
+                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                                 setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                             }
                         },
@@ -191,6 +192,7 @@ fun LiveVideoPlayer(
                                 )
                                 player = opponentPlayer
                                 useController = false
+                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                                 setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                             }
                         },
@@ -228,6 +230,7 @@ fun LiveVideoPlayer(
                         )
                         player = hostPlayer
                         useController = false
+                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                         setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     }
                 },
