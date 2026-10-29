@@ -165,30 +165,24 @@ fun LiveVideoPlayer(
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
                         factory = { ctx ->
-                            try {
-                                PlayerView(ctx).apply {
-                                    layoutParams = FrameLayout.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT
-                                    ).apply {
-                                        gravity = android.view.Gravity.CENTER
-                                    }
-                                    player = hostPlayer
-                                    useController = false
-                                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                            PlayerView(ctx).apply {
+                                layoutParams = FrameLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                ).apply {
+                                    gravity = android.view.Gravity.CENTER
                                 }
-                            } catch (_: Throwable) {
-                                FrameLayout(ctx)
+                                player = hostPlayer
+                                useController = false
+                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                             }
                         },
-                        update = { playerView ->
-                            try {
-                                if (playerView.player != hostPlayer) {
-                                    playerView.player = hostPlayer
-                                }
-                            } catch (_: Throwable) {}
+                        update = { playerView: PlayerView ->
+                            if (playerView.player != hostPlayer) {
+                                playerView.player = hostPlayer
+                            }
                         }
                     )
                     // Host Neon Tag
@@ -218,30 +212,24 @@ fun LiveVideoPlayer(
                     AndroidView(
                         modifier = Modifier.fillMaxSize(),
                         factory = { ctx ->
-                            try {
-                                PlayerView(ctx).apply {
-                                    layoutParams = FrameLayout.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        ViewGroup.LayoutParams.MATCH_PARENT
-                                    ).apply {
-                                        gravity = android.view.Gravity.CENTER
-                                    }
-                                    player = opponentPlayer
-                                    useController = false
-                                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                                    setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                            PlayerView(ctx).apply {
+                                layoutParams = FrameLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                ).apply {
+                                    gravity = android.view.Gravity.CENTER
                                 }
-                            } catch (_: Throwable) {
-                                FrameLayout(ctx)
+                                player = opponentPlayer
+                                useController = false
+                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                             }
                         },
-                        update = { playerView ->
-                            try {
-                                if (playerView.player != opponentPlayer) {
-                                    playerView.player = opponentPlayer
-                                }
-                            } catch (_: Throwable) {}
+                        update = { playerView: PlayerView ->
+                            if (playerView.player != opponentPlayer) {
+                                playerView.player = opponentPlayer
+                            }
                         }
                     )
                     // Opponent Neon Tag
@@ -265,30 +253,24 @@ fun LiveVideoPlayer(
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
-                    try {
-                        PlayerView(ctx).apply {
-                            layoutParams = FrameLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            ).apply {
-                                gravity = android.view.Gravity.CENTER
-                            }
-                            player = hostPlayer
-                            useController = false
-                            resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                            setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
-                            setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
+                    PlayerView(ctx).apply {
+                        layoutParams = FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        ).apply {
+                            gravity = android.view.Gravity.CENTER
                         }
-                    } catch (_: Throwable) {
-                        FrameLayout(ctx)
+                        player = hostPlayer
+                        useController = false
+                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                        setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                        setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER)
                     }
                 },
-                update = { playerView ->
-                    try {
-                        if (playerView.player != hostPlayer) {
-                            playerView.player = hostPlayer
-                        }
-                    } catch (_: Throwable) {}
+                update = { playerView: PlayerView ->
+                    if (playerView.player != hostPlayer) {
+                        playerView.player = hostPlayer
+                    }
                 }
             )
         } else {
