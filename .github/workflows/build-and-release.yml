@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v1.4.0"
+            TAG_NAME="v1.5.0"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v1.4.0.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v1.5.0.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v1.4.0.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v1.5.0.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,28 +101,24 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.4.0' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.4.0' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.5.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.5.0' }}"
           body: |
-            ## 🌟 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.4.0' }})
+            ## 🚀 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.5.0' }})
             
-            تحديث شامل يتضمن قسم **الفحص الشامل (TikTok Deep Inspector)** للفيديوهات وألبومات الصور والقصص والحسابات وتحليل التعليقات الأكثر إعجاباً.
+            تحديث جذري ودقيق 100%:
+            - **إصلاح جذري لفحص القصص والفيديوهات**: تمييز القصص (Story) تلقائياً وقراءة إحصائياتها الحقيقية مباشرة من خوادم تيك توك بدون أي بيانات وهمية.
+            - **إظهار صور البروفايلات بجودة عالية**: دمج مكتبة Coil مع ترويسات المتصفح الصحيحة لعرض صور أصحاب المحتوى والمعلقين والأغلفة بدقة كاملة.
+            - **إحصائيات حقيقية 100%**: أرقام المشاهدات، الإعجابات، التعليقات، الحفظ، التنزيل، وتوقيت النشر الدقيق بالعربية.
+            - **التعليقات الحقيقية الأكثر إعجاباً**: جلب التعليقات الحقيقية مرتبة تنازلياً مع إمكانية النسخ بنقرة واحدة.
             
             ### 📦 الملفات المتاحة للتحميل:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v1.4.0.apk`
+               - `TikTok-Viral-Studio-v1.5.0.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v1.4.0.apk`
+               - `TikTok-Studio-Admin-v1.5.0.apk`
                - `TikTok-Studio-Admin.apk` (رمز المرور الافتراضي: `2026`)
-            
-            ### ✨ أبرز الميزات الجديدة (v1.4.0):
-            - **قسم الفحص الشامل 🔍 (TikTok Deep Inspector)**: فحص عميق لأي رابط تيك توك.
-            - **دعم كافة الروابط**: فيديوهات عادية، ألبومات الصور (Photo Mode)، القصص (Stories)، والحسابات الشخصية (@username).
-            - **مواصفات دقيقة**: تاريخ ووقت النشر الدقيق بالعربية، المشاهدات، الإعجابات، المحفوظات، المشاركات، الدقة (FHD / 4K)، ومعدل الإطارات.
-            - **التعليقات الأكثر إعجاباً 🔥**: استعراض أكثر التعليقات تفاعلاً وحصداً للإعجابات مع إمكانية نسخها بنقرة واحدة.
-            - **أزرار التحميل السريع**: تحميل الفيديو أو جميع صور الألبوم أو صورة البروفايل بدون علامة مائية.
-            - **توقيع رقمي موحد ودائم (release.keystore)** لمنع أي تعارض في الحزم.
           files: release-output/*
           draft: false
           prerelease: false

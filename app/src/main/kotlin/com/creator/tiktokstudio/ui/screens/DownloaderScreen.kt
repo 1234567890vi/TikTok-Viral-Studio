@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.creator.tiktokstudio.core.NativeEngine
 import com.creator.tiktokstudio.core.TikTokDownloaderService
 import com.creator.tiktokstudio.data.DownloadProgressState
@@ -334,6 +337,21 @@ fun DownloaderScreen(
                                 tint = NeonCyan,
                                 modifier = Modifier.size(28.dp)
                             )
+                            if (video.authorAvatar.isNotBlank()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(video.authorAvatar)
+                                        .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
+                                        .addHeader("Referer", "https://www.tiktok.com/")
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = video.authorName,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -364,6 +382,31 @@ fun DownloaderScreen(
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
+
+                    // Cover thumbnail preview
+                    if (video.thumbnailUrl.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(DarkSurfaceElevated),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(video.thumbnailUrl)
+                                    .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
+                                    .addHeader("Referer", "https://www.tiktok.com/")
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = video.title,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 

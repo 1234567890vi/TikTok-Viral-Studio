@@ -7,13 +7,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import com.creator.tiktokstudio.data.DownloadProgressState
-import com.creator.tiktokstudio.data.DownloadedMedia
-import com.creator.tiktokstudio.data.TikTokVideoInfo
-import com.creator.tiktokstudio.data.TikTokContentType
-import com.creator.tiktokstudio.data.TikTokCommentItem
-import com.creator.tiktokstudio.data.TikTokPhotoItem
-import com.creator.tiktokstudio.data.TikTokDeepInspectionData
+import com.creator.tiktokstudio.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -23,10 +17,15 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.URLEncoder
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 object TikTokDownloaderService {
     private const val TAG = "TikTokDownloaderService"
+
+    private const val USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -35,18 +34,96 @@ object TikTokDownloaderService {
         .followSslRedirects(true)
         .build()
 
+    private val ARABIC_MONTHS = arrayOf(
+        "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+        "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+    )
+
+    fun resolveRedirects(inputUrl: String): String {
+        val clean = inputUrl.trim()
+        return try {
+            val request = Request.Builder()
+                .url(clean)
+                .addHeader("User-Agent", USER_AGENT)
+                .build()
+            httpClient.newCall(request).execute().use { response ->
+                val finalUrl = response.request.url.toString()
+                if (finalUrl.isNotBlank()) finalUrl else clean
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Redirect resolution failed: ${e.message}")
+            clean
+        }
+    }
+
+    fun sanitizeUrl(url: String): String {
+        if (url.isBlank()) return ""
+        var u = url.trim()
+        if (u.startsWith("http://")) {
+            u = u.replace("http://", "https://")
+        }
+        if (!u.startsWith("http")) {
+            u = "https://www.tikwm.com$u"
+        }
+        return u
+    }
+
+    fun formatArabicTimestamp(seconds: Long): String {
+        if (seconds <= 0L) return "تاريخ النشر غير متوفر"
+        return try {
+            val date = Date(seconds * 1000L)
+            val cal = Calendar.getInstance()
+            cal.time = date
+            val day = cal.get(Calendar.DAY_OF_MONTH)
+            val month = cal.get(Calendar.MONTH)
+            val year = cal.get(Calendar.YEAR)
+            val hour = String.format("%02d", cal.get(Calendar.HOUR_OF_DAY))
+            val minute = String.format("%02d", cal.get(Calendar.MINUTE))
+            val monthName = ARABIC_MONTHS.getOrElse(month) { "" }
+
+            val nowSec = System.currentTimeMillis() / 1000L
+            val diffSec = nowSec - seconds
+            val timeAgo = when {
+                diffSec < 60 -> "منذ لحظات"
+                diffSec < 3600 -> "منذ ${diffSec / 60} دقيقة"
+                diffSec < 7200 -> "منذ ساعة"
+                diffSec < 14400 -> "منذ ساعتين"
+                diffSec < 86400 -> "منذ ${diffSec / 3600} ساعة"
+                diffSec < 172800 -> "منذ يوم"
+                diffSec < 2592000 -> "منذ ${diffSec / 86400} يوم"
+                else -> "منذ ${diffSec / 2592000} شهر"
+            }
+            "نُشر في $day $monthName $year - الساعة $hour:$minute ($timeAgo)"
+        } catch (e: Exception) {
+            "تاريخ غير صالح"
+        }
+    }
+
+    fun formatCommentTimeAgo(seconds: Long): String {
+        if (seconds <= 0L) return ""
+        val diffSec = (System.currentTimeMillis() / 1000L) - seconds
+        return when {
+            diffSec < 60 -> "الآن"
+            diffSec < 3600 -> "منذ ${diffSec / 60} د"
+            diffSec < 86400 -> "منذ ${diffSec / 3600} س"
+            diffSec < 172800 -> "منذ يوم"
+            diffSec < 2592000 -> "منذ ${diffSec / 86400} ي"
+            else -> "منذ ${diffSec / 2592000} ش"
+        }
+    }
+
     suspend fun extractMediaInfo(url: String): Result<TikTokVideoInfo> = withContext(Dispatchers.IO) {
         try {
             val cleanUrl = url.trim()
-            if (!cleanUrl.contains("tiktok.com")) {
+            if (!cleanUrl.contains("tiktok.com") && !cleanUrl.startsWith("@")) {
                 return@withContext Result.failure(IllegalArgumentException("الرجاء إدخال رابط تيك توك صالح"))
             }
 
-            // Call TikWM extraction API
-            val apiEndpoint = "https://www.tikwm.com/api/?url=${java.net.URLEncoder.encode(cleanUrl, "UTF-8")}&hd=1"
+            val resolvedUrl = resolveRedirects(cleanUrl)
+            val apiEndpoint = "https://www.tikwm.com/api/?url=${URLEncoder.encode(resolvedUrl, "UTF-8")}&hd=1"
             val request = Request.Builder()
                 .url(apiEndpoint)
-                .addHeader("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:124.0) Gecko/124.0 Firefox/124.0")
+                .addHeader("User-Agent", USER_AGENT)
                 .addHeader("Accept", "application/json")
                 .build()
 
@@ -58,25 +135,21 @@ object TikTokDownloaderService {
                 val code = json.optInt("code", -1)
                 if (code == 0 && json.has("data")) {
                     val dataObj = json.getJSONObject("data")
-                    var hdPlay = dataObj.optString("hdplay", "")
-                    var sdPlay = dataObj.optString("play", "")
-                    var music = dataObj.optString("music", "")
+                    val hdPlay = sanitizeUrl(dataObj.optString("hdplay", ""))
+                    val sdPlay = sanitizeUrl(dataObj.optString("play", ""))
+                    val music = sanitizeUrl(dataObj.optString("music", ""))
                     val title = dataObj.optString("title", "فيديو تيك توك بدون علامة مائية")
-                    val cover = dataObj.optString("cover", "")
+                    val cover = sanitizeUrl(dataObj.optString("cover", "").ifBlank { dataObj.optString("origin_cover", "") })
                     val duration = dataObj.optInt("duration", 0)
 
                     val author = dataObj.optJSONObject("author")
-                    val authorName = author?.optString("nickname") ?: "TikTok Creator"
+                    val authorName = author?.optString("nickname") ?: "صانع محتوى"
                     val authorId = author?.optString("unique_id") ?: "creator"
-                    val authorAvatar = author?.optString("avatar") ?: ""
-
-                    if (hdPlay.isNotEmpty() && !hdPlay.startsWith("http")) hdPlay = "https://www.tikwm.com$hdPlay"
-                    if (sdPlay.isNotEmpty() && !sdPlay.startsWith("http")) sdPlay = "https://www.tikwm.com$sdPlay"
-                    if (music.isNotEmpty() && !music.startsWith("http")) music = "https://www.tikwm.com$music"
+                    val authorAvatar = sanitizeUrl(author?.optString("avatar", "") ?: "")
 
                     val videoInfo = TikTokVideoInfo(
                         id = dataObj.optString("id", System.currentTimeMillis().toString()),
-                        originalUrl = cleanUrl,
+                        originalUrl = resolvedUrl,
                         title = title,
                         authorName = authorName,
                         authorId = authorId,
@@ -86,46 +159,253 @@ object TikTokDownloaderService {
                         videoSdUrl = sdPlay,
                         audioUrl = music,
                         durationSec = duration,
-                        likesCount = dataObj.optLong("digg_count", 154200),
-                        commentsCount = dataObj.optLong("comment_count", 4320),
-                        sharesCount = dataObj.optLong("share_count", 18900),
-                        viewsCount = dataObj.optLong("play_count", 890000),
+                        likesCount = dataObj.optLong("digg_count", 0L),
+                        commentsCount = dataObj.optLong("comment_count", 0L),
+                        sharesCount = dataObj.optLong("share_count", 0L),
+                        viewsCount = dataObj.optLong("play_count", 0L),
                         isWatermarkFree = true
                     )
                     return@withContext Result.success(videoInfo)
+                } else {
+                    val msg = json.optString("msg", "فشل استخراج الفيديو: تأكد من أن الرابط صحيح وأن المنشور عام.")
+                    return@withContext Result.failure(Exception(msg))
                 }
             }
-
-            // Fallback: If external API has rate-limit or offline, return a resilient parsed object
-            val fallback = createResilientFallback(cleanUrl)
-            Result.success(fallback)
+            return@withContext Result.failure(Exception("تعذر الاتصال بخوادم تيك توك"))
         } catch (e: Exception) {
             Log.e(TAG, "Extraction failed: ${e.message}", e)
-            // Still deliver an operational preview for demonstration
-            val fallback = createResilientFallback(url)
-            Result.success(fallback)
+            return@withContext Result.failure(e)
         }
     }
 
-    private fun createResilientFallback(url: String): TikTokVideoInfo {
-        return TikTokVideoInfo(
-            id = "demo_${System.currentTimeMillis()}",
-            originalUrl = url,
-            title = "فيديو تيك توك احترافي فائق الدقة (جاهز للتحميل بدون علامة مائية)",
-            authorName = "TikTok Master Creator",
-            authorId = "viral_creator",
-            authorAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
-            thumbnailUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600",
-            videoHdUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            videoSdUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-            durationSec = 28,
-            likesCount = 345000,
-            commentsCount = 8900,
-            sharesCount = 45000,
-            viewsCount = 1420000,
-            isWatermarkFree = true
+    suspend fun inspectTikTokUrl(url: String): Result<TikTokDeepInspectionData> = withContext(Dispatchers.IO) {
+        val cleanUrl = url.trim()
+        val resolvedUrl = resolveRedirects(cleanUrl)
+
+        // Profile detection:
+        // /@username without /video/, /photo/, or /story/
+        val isProfile = (
+            (resolvedUrl.contains("/@") && !resolvedUrl.contains("/video/") && !resolvedUrl.contains("/photo/") && !resolvedUrl.contains("/story/")) ||
+            (cleanUrl.startsWith("@") && !cleanUrl.contains("/")) ||
+            (cleanUrl.contains("/@") && !cleanUrl.contains("/video/") && !cleanUrl.contains("/photo/") && !cleanUrl.contains("/story/"))
         )
+
+        try {
+            if (isProfile) {
+                val username = if (cleanUrl.startsWith("@")) {
+                    cleanUrl.substring(1)
+                } else {
+                    val match = Regex("@([a-zA-Z0-9_.-]+)").find(resolvedUrl) ?: Regex("@([a-zA-Z0-9_.-]+)").find(cleanUrl)
+                    match?.groupValues?.get(1) ?: cleanUrl.substringAfterLast("@").substringBefore("?").substringBefore("/")
+                }
+
+                val profileApi = "https://www.tikwm.com/api/user/info?unique_id=${URLEncoder.encode(username, "UTF-8")}"
+                val req = Request.Builder()
+                    .url(profileApi)
+                    .addHeader("User-Agent", USER_AGENT)
+                    .addHeader("Accept", "application/json")
+                    .build()
+                val resp = httpClient.newCall(req).execute()
+                val body = resp.body?.string()
+                if (resp.isSuccessful && !body.isNullOrBlank()) {
+                    val json = JSONObject(body)
+                    if (json.optInt("code", -1) == 0 && json.has("data")) {
+                        val data = json.getJSONObject("data")
+                        val user = data.optJSONObject("user")
+                        val stats = data.optJSONObject("stats")
+                        val uniqueId = user?.optString("uniqueId") ?: username
+                        val nickname = user?.optString("nickname") ?: uniqueId
+                        val avatarRaw = user?.optString("avatarLarger").orEmpty().ifBlank {
+                            user?.optString("avatarMedium").orEmpty().ifBlank {
+                                user?.optString("avatar").orEmpty()
+                            }
+                        }
+                        val avatar = sanitizeUrl(avatarRaw)
+                        val signature = user?.optString("signature", "") ?: ""
+                        val followers = stats?.optLong("followerCount", 0L) ?: 0L
+                        val following = stats?.optLong("followingCount", 0L) ?: 0L
+                        val heart = stats?.optLong("heartCount", 0L) ?: 0L
+                        val videos = stats?.optLong("videoCount", 0L) ?: 0L
+                        val isVerified = user?.optBoolean("verified", false) ?: false
+
+                        return@withContext Result.success(
+                            TikTokDeepInspectionData(
+                                url = resolvedUrl,
+                                contentType = TikTokContentType.PROFILE,
+                                title = "حساب تيك توك: @$uniqueId",
+                                authorName = nickname,
+                                authorUniqueId = uniqueId,
+                                authorAvatar = avatar,
+                                authorBio = signature,
+                                followerCount = followers,
+                                followingCount = following,
+                                authorTotalLikes = heart,
+                                authorVideoCount = videos,
+                                isVerified = isVerified,
+                                createTimeFormatted = "حساب نشط ومسجل",
+                                topComments = emptyList()
+                            )
+                        )
+                    }
+                }
+                return@withContext Result.failure(
+                    Exception("تعذر جلب بيانات الحساب (@$username) مباشرة. يرجى وضع رابط فيديو أو قصة للناشر بدلاً من رابط الحساب فقط.")
+                )
+            }
+
+            // Normal Video, Photo Mode, or Story
+            val apiEndpoint = "https://www.tikwm.com/api/?url=${URLEncoder.encode(resolvedUrl, "UTF-8")}&hd=1"
+            val req = Request.Builder()
+                .url(apiEndpoint)
+                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Accept", "application/json")
+                .build()
+            val resp = httpClient.newCall(req).execute()
+            val body = resp.body?.string()
+
+            if (!resp.isSuccessful || body.isNullOrBlank()) {
+                return@withContext Result.failure(Exception("تعذر الاتصال بخوادم الفحص. يرجى التحقق من اتصالك بالإنترنت."))
+            }
+
+            val json = JSONObject(body)
+            val code = json.optInt("code", -1)
+            if (code != 0 || !json.has("data")) {
+                val errorMsg = json.optString("msg", "فشل فحص الرابط: يرجى التأكد من أن المنشور متاح وعام وصحيح.")
+                return@withContext Result.failure(Exception(errorMsg))
+            }
+
+            val dataObj = json.getJSONObject("data")
+            val hdPlay = sanitizeUrl(dataObj.optString("hdplay", ""))
+            val sdPlay = sanitizeUrl(dataObj.optString("play", ""))
+            val music = sanitizeUrl(dataObj.optString("music", ""))
+            val musicInfo = dataObj.optJSONObject("music_info")
+            val audioTitle = musicInfo?.optString("title", "الصوت الأصلي") ?: "الصوت الأصلي"
+            val audioAuthor = musicInfo?.optString("author", "TikTok") ?: "TikTok"
+            val title = dataObj.optString("title", "منشور تيك توك")
+            val cover = sanitizeUrl(dataObj.optString("cover", "").ifBlank { dataObj.optString("origin_cover", "") })
+            val duration = dataObj.optInt("duration", 0)
+
+            val author = dataObj.optJSONObject("author")
+            val authorName = author?.optString("nickname", "صانع محتوى") ?: "صانع محتوى"
+            val authorId = author?.optString("unique_id", "creator") ?: "creator"
+            val authorAvatar = sanitizeUrl(author?.optString("avatar", "") ?: "")
+
+            // Parse Photos
+            val imagesArr = dataObj.optJSONArray("images")
+            val photosList = mutableListOf<TikTokPhotoItem>()
+            if (imagesArr != null) {
+                for (i in 0 until imagesArr.length()) {
+                    val imgUrl = sanitizeUrl(imagesArr.getString(i))
+                    photosList.add(TikTokPhotoItem(index = i + 1, url = imgUrl, hdUrl = imgUrl))
+                }
+            }
+
+            // Classification
+            val isPhoto = photosList.isNotEmpty() || resolvedUrl.contains("/photo/") || cleanUrl.contains("/photo/")
+            val isStory = (
+                resolvedUrl.contains("/story/") ||
+                cleanUrl.contains("/story/") ||
+                dataObj.optBoolean("is_story", false) ||
+                dataObj.optInt("is_story", 0) == 1 ||
+                title.lowercase().contains("#story")
+            )
+
+            val detectedType = when {
+                isPhoto -> TikTokContentType.PHOTO_ALBUM
+                isStory -> TikTokContentType.STORY
+                else -> TikTokContentType.VIDEO
+            }
+
+            val rawCreateTime = dataObj.optLong("create_time", 0L)
+            val formattedDate = formatArabicTimestamp(rawCreateTime)
+
+            val sizeBytes = dataObj.optLong("hd_size", 0L).let { if (it > 0) it else dataObj.optLong("size", 0L) }
+            val sizeMb = if (sizeBytes > 0) {
+                Math.round((sizeBytes.toDouble() / (1024.0 * 1024.0)) * 100.0) / 100.0
+            } else 0.0
+
+            // Fetch Real Comments
+            val commentsList = mutableListOf<TikTokCommentItem>()
+            try {
+                val commentEndpoint = "https://www.tikwm.com/api/comment/list?url=${URLEncoder.encode(resolvedUrl, "UTF-8")}&count=30"
+                val cReq = Request.Builder()
+                    .url(commentEndpoint)
+                    .addHeader("User-Agent", USER_AGENT)
+                    .addHeader("Accept", "application/json")
+                    .build()
+                val cResp = httpClient.newCall(cReq).execute()
+                val cBody = cResp.body?.string()
+                if (cResp.isSuccessful && !cBody.isNullOrBlank()) {
+                    val cJson = JSONObject(cBody)
+                    if (cJson.optInt("code", -1) == 0 && cJson.has("data")) {
+                        val cData = cJson.getJSONObject("data")
+                        val commentsArr = cData.optJSONArray("comments")
+                        if (commentsArr != null) {
+                            for (j in 0 until commentsArr.length()) {
+                                val cObj = commentsArr.getJSONObject(j)
+                                val uObj = cObj.optJSONObject("user")
+                                val cUser = uObj?.optString("nickname", "مستخدم تيك توك") ?: "مستخدم تيك توك"
+                                val cUid = uObj?.optString("unique_id", "user") ?: "user"
+                                val cAvatar = sanitizeUrl(uObj?.optString("avatar", "") ?: "")
+                                val cText = cObj.optString("text", "")
+                                val cLikes = cObj.optLong("digg_count", 0L)
+                                val cReplies = cObj.optLong("reply_total", 0L)
+                                val cTime = cObj.optLong("create_time", 0L)
+                                commentsList.add(
+                                    TikTokCommentItem(
+                                        id = cObj.optString("id", j.toString()),
+                                        authorName = cUser,
+                                        authorUniqueId = cUid,
+                                        authorAvatar = cAvatar,
+                                        text = cText,
+                                        diggCount = cLikes,
+                                        replyCount = cReplies,
+                                        timeAgoArabic = formatCommentTimeAgo(cTime)
+                                    )
+                                )
+                            }
+                            commentsList.sortByDescending { it.diggCount }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Comments fetch note: ${e.message}")
+            }
+
+            return@withContext Result.success(
+                TikTokDeepInspectionData(
+                    url = resolvedUrl,
+                    contentType = detectedType,
+                    title = title,
+                    authorName = authorName,
+                    authorUniqueId = authorId,
+                    authorAvatar = authorAvatar,
+                    thumbnailUrl = cover,
+                    createTimeFormatted = formattedDate,
+                    rawCreateTime = rawCreateTime,
+                    likesCount = dataObj.optLong("digg_count", 0L),
+                    commentsCount = dataObj.optLong("comment_count", 0L),
+                    collectCount = dataObj.optLong("collect_count", 0L),
+                    downloadCount = dataObj.optLong("download_count", 0L),
+                    sharesCount = dataObj.optLong("share_count", 0L),
+                    viewsCount = dataObj.optLong("play_count", 0L),
+                    resolution = if (isPhoto) "ألبوم صور عالي الدقة" else "1080x1920 (Full HD)",
+                    durationSec = duration,
+                    fileSizeMB = sizeMb,
+                    qualityBadge = if (isPhoto) "ألبوم صور" else "Full HD 1080p",
+                    audioTitle = audioTitle,
+                    audioAuthor = audioAuthor,
+                    audioUrl = music,
+                    videoHdUrl = if (hdPlay.isNotBlank()) hdPlay else sdPlay,
+                    videoSdUrl = sdPlay,
+                    photos = photosList,
+                    topComments = commentsList
+                )
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Deep inspection exception: ${e.message}", e)
+            return@withContext Result.failure(e)
+        }
     }
 
     suspend fun downloadMediaFile(
@@ -152,7 +432,7 @@ object TikTokDownloaderService {
 
             val request = Request.Builder()
                 .url(downloadUrl)
-                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                .addHeader("User-Agent", USER_AGENT)
                 .build()
 
             val response = httpClient.newCall(request).execute()
@@ -245,7 +525,6 @@ object TikTokDownloaderService {
                 }
             }
 
-            // Mark pending off for MediaStore Android 10+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && resultUri != null) {
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.IS_PENDING, 0)
@@ -289,350 +568,6 @@ object TikTokDownloaderService {
         }
     }
 
-    private val ARABIC_MONTHS = arrayOf(
-        "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-        "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-    )
-
-    fun formatArabicTimestamp(seconds: Long): String {
-        if (seconds <= 0) return "نُشر حديثاً"
-        return try {
-            val date = java.util.Date(seconds * 1000L)
-            val cal = java.util.Calendar.getInstance()
-            cal.time = date
-            val day = cal.get(java.util.Calendar.DAY_OF_MONTH)
-            val month = cal.get(java.util.Calendar.MONTH)
-            val year = cal.get(java.util.Calendar.YEAR)
-            val hour = String.format("%02d", cal.get(java.util.Calendar.HOUR_OF_DAY))
-            val minute = String.format("%02d", cal.get(java.util.Calendar.MINUTE))
-            val monthName = ARABIC_MONTHS.getOrElse(month) { "" }
-
-            val diffHours = ((System.currentTimeMillis() - (seconds * 1000L)) / (1000 * 60 * 60)).toInt()
-            val ago = when {
-                diffHours <= 0 -> "منذ قليل"
-                diffHours == 1 -> "منذ ساعة"
-                diffHours == 2 -> "منذ ساعتين"
-                diffHours in 3..10 -> "منذ $diffHours ساعات"
-                diffHours < 24 -> "منذ $diffHours ساعة"
-                diffHours in 24..47 -> "منذ يوم"
-                else -> "منذ ${diffHours / 24} أيام"
-            }
-            "نُشر في $day $monthName $year - الساعة $hour:$minute ($ago)"
-        } catch (e: Exception) {
-            "نُشر حديثاً"
-        }
-    }
-
-    fun getCuratedTopComments(): List<TikTokCommentItem> = listOf(
-        TikTokCommentItem(
-            id = "c1",
-            authorName = "سارة العتيبي",
-            authorUniqueId = "sara_otb",
-            authorAvatar = "",
-            text = "ما شاء الله تبارك الله، شرح جبار واحترافي استمر يا أسطورة! 👏🔥",
-            diggCount = 14200,
-            replyCount = 48,
-            timeAgoArabic = "منذ 3 ساعات"
-        ),
-        TikTokCommentItem(
-            id = "c2",
-            authorName = "محمد الشمري",
-            authorUniqueId = "m_alshammari",
-            authorAvatar = "",
-            text = "أفضل صانع محتوى في هذا المجال بدون منازع، ننتظر الجزء الثاني بفارغ الصبر! 🚀✨",
-            diggCount = 8900,
-            replyCount = 23,
-            timeAgoArabic = "منذ 5 ساعات"
-        ),
-        TikTokCommentItem(
-            id = "c3",
-            authorName = "فاطمة الزهراء",
-            authorUniqueId = "fatima_tech",
-            authorAvatar = "",
-            text = "طبقت الطريقة بالضبط ونجحت معي من أول مرة، شكراً لك من القلب ❤️❤️",
-            diggCount = 6100,
-            replyCount = 12,
-            timeAgoArabic = "منذ 9 ساعات"
-        ),
-        TikTokCommentItem(
-            id = "c4",
-            authorName = "عبدالرحمن القحطاني",
-            authorUniqueId = "abdulrahman_q",
-            authorAvatar = "",
-            text = "أجمل وأوضح فيديو شفته اليوم في التايم لاين، حفظ بالمفضلة فوراً 📌💫",
-            diggCount = 4300,
-            replyCount = 9,
-            timeAgoArabic = "منذ يوم"
-        ),
-        TikTokCommentItem(
-            id = "c5",
-            authorName = "ياسين المرابط",
-            authorUniqueId = "yassine_morocco",
-            authorAvatar = "",
-            text = "الفكرة مبهرة والمونتاج عالمي! تحية لك من المغرب 🇲🇦🇸🇦",
-            diggCount = 3200,
-            replyCount = 5,
-            timeAgoArabic = "منذ يومين"
-        )
-    )
-
-    fun createResilientInspectionFallback(url: String, type: TikTokContentType): TikTokDeepInspectionData {
-        val curTime = System.currentTimeMillis() / 1000L - 7200L
-        val dateArabic = formatArabicTimestamp(curTime)
-
-        val photos = if (type == TikTokContentType.PHOTO_ALBUM) {
-            listOf(
-                TikTokPhotoItem(1, "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800"),
-                TikTokPhotoItem(2, "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800"),
-                TikTokPhotoItem(3, "https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=800")
-            )
-        } else emptyList()
-
-        return TikTokDeepInspectionData(
-            url = url,
-            contentType = type,
-            title = if (type == TikTokContentType.PROFILE) "الحساب الرسمي للمبدع على تيك توك"
-                   else "فيديو تيك توك احترافي فائق الدقة (مفحوص بالكامل)",
-            authorName = "TikTok Master Creator",
-            authorUniqueId = "viral_master",
-            authorAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=250",
-            authorBio = "صانع محتوى ومصمم فيديوهات فيروسية 🚀 | أشارك معكم أقوى الأسرار والترندات الحصرية يومياً",
-            followerCount = 2450000L,
-            followingCount = 128L,
-            authorTotalLikes = 38900000L,
-            authorVideoCount = 412L,
-            isVerified = true,
-            createTimeFormatted = dateArabic,
-            rawCreateTime = curTime,
-            likesCount = 345000L,
-            commentsCount = 8900L,
-            collectCount = 42300L,
-            downloadCount = 19500L,
-            sharesCount = 28400L,
-            viewsCount = 1420000L,
-            resolution = "1080x1920 (Full HD 60fps)",
-            durationSec = 34,
-            fileSizeMB = 24.5,
-            qualityBadge = "Full HD 1080p",
-            audioTitle = "الصوت الأصلي - TikTok Master",
-            audioAuthor = "viral_master",
-            audioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-            videoHdUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            videoSdUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-            thumbnailUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600",
-            photos = photos,
-            topComments = getCuratedTopComments()
-        )
-    }
-
-    suspend fun inspectTikTokUrl(url: String): Result<TikTokDeepInspectionData> = withContext(Dispatchers.IO) {
-        val cleanUrl = url.trim()
-        val isProfile = (cleanUrl.contains("/@") && !cleanUrl.contains("/video/") && !cleanUrl.contains("/photo/") && !cleanUrl.contains("/story/")) || cleanUrl.startsWith("@")
-        val isPhoto = cleanUrl.contains("/photo/")
-        val isStory = cleanUrl.contains("/story/")
-
-        val defaultType = when {
-            isProfile -> TikTokContentType.PROFILE
-            isPhoto -> TikTokContentType.PHOTO_ALBUM
-            isStory -> TikTokContentType.STORY
-            else -> TikTokContentType.VIDEO
-        }
-
-        try {
-            if (isProfile) {
-                val username = if (cleanUrl.startsWith("@")) cleanUrl.substring(1)
-                else {
-                    val match = Regex("@([a-zA-Z0-9_.-]+)").find(cleanUrl)
-                    match?.groupValues?.get(1) ?: cleanUrl.substringAfterLast("@").substringBefore("?").substringBefore("/")
-                }
-                val profileApi = "https://www.tikwm.com/api/user/info?unique_id=${java.net.URLEncoder.encode(username, "UTF-8")}"
-                val req = Request.Builder()
-                    .url(profileApi)
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                    .addHeader("Accept", "application/json")
-                    .build()
-                val resp = httpClient.newCall(req).execute()
-                val body = resp.body?.string()
-                if (resp.isSuccessful && !body.isNullOrBlank()) {
-                    val json = JSONObject(body)
-                    if (json.optInt("code", -1) == 0 && json.has("data")) {
-                        val data = json.getJSONObject("data")
-                        val user = data.optJSONObject("user")
-                        val stats = data.optJSONObject("stats")
-                        val uniqueId = user?.optString("uniqueId") ?: username
-                        val nickname = user?.optString("nickname") ?: uniqueId
-                        val avatar = user?.optString("avatarLarger") ?: user?.optString("avatarMedium") ?: ""
-                        val signature = user?.optString("signature") ?: "صانع محتوى على تيك توك"
-                        val followers = stats?.optLong("followerCount") ?: 0L
-                        val following = stats?.optLong("followingCount") ?: 0L
-                        val heart = stats?.optLong("heartCount") ?: 0L
-                        val videos = stats?.optLong("videoCount") ?: 0L
-                        val isVerified = user?.optBoolean("verified") ?: false
-
-                        return@withContext Result.success(
-                            TikTokDeepInspectionData(
-                                url = cleanUrl,
-                                contentType = TikTokContentType.PROFILE,
-                                title = "حساب تيك توك: @$uniqueId",
-                                authorName = nickname,
-                                authorUniqueId = uniqueId,
-                                authorAvatar = avatar,
-                                authorBio = signature,
-                                followerCount = followers,
-                                followingCount = following,
-                                authorTotalLikes = heart,
-                                authorVideoCount = videos,
-                                isVerified = isVerified,
-                                createTimeFormatted = "حساب نشط",
-                                topComments = emptyList()
-                            )
-                        )
-                    }
-                }
-            } else {
-                val apiEndpoint = "https://www.tikwm.com/api/?url=${java.net.URLEncoder.encode(cleanUrl, "UTF-8")}&hd=1"
-                val req = Request.Builder()
-                    .url(apiEndpoint)
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                    .addHeader("Accept", "application/json")
-                    .build()
-                val resp = httpClient.newCall(req).execute()
-                val body = resp.body?.string()
-                if (resp.isSuccessful && !body.isNullOrBlank()) {
-                    val json = JSONObject(body)
-                    if (json.optInt("code", -1) == 0 && json.has("data")) {
-                        val dataObj = json.getJSONObject("data")
-                        var hdPlay = dataObj.optString("hdplay", "")
-                        var sdPlay = dataObj.optString("play", "")
-                        var music = dataObj.optString("music", "")
-                        val musicInfo = dataObj.optJSONObject("music_info")
-                        val audioTitle = musicInfo?.optString("title") ?: "الصوت الأصلي"
-                        val audioAuthor = musicInfo?.optString("author") ?: "TikTok"
-                        val title = dataObj.optString("title", "محتوى تيك توك مميز")
-                        val cover = dataObj.optString("cover", "")
-                        val duration = dataObj.optInt("duration", 0)
-
-                        val author = dataObj.optJSONObject("author")
-                        val authorName = author?.optString("nickname") ?: "صانع محتوى"
-                        val authorId = author?.optString("unique_id") ?: "creator"
-                        val authorAvatar = author?.optString("avatar", "") ?: ""
-
-                        if (hdPlay.isNotEmpty() && !hdPlay.startsWith("http")) hdPlay = "https://www.tikwm.com$hdPlay"
-                        if (sdPlay.isNotEmpty() && !sdPlay.startsWith("http")) sdPlay = "https://www.tikwm.com$sdPlay"
-                        if (music.isNotEmpty() && !music.startsWith("http")) music = "https://www.tikwm.com$music"
-
-                        // Photos parsing
-                        val imagesArr = dataObj.optJSONArray("images")
-                        val photosList = mutableListOf<TikTokPhotoItem>()
-                        if (imagesArr != null) {
-                            for (i in 0 until imagesArr.length()) {
-                                val imgUrl = imagesArr.getString(i)
-                                photosList.add(TikTokPhotoItem(index = i + 1, url = imgUrl, hdUrl = imgUrl))
-                            }
-                        }
-
-                        val detectedType = when {
-                            photosList.isNotEmpty() || isPhoto -> TikTokContentType.PHOTO_ALBUM
-                            isStory -> TikTokContentType.STORY
-                            else -> TikTokContentType.VIDEO
-                        }
-
-                        val createTime = dataObj.optLong("create_time", 0L)
-                        val formattedDate = formatArabicTimestamp(createTime)
-
-                        val sizeBytes = dataObj.optLong("hd_size", 0L).let { if (it > 0) it else dataObj.optLong("size", 0L) }
-                        val sizeMb = if (sizeBytes > 0) Math.round((sizeBytes.toDouble() / (1024.0 * 1024.0)) * 100.0) / 100.0 else 24.5
-
-                        // Fetch comments
-                        val commentsList = mutableListOf<TikTokCommentItem>()
-                        try {
-                            val commentEndpoint = "https://www.tikwm.com/api/comment/list?url=${java.net.URLEncoder.encode(cleanUrl, "UTF-8")}&count=20"
-                            val cReq = Request.Builder()
-                                .url(commentEndpoint)
-                                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                                .build()
-                            val cResp = httpClient.newCall(cReq).execute()
-                            val cBody = cResp.body?.string()
-                            if (cResp.isSuccessful && !cBody.isNullOrBlank()) {
-                                val cJson = JSONObject(cBody)
-                                if (cJson.optInt("code", -1) == 0 && cJson.has("data")) {
-                                    val cData = cJson.getJSONObject("data")
-                                    val commentsArr = cData.optJSONArray("comments")
-                                    if (commentsArr != null) {
-                                        for (j in 0 until commentsArr.length()) {
-                                            val cObj = commentsArr.getJSONObject(j)
-                                            val uObj = cObj.optJSONObject("user")
-                                            val cUser = uObj?.optString("nickname") ?: "مستخدم تيك توك"
-                                            val cUid = uObj?.optString("unique_id") ?: "user"
-                                            val cAvatar = uObj?.optString("avatar") ?: ""
-                                            val cText = cObj.optString("text", "")
-                                            val cLikes = cObj.optLong("digg_count", 0L)
-                                            val cReplies = cObj.optLong("reply_total", 0L)
-                                            commentsList.add(
-                                                TikTokCommentItem(
-                                                    id = cObj.optString("id", j.toString()),
-                                                    authorName = cUser,
-                                                    authorUniqueId = cUid,
-                                                    authorAvatar = cAvatar,
-                                                    text = cText,
-                                                    diggCount = cLikes,
-                                                    replyCount = cReplies,
-                                                    timeAgoArabic = "منذ فترة"
-                                                )
-                                            )
-                                        }
-                                        commentsList.sortByDescending { it.diggCount }
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) {
-                            Log.w(TAG, "Comments fetch warning: ${e.message}")
-                        }
-
-                        val finalComments = if (commentsList.isNotEmpty()) commentsList else getCuratedTopComments()
-
-                        return@withContext Result.success(
-                            TikTokDeepInspectionData(
-                                url = cleanUrl,
-                                contentType = detectedType,
-                                title = title,
-                                authorName = authorName,
-                                authorUniqueId = authorId,
-                                authorAvatar = authorAvatar,
-                                createTimeFormatted = formattedDate,
-                                rawCreateTime = createTime,
-                                likesCount = dataObj.optLong("digg_count", 345000L),
-                                commentsCount = dataObj.optLong("comment_count", 8900L),
-                                collectCount = dataObj.optLong("collect_count", 42300L),
-                                downloadCount = dataObj.optLong("download_count", 19500L),
-                                sharesCount = dataObj.optLong("share_count", 28400L),
-                                viewsCount = dataObj.optLong("play_count", 1420000L),
-                                resolution = "1080x1920 (Full HD 60fps)",
-                                durationSec = duration,
-                                fileSizeMB = sizeMb,
-                                qualityBadge = "Full HD 1080p",
-                                audioTitle = audioTitle,
-                                audioAuthor = audioAuthor,
-                                audioUrl = music,
-                                videoHdUrl = if (hdPlay.isNotBlank()) hdPlay else sdPlay,
-                                videoSdUrl = sdPlay,
-                                thumbnailUrl = cover,
-                                photos = photosList,
-                                topComments = finalComments
-                            )
-                        )
-                    }
-                }
-            }
-            val fallback = createResilientInspectionFallback(cleanUrl, defaultType)
-            Result.success(fallback)
-        } catch (e: Exception) {
-            Log.e(TAG, "Deep inspection exception: ${e.message}", e)
-            val fallback = createResilientInspectionFallback(url, defaultType)
-            Result.success(fallback)
-        }
-    }
-
     suspend fun downloadImageFile(
         context: Context,
         downloadUrl: String,
@@ -654,7 +589,7 @@ object TikTokDownloaderService {
 
             val request = Request.Builder()
                 .url(downloadUrl)
-                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                .addHeader("User-Agent", USER_AGENT)
                 .build()
 
             val response = httpClient.newCall(request).execute()

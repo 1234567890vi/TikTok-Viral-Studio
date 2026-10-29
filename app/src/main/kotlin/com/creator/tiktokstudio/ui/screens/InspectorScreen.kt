@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,12 +26,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.creator.tiktokstudio.core.TikTokDownloaderService
 import com.creator.tiktokstudio.data.*
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
@@ -53,6 +57,7 @@ fun InspectorScreen(
     var isInspecting by remember { mutableStateOf(false) }
     var inspectionStatusText by remember { mutableStateOf("جاري فحص وتفكيك الرابط...") }
     var inspectionResult by remember { mutableStateOf<TikTokDeepInspectionData?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableStateOf(DownloadProgressState()) }
 
     // Auto-clipboard detection on entry
@@ -72,10 +77,10 @@ fun InspectorScreen(
     LaunchedEffect(isInspecting) {
         if (isInspecting) {
             val messages = listOf(
-                "جاري الاتصال بخوادم تيك توك وسحب بيانات الرابط...",
+                "جاري تتبع التحويلات وفك الرابط الأصلي...",
+                "جاري الاتصال بخوادم تيك توك وسحب بيانات المنشور...",
                 "جاري استخراج مواصفات الفيديو ومعدل الإطارات والأبعاد...",
-                "جاري تحليل حساب الناشر وإحصائيات التفاعل...",
-                "جاري استخراج وترتيب التعليقات الأكثر إعجاباً..."
+                "جاري جلب وترتيب التعليقات الأكثر إعجاباً من API..."
             )
             var index = 0
             while (isInspecting) {
@@ -129,7 +134,7 @@ fun InspectorScreen(
                             )
                         )
                         Text(
-                            text = "تحليل الفيديوهات، الصور، القصص، والحسابات مع أكثر التعليقات إعجاباً",
+                            text = "تحليل الفيديوهات، القصص (Story)، الصور، والحسابات ببيانات حقيقية 100%",
                             style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                         )
                     }
@@ -186,14 +191,17 @@ fun InspectorScreen(
                                     urlInput = detectedClipboardUrl!!
                                     detectedClipboardUrl = null
                                     isInspecting = true
+                                    errorMessage = null
                                     coroutineScope.launch {
                                         val res = TikTokDownloaderService.inspectTikTokUrl(urlInput)
                                         isInspecting = false
                                         res.onSuccess {
                                             inspectionResult = it
+                                            errorMessage = null
                                             Toast.makeText(context, "تم الفحص والتحليل بنجاح! 🎯", Toast.LENGTH_SHORT).show()
                                         }.onFailure {
-                                            Toast.makeText(context, it.message ?: "فشل الفحص", Toast.LENGTH_SHORT).show()
+                                            errorMessage = it.localizedMessage ?: "فشل فحص الرابط"
+                                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 },
@@ -213,17 +221,20 @@ fun InspectorScreen(
         item {
             GlassCard {
                 Text(
-                    text = "رابط الفيديو، الصورة، القصة، أو الحساب (@username)",
+                    text = "رابط الفيديو، القصة (Story)، ألبوم الصور، أو الحساب (@username)",
                     style = MaterialTheme.typography.labelLarge.copy(color = NeonCyan),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
                 OutlinedTextField(
                     value = urlInput,
-                    onValueChange = { urlInput = it },
+                    onValueChange = {
+                        urlInput = it
+                        if (errorMessage != null) errorMessage = null
+                    },
                     placeholder = {
                         Text(
-                            "ضع أي رابط تيك توك هنا (فيديو، صورة، قصة، أو بروفايل)...",
+                            "ضع أي رابط تيك توك هنا (فيديو، قصة، صورة، أو بروفايل)...",
                             color = TextMuted,
                             fontSize = 12.sp
                         )
@@ -268,14 +279,17 @@ fun InspectorScreen(
                             return@Button
                         }
                         isInspecting = true
+                        errorMessage = null
                         coroutineScope.launch {
                             val res = TikTokDownloaderService.inspectTikTokUrl(urlInput)
                             isInspecting = false
                             res.onSuccess {
                                 inspectionResult = it
+                                errorMessage = null
                                 Toast.makeText(context, "تم الفحص الشامل بنجاح! 🚀", Toast.LENGTH_SHORT).show()
                             }.onFailure {
-                                Toast.makeText(context, it.message ?: "فشل الفحص", Toast.LENGTH_SHORT).show()
+                                errorMessage = it.localizedMessage ?: "فشل فحص الرابط"
+                                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                             }
                         }
                     },
@@ -296,7 +310,7 @@ fun InspectorScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            "جاري الفحص العميق واستخراج البيانات...",
+                            "جاري فك الرابط والاتصال بـ API...",
                             color = DeepDarkBackground,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
@@ -317,7 +331,6 @@ fun InspectorScreen(
                     }
                 }
 
-                // Pulsing indicator subtitle
                 if (isInspecting) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
@@ -327,6 +340,31 @@ fun InspectorScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+            }
+        }
+
+        // Error Card (if any real failure occurs)
+        if (errorMessage != null) {
+            item {
+                GlassCard(
+                    borderColor = ErrorRed.copy(alpha = 0.8f),
+                    backgroundColor = Color(0x33FF3D00)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "تنبيه أثناء الفحص",
+                                style = MaterialTheme.typography.titleSmall.copy(color = TextPrimary, fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = errorMessage!!,
+                                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -342,7 +380,7 @@ fun InspectorScreen(
                         totalBytes = downloadProgress.totalBytes
                     )
                     Text(
-                        text = "جاري الحفظ بجودة عالية بدون علامة مائية...",
+                        text = "جاري الحفظ بدون علامة مائية...",
                         color = TextPrimary,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center,
@@ -353,7 +391,7 @@ fun InspectorScreen(
         }
 
         // If no inspection yet, show informative guide card
-        if (inspectionResult == null && !isInspecting) {
+        if (inspectionResult == null && !isInspecting && errorMessage == null) {
             item {
                 GlassCard(
                     borderColor = NeonCyan.copy(alpha = 0.2f),
@@ -367,15 +405,15 @@ fun InspectorScreen(
                         )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    InspectorFeatureRow(icon = Icons.Default.Movie, title = "فيديوهات فائقة الدقة", desc = "استخراج جودة 4K/FHD والأبعاد وحجم الملف الصافي")
+                    InspectorFeatureRow(icon = Icons.Default.Movie, title = "فيديوهات فائقة الدقة", desc = "استخراج جودة FHD والأبعاد وحجم الملف الصافي")
                     Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.PhotoLibrary, title = "ألبومات الصور (Photo Mode)", desc = "فحص كافة صور الألبوم وتنزيلها دفعة واحدة بجودة أصلية")
+                    InspectorFeatureRow(icon = Icons.Default.HistoryToggleOff, title = "قصص تيك توك (Stories)", desc = "تمييز القصص تلقائياً وإظهار إحصائياتها الدقيقة الحقيقية")
                     Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.HistoryToggleOff, title = "قصص تيك توك (Stories)", desc = "تحليل وتنزيل القصص قبل اختفائها بدقة كاملة")
+                    InspectorFeatureRow(icon = Icons.Default.PhotoLibrary, title = "ألبومات الصور (Photo Mode)", desc = "فحص كافة صور الألبوم وتنزيلها بجودة أصلية")
                     Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.Person, title = "فحص الحسابات والبروفايل", desc = "إحصائيات المتابعين، مجموع اللايكات، والنبذة التعريفية")
+                    InspectorFeatureRow(icon = Icons.Default.Person, title = "صور الحسابات (Avatars)", desc = "عرض صور البروفايل وصور المعلقين بدقة عالية عبر Coil")
                     Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.Favorite, title = "🔥 التعليقات الأكثر إعجاباً", desc = "جلب التعليقات الأعلى تفاعلاً مع إمكانية نسخها بنقرة واحدة")
+                    InspectorFeatureRow(icon = Icons.Default.Favorite, title = "🔥 التعليقات الحقيقية الأكثر إعجاباً", desc = "جلب التعليقات الحقيقية من API مرتبة حسب الإعجابات")
                 }
             }
         }
@@ -398,8 +436,8 @@ fun InspectorScreen(
                     ) {
                         NeonBadge(
                             text = "${data.contentType.badgeIcon} ${data.contentType.titleArabic}",
-                            textColor = NeonCyan,
-                            borderColor = NeonCyan
+                            textColor = if (data.contentType == TikTokContentType.STORY) NeonPink else NeonCyan,
+                            borderColor = if (data.contentType == TikTokContentType.STORY) NeonPink else NeonCyan
                         )
                         if (data.isVerified) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -412,14 +450,14 @@ fun InspectorScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Profile Row
+                    // Profile Row with Coil Image Loader
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
+                                .size(68.dp)
                                 .clip(CircleShape)
                                 .background(DarkSurfaceElevated)
                                 .border(2.dp, Brush.linearGradient(listOf(NeonCyan, NeonPink)), CircleShape),
@@ -431,6 +469,21 @@ fun InspectorScreen(
                                 tint = NeonCyan,
                                 modifier = Modifier.size(36.dp)
                             )
+                            if (data.authorAvatar.isNotBlank()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(data.authorAvatar)
+                                        .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
+                                        .addHeader("Referer", "https://www.tiktok.com/")
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = data.authorName,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(14.dp))
@@ -507,6 +560,53 @@ fun InspectorScreen(
                 }
             }
 
+            // Cover Image Preview (if present)
+            if (data.thumbnailUrl.isNotBlank() && data.contentType != TikTokContentType.PROFILE) {
+                item {
+                    GlassCard(
+                        borderColor = NeonCyan.copy(alpha = 0.35f),
+                        backgroundColor = DarkSurfaceCard
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(210.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(DarkSurfaceElevated),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(data.thumbnailUrl)
+                                    .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
+                                    .addHeader("Referer", "https://www.tiktok.com/")
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "غلاف المنشور",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            // Content type badge overlay
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xCC0F0F13))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "${data.contentType.badgeIcon} ${data.contentType.titleArabic}",
+                                    color = NeonCyan,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // 2. Title & Caption Card
             if (data.title.isNotBlank() && data.contentType != TikTokContentType.PROFILE) {
                 item {
@@ -518,7 +618,7 @@ fun InspectorScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "الوصف والهاشتاقات:",
+                                    text = "الوصف / العنوان:",
                                     style = MaterialTheme.typography.labelMedium.copy(color = NeonCyan)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -541,11 +641,11 @@ fun InspectorScreen(
                 }
             }
 
-            // 3. Bento Grid of Media Specs & Metrics
+            // 3. Bento Grid of Media Specs & Real Metrics
             if (data.contentType != TikTokContentType.PROFILE) {
                 item {
                     Text(
-                        text = "مواصفات وإحصائيات المحتوى (Specs & Analytics)",
+                        text = "مواصفات وإحصائيات المحتوى الحقيقية (100% Real Analytics)",
                         style = MaterialTheme.typography.titleSmall.copy(
                             color = NeonCyan,
                             fontWeight = FontWeight.Bold
@@ -641,7 +741,7 @@ fun InspectorScreen(
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.SdCard,
-                            value = "${data.fileSizeMB} MB | ${data.durationSec} ث",
+                            value = if (data.fileSizeMB > 0) "${data.fileSizeMB} MB | ${data.durationSec} ث" else "${data.durationSec} ثانية",
                             label = "الحجم والمدة",
                             accentColor = SuccessGreen
                         )
@@ -659,7 +759,7 @@ fun InspectorScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "ألبوم صور (${data.photos.size} صور عالية الدقة)",
+                                text = "ألبوم صور (${data.photos.size} صور)",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = NeonCyan
@@ -668,7 +768,7 @@ fun InspectorScreen(
                             Button(
                                 onClick = {
                                     coroutineScope.launch {
-                                        Toast.makeText(context, "جاري تحميل جميع صور الألبوم...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "جاري تحميل كافة صور الألبوم...", Toast.LENGTH_SHORT).show()
                                         for (photo in data.photos) {
                                             TikTokDownloaderService.downloadImageFile(
                                                 context = context,
@@ -687,11 +787,54 @@ fun InspectorScreen(
                                 Text("تحميل الكل 📥", color = DeepDarkBackground, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(data.photos, key = { it.index }) { photo ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(110.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(DarkSurfaceElevated)
+                                ) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(photo.url)
+                                            .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
+                                            .addHeader("Referer", "https://www.tiktok.com/")
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "صورة ${photo.index}",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(4.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(Color(0xCC000000))
+                                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "#${photo.index}",
+                                            color = TextPrimary,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            // 5. Quick Download Actions (for Video or Audio)
+            // 5. Quick Download Actions (for Video, Story, or Audio)
             if (data.contentType != TikTokContentType.PROFILE) {
                 item {
                     GlassCard(borderColor = NeonCyan.copy(alpha = 0.5f)) {
@@ -701,7 +844,7 @@ fun InspectorScreen(
                             modifier = Modifier.padding(bottom = 10.dp)
                         )
 
-                        // Video Download Button
+                        // Video / Story Download Button
                         Button(
                             onClick = {
                                 coroutineScope.launch {
@@ -734,7 +877,7 @@ fun InspectorScreen(
                             Icon(Icons.Default.Download, contentDescription = null, tint = DeepDarkBackground)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "تحميل الفيديو بدون علامة مائية (FHD)",
+                                if (data.contentType == TikTokContentType.STORY) "تحميل القصة بدون علامة مائية ⏱️" else "تحميل الفيديو بدون علامة مائية (FHD)",
                                 color = DeepDarkBackground,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
@@ -791,7 +934,7 @@ fun InspectorScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "🔥 التعليقات الأكثر إعجاباً (Top Liked Comments)",
+                            text = "🔥 التعليقات الحقيقية الأكثر إعجاباً (Top Liked Comments)",
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = NeonPink
@@ -813,7 +956,7 @@ fun InspectorScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
+                                    .size(40.dp)
                                     .clip(CircleShape)
                                     .background(DarkSurfaceElevated)
                                     .border(1.dp, NeonCyan.copy(alpha = 0.5f), CircleShape),
@@ -825,6 +968,21 @@ fun InspectorScreen(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
+                                if (comment.authorAvatar.isNotBlank()) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(comment.authorAvatar)
+                                            .addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
+                                            .addHeader("Referer", "https://www.tiktok.com/")
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = comment.authorName,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape)
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))
@@ -922,6 +1080,21 @@ fun InspectorScreen(
                                 }
                             }
                         }
+                    }
+                }
+            } else if (data.contentType != TikTokContentType.PROFILE) {
+                item {
+                    GlassCard(
+                        borderColor = GlassBorder.copy(alpha = 0.3f),
+                        backgroundColor = DarkSurfaceCard
+                    ) {
+                        Text(
+                            text = "لا توجد تعليقات عامة متاحة لهذا المنشور حالياً.",
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }

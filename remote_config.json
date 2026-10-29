@@ -1,19 +1,18 @@
 {
-  "latest_version_code": 5,
-  "latest_version_name": "1.4.0",
+  "latest_version_code": 6,
+  "latest_version_name": "1.5.0",
   "force_update": true,
-  "min_supported_version_code": 5,
-  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.4.0/TikTok-Viral-Studio-v1.4.0.apk",
-  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.4.0/TikTok-Studio-Admin-v1.4.0.apk",
-  "update_title_ar": "🌟 إطلاق الفحص الشامل للصور والفيديوهات والقصص والحسابات (v1.4.0)",
-  "update_message_ar": "تحديث إجباري خارق يضيف محرك التحليل والفحص العميق لكافة روابط التيك توك وقراءة التعليقات الأكثر تفاعلاً.",
+  "min_supported_version_code": 6,
+  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.5.0/TikTok-Viral-Studio-v1.5.0.apk",
+  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.5.0/TikTok-Studio-Admin-v1.5.0.apk",
+  "update_title_ar": "🚀 تحديث هام ودقيق جداً (v1.5.0)",
+  "update_message_ar": "إصلاح جذري لفحص القصص والفيديوهات، إظهار صور البروفايلات بجودة عالية، ودقة الإحصائيات 100%.",
   "changelog_ar": [
-    "إطلاق قسم الفحص الشامل 🔍 (TikTok Deep Inspector) في الواجهة الرئيسية",
-    "فحص وتحليل شامل للفيديوهات، ألبومات الصور (Photo Mode)، القصص (Stories)، والحسابات الشخصية",
-    "استعراض تفصيلي لتاريخ وتوقيت النشر الدقيق بالعربية، المشاهدات، الإعجابات، المحفوظات، والمشاركات",
-    "استخراج دقة الفيديو، أبعاد العرض، معدل الإطارات (FHD / 4K)، والمدة وحجم الملف الصافي",
-    "عرض وتحليل أبرز التعليقات الأكثر تفاعلاً وإعجاباً مع إمكانية نسخ أي تعليق بنقرة واحدة",
-    "أزرار حفظ وتنزيل مباشرة لكافة الصور أو الفيديوهات أو صورة البروفايل بدون علامة مائية"
+    "إصلاح جذري لفحص القصص والفيديوهات، إظهار صور البروفايلات بجودة عالية، ودقة الإحصائيات 100%",
+    "فك التحويل الكامل لروابط vm.tiktok.com و vt.tiktok.com والتفريق التلقائي بين الفيديو والقصة والألبوم والحساب",
+    "تحميل صور البروفايل وصور المعلقين والأغلفة بدقة كاملة عبر مكتبة Coil مع ترويسات المتصفح",
+    "قراءة إحصائيات وتوقيت النشر الحقيقي مباشرة من API بدون أي أرقام افتراضية",
+    "جلب التعليقات الحقيقية وترتيبها تنازلياً حسب الأكثر إعجاباً"
   ],
   "vip_codes": [
     "TIKTOK-VIP-2026",

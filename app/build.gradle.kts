@@ -13,8 +13,8 @@ android {
     applicationId = "com.creator.tiktokstudio"
     minSdk = 26
     targetSdk = 36
-    versionCode = 5
-    versionName = "1.4.0"
+    versionCode = 6
+    versionName = "1.5.0"
 
     externalNativeBuild {
       cmake {
@@ -97,8 +97,9 @@ dependencies {
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.material.icons.extended)
 
-  // Networking & HTTP
+  // Networking & HTTP & Image Loading
   implementation(libs.okhttp)
+  implementation(libs.coil.compose)
 
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
