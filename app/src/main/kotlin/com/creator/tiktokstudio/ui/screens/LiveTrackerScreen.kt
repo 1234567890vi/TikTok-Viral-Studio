@@ -44,6 +44,8 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.random.Random
 
+private val DangerRed = Color(0xFFFF1744)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveTrackerScreen(
@@ -488,13 +490,14 @@ fun LiveTrackerScreen(
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .background(
-                                                Brush.horizontalGradient(
+                                                brush = Brush.horizontalGradient(
                                                     listOf(
                                                         Color(0xEE4A148C),
                                                         Color(0xDD311B92),
                                                         Color(0xEE4A148C)
                                                     )
-                                                ).copy(alpha = mistFogAlpha)
+                                                ),
+                                                alpha = mistFogAlpha
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
