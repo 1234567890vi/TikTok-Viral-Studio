@@ -41,6 +41,9 @@ object TikTokDownloaderService {
 
     fun resolveRedirects(inputUrl: String): String {
         val clean = inputUrl.trim()
+        if (!clean.startsWith("http://", ignoreCase = true) && !clean.startsWith("https://", ignoreCase = true)) {
+            return clean
+        }
         return try {
             val request = Request.Builder()
                 .url(clean)
@@ -115,11 +118,12 @@ object TikTokDownloaderService {
     suspend fun extractMediaInfo(url: String): Result<TikTokVideoInfo> = withContext(Dispatchers.IO) {
         try {
             val cleanUrl = url.trim()
-            if (!cleanUrl.contains("tiktok.com") && !cleanUrl.startsWith("@")) {
-                return@withContext Result.failure(IllegalArgumentException("الرجاء إدخال رابط تيك توك صالح"))
+            val normalizedUrl = InputUtils.normalizeTikTokInput(cleanUrl, InputTargetType.DOWNLOADER)
+            if (normalizedUrl.isBlank()) {
+                return@withContext Result.failure(IllegalArgumentException("الرجاء إدخال رابط تيك توك صالح أو اسم مستخدم"))
             }
 
-            val resolvedUrl = resolveRedirects(cleanUrl)
+            val resolvedUrl = resolveRedirects(normalizedUrl)
             val apiEndpoint = "https://www.tikwm.com/api/?url=${URLEncoder.encode(resolvedUrl, "UTF-8")}&hd=1"
             val request = Request.Builder()
                 .url(apiEndpoint)
@@ -180,23 +184,21 @@ object TikTokDownloaderService {
 
     suspend fun inspectTikTokUrl(url: String): Result<TikTokDeepInspectionData> = withContext(Dispatchers.IO) {
         val cleanUrl = url.trim()
-        val resolvedUrl = resolveRedirects(cleanUrl)
+        val normalizedUrl = InputUtils.normalizeTikTokInput(cleanUrl, InputTargetType.INSPECTOR)
+        val resolvedUrl = resolveRedirects(normalizedUrl)
 
         // Profile detection:
-        // /@username without /video/, /photo/, or /story/
+        // /@username without /video/, /photo/, or /story/, or bare username, or starts with @
         val isProfile = (
-            (resolvedUrl.contains("/@") && !resolvedUrl.contains("/video/") && !resolvedUrl.contains("/photo/") && !resolvedUrl.contains("/story/")) ||
-            (cleanUrl.startsWith("@") && !cleanUrl.contains("/")) ||
-            (cleanUrl.contains("/@") && !cleanUrl.contains("/video/") && !cleanUrl.contains("/photo/") && !cleanUrl.contains("/story/"))
+            (!resolvedUrl.contains("/video/") && !resolvedUrl.contains("/photo/") && !resolvedUrl.contains("/story/")) &&
+            (resolvedUrl.contains("/@") || cleanUrl.startsWith("@") || !cleanUrl.contains("/"))
         )
 
         try {
             if (isProfile) {
-                val username = if (cleanUrl.startsWith("@")) {
-                    cleanUrl.substring(1)
-                } else {
-                    val match = Regex("@([a-zA-Z0-9_.-]+)").find(resolvedUrl) ?: Regex("@([a-zA-Z0-9_.-]+)").find(cleanUrl)
-                    match?.groupValues?.get(1) ?: cleanUrl.substringAfterLast("@").substringBefore("?").substringBefore("/")
+                val username = InputUtils.extractCleanUsername(if (cleanUrl.startsWith("@") || !cleanUrl.contains("/")) cleanUrl else resolvedUrl)
+                if (username.isBlank()) {
+                    return@withContext Result.failure(Exception("اسم المستخدم غير صالح"))
                 }
 
                 val profileApi = "https://www.tikwm.com/api/user/info?unique_id=${URLEncoder.encode(username, "UTF-8")}"
@@ -217,10 +219,14 @@ object TikTokDownloaderService {
                         val nickname = user?.optString("nickname") ?: uniqueId
                         val avatarRaw = user?.optString("avatarLarger").orEmpty().ifBlank {
                             user?.optString("avatarMedium").orEmpty().ifBlank {
-                                user?.optString("avatar").orEmpty()
+                                user?.optString("avatarThumb").orEmpty().ifBlank {
+                                    user?.optString("avatar").orEmpty()
+                                }
                             }
                         }
-                        val avatar = sanitizeUrl(avatarRaw)
+                        val avatar = sanitizeUrl(avatarRaw).ifBlank {
+                            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200"
+                        }
                         val signature = user?.optString("signature", "") ?: ""
                         val followers = stats?.optLong("followerCount", 0L) ?: 0L
                         val following = stats?.optLong("followingCount", 0L) ?: 0L
@@ -230,7 +236,7 @@ object TikTokDownloaderService {
 
                         return@withContext Result.success(
                             TikTokDeepInspectionData(
-                                url = resolvedUrl,
+                                url = normalizedUrl,
                                 contentType = TikTokContentType.PROFILE,
                                 title = "حساب تيك توك: @$uniqueId",
                                 authorName = nickname,
@@ -246,10 +252,14 @@ object TikTokDownloaderService {
                                 topComments = emptyList()
                             )
                         )
+                    } else {
+                        return@withContext Result.failure(
+                            Exception("اسم المستخدم غير موجود أو الحساب خاص")
+                        )
                     }
                 }
                 return@withContext Result.failure(
-                    Exception("تعذر جلب بيانات الحساب (@$username) مباشرة. يرجى وضع رابط فيديو أو قصة للناشر بدلاً من رابط الحساب فقط.")
+                    Exception("اسم المستخدم غير موجود أو الحساب خاص")
                 )
             }
 

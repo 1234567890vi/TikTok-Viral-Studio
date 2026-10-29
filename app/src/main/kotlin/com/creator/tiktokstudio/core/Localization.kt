@@ -131,7 +131,9 @@ data class AppStrings(
     val winnerCrownText: String,
     val sendLikeBtn: String,
     val liveConnectingText: String,
-    val liveOfflineNotice: String
+    val liveOfflineNotice: String,
+    val userNotFoundOrPrivate: String,
+    val interactiveDemoBtn: String
 )
 
 val ArabicStrings = AppStrings(
@@ -254,7 +256,9 @@ val ArabicStrings = AppStrings(
     winnerCrownText = "الفائز بالجولة 👑",
     sendLikeBtn = "إرسال لايك ❤️",
     liveConnectingText = "جاري الاتصال بغرفة البث المباشر وفك تشفير الجولة...",
-    liveOfflineNotice = "البث المباشر غير متاح حالياً أو انتهت الجولة."
+    liveOfflineNotice = "هذا الحساب ليس في بث مباشر حالياً.",
+    userNotFoundOrPrivate = "اسم المستخدم غير موجود أو الحساب خاص",
+    interactiveDemoBtn = "عرض جولة تجريبية تفاعلية ⚡"
 )
 
 val EnglishStrings = AppStrings(
@@ -377,7 +381,9 @@ val EnglishStrings = AppStrings(
     winnerCrownText = "Round Winner 👑",
     sendLikeBtn = "Send Like ❤️",
     liveConnectingText = "Connecting to Live Webcast & decrypting battle...",
-    liveOfflineNotice = "Live stream is currently offline or battle has ended."
+    liveOfflineNotice = "This account is not currently live.",
+    userNotFoundOrPrivate = "Username not found or account is private",
+    interactiveDemoBtn = "Show Interactive Demo Battle ⚡"
 )
 
 val FrenchStrings = AppStrings(
@@ -500,7 +506,9 @@ val FrenchStrings = AppStrings(
     winnerCrownText = "Vainqueur du Match 👑",
     sendLikeBtn = "Envoyer Like ❤️",
     liveConnectingText = "Connexion au Webcast Live & décodage du match...",
-    liveOfflineNotice = "Le live est actuellement hors-ligne ou le match est terminé."
+    liveOfflineNotice = "Ce compte n'est pas en direct actuellement.",
+    userNotFoundOrPrivate = "Nom d'utilisateur introuvable ou compte privé",
+    interactiveDemoBtn = "Afficher la bataille de démo ⚡"
 )
 
 val LocalAppStrings = staticCompositionLocalOf { ArabicStrings }

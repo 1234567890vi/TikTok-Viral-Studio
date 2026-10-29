@@ -147,22 +147,34 @@ fun LiveTrackerScreen(
             Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
             return
         }
+        val normalized = InputUtils.normalizeTikTokInput(inputUrl, InputTargetType.LIVE_TRACKER)
         isProcessing = true
         roomData = null
 
         coroutineScope.launch {
             val start = System.currentTimeMillis()
-            val result = LiveStreamService.fetchLiveRoom(inputUrl)
+            val result = LiveStreamService.fetchLiveRoom(normalized)
             val elapsed = System.currentTimeMillis() - start
             if (elapsed < 3000L) {
                 delay(3000L - elapsed)
             }
+            delay(250L)
             isProcessing = false
             result.onSuccess {
                 roomData = it
-                Toast.makeText(context, "تم الاتصال بالبث والجولة بنجاح! 🔴", Toast.LENGTH_SHORT).show()
+                if (it.isLiveOffline) {
+                    Toast.makeText(context, strings.liveOfflineNotice, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "تم الاتصال بالبث والجولة بنجاح! 🔴", Toast.LENGTH_SHORT).show()
+                }
             }.onFailure {
-                Toast.makeText(context, "فشل الاتصال: ${it.message}", Toast.LENGTH_LONG).show()
+                val rawMsg = it.localizedMessage ?: ""
+                val err = when {
+                    rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                    rawMsg.isNotBlank() -> rawMsg
+                    else -> strings.inspectErrorFallback
+                }
+                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -282,8 +294,145 @@ fun LiveTrackerScreen(
             // Section 3: Live Room Player & Battle Display
             val currentRoom = roomData
             if (currentRoom != null && !isProcessing) {
-                // Top Live Info & Clean Mode Bar
-                item {
+                if (currentRoom.isLiveOffline) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .border(1.5.dp, GoldVip.copy(alpha = 0.6f), RoundedCornerShape(20.dp)),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xF01A1828))
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(20.dp),
+                                    color = GoldVip.copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, GoldVip.copy(alpha = 0.5f))
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.WifiOff,
+                                            contentDescription = null,
+                                            tint = GoldVip,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = strings.liveOfflineNotice,
+                                            color = GoldVip,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                AsyncImage(
+                                    model = currentRoom.hostAvatar,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape)
+                                        .border(2.5.dp, Brush.sweepGradient(listOf(NeonCyan, NeonPink, GoldVip)), CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    text = currentRoom.hostName,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "@${currentRoom.hostUniqueId}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = NeonCyan,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(DarkSurfaceElevated)
+                                        .padding(vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = formatMetric(currentRoom.likesCount),
+                                            fontWeight = FontWeight.Bold,
+                                            color = NeonPink,
+                                            fontSize = 15.sp
+                                        )
+                                        Text(
+                                            text = strings.likesLabel,
+                                            color = TextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .width(1.dp)
+                                            .height(26.dp)
+                                            .background(GlassBorder)
+                                    )
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "OFFLINE",
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextMuted,
+                                            fontSize = 15.sp
+                                        )
+                                        Text(
+                                            text = "حالة البث",
+                                            color = TextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                Button(
+                                    onClick = {
+                                        roomData = LiveStreamService.createDemoRoom(currentRoom.hostUniqueId)
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Bolt, contentDescription = null, tint = OnAccentDark)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = strings.interactiveDemoBtn,
+                                        color = OnAccentDark,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Top Live Info & Clean Mode Bar
+                    item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -741,6 +890,7 @@ fun LiveTrackerScreen(
             }
         }
     }
+}
 }
 
 @Composable

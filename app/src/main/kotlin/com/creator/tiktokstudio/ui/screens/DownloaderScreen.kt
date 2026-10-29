@@ -33,9 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.creator.tiktokstudio.core.Localization
-import com.creator.tiktokstudio.core.NativeEngine
-import com.creator.tiktokstudio.core.TikTokDownloaderService
+import com.creator.tiktokstudio.core.*
 import com.creator.tiktokstudio.data.DownloadProgressState
 import com.creator.tiktokstudio.data.DownloadedMedia
 import com.creator.tiktokstudio.data.TikTokVideoInfo
@@ -70,8 +68,8 @@ fun DownloaderScreen(
     LaunchedEffect(Unit) {
         val clip = clipboardManager.primaryClip
         if (clip != null && clip.itemCount > 0) {
-            val text = clip.getItemAt(0).text?.toString() ?: ""
-            if (text.contains("tiktok.com") && text != urlInput) {
+            val text = clip.getItemAt(0).text?.toString()?.trim() ?: ""
+            if (text.isNotBlank() && (text.contains("tiktok.com") || text.startsWith("@") || (!text.contains(" ") && text.length in 3..30)) && text != urlInput) {
                 detectedClipboardUrl = text
             }
         }
@@ -129,11 +127,12 @@ fun DownloaderScreen(
                                 onClick = {
                                     urlInput = detectedClipboardUrl!!
                                     detectedClipboardUrl = null
+                                    val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.DOWNLOADER)
                                     isExtracting = true
                                     extractedVideo = null
                                     coroutineScope.launch {
                                         val start = System.currentTimeMillis()
-                                        val res = TikTokDownloaderService.extractMediaInfo(urlInput)
+                                        val res = TikTokDownloaderService.extractMediaInfo(normalized)
                                         val elapsed = System.currentTimeMillis() - start
                                         if (elapsed < 3000L) {
                                             delay(3000L - elapsed)
@@ -144,7 +143,13 @@ fun DownloaderScreen(
                                             extractedVideo = it
                                             Toast.makeText(context, strings.videoExtractSuccessToast, Toast.LENGTH_SHORT).show()
                                         }.onFailure {
-                                            Toast.makeText(context, it.message ?: strings.downloadFailedToast, Toast.LENGTH_LONG).show()
+                                            val rawMsg = it.localizedMessage ?: ""
+                                            val err = when {
+                                                rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                                                rawMsg.isNotBlank() -> rawMsg
+                                                else -> strings.downloadFailedToast
+                                            }
+                                            Toast.makeText(context, err, Toast.LENGTH_LONG).show()
                                         }
                                     }
                                 },
@@ -218,11 +223,12 @@ fun DownloaderScreen(
                             Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
                             return@Button
                         }
+                        val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.DOWNLOADER)
                         isExtracting = true
                         extractedVideo = null
                         coroutineScope.launch {
                             val start = System.currentTimeMillis()
-                            val res = TikTokDownloaderService.extractMediaInfo(urlInput)
+                            val res = TikTokDownloaderService.extractMediaInfo(normalized)
                             val elapsed = System.currentTimeMillis() - start
                             if (elapsed < 3000L) {
                                 delay(3000L - elapsed)
@@ -233,7 +239,13 @@ fun DownloaderScreen(
                                 extractedVideo = it
                                 Toast.makeText(context, strings.videoExtractSuccessToast, Toast.LENGTH_SHORT).show()
                             }.onFailure {
-                                Toast.makeText(context, it.message ?: strings.downloadFailedToast, Toast.LENGTH_LONG).show()
+                                val rawMsg = it.localizedMessage ?: ""
+                                val err = when {
+                                    rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                                    rawMsg.isNotBlank() -> rawMsg
+                                    else -> strings.downloadFailedToast
+                                }
+                                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
                             }
                         }
                     },

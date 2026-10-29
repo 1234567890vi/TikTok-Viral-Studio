@@ -35,9 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.creator.tiktokstudio.core.AppStrings
-import com.creator.tiktokstudio.core.Localization
-import com.creator.tiktokstudio.core.TikTokDownloaderService
+import com.creator.tiktokstudio.core.*
 import com.creator.tiktokstudio.data.*
 import com.creator.tiktokstudio.ui.components.ProcessingStepsBox
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
@@ -77,8 +75,8 @@ fun InspectorScreen(
     LaunchedEffect(Unit) {
         val clip = clipboardManager.primaryClip
         if (clip != null && clip.itemCount > 0) {
-            val text = clip.getItemAt(0).text?.toString() ?: ""
-            if (text.contains("tiktok.com") && text != urlInput) {
+            val text = clip.getItemAt(0).text?.toString()?.trim() ?: ""
+            if (text.isNotBlank() && (text.contains("tiktok.com") || text.startsWith("@") || (!text.contains(" ") && text.length in 3..30)) && text != urlInput) {
                 detectedClipboardUrl = text
             }
         }
@@ -183,12 +181,13 @@ fun InspectorScreen(
                                 onClick = {
                                     urlInput = detectedClipboardUrl!!
                                     detectedClipboardUrl = null
+                                    val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.INSPECTOR)
                                     isInspecting = true
                                     inspectionResult = null
                                     errorMessage = null
                                     coroutineScope.launch {
                                         val start = System.currentTimeMillis()
-                                        val res = TikTokDownloaderService.inspectTikTokUrl(urlInput)
+                                        val res = TikTokDownloaderService.inspectTikTokUrl(normalized)
                                         val elapsed = System.currentTimeMillis() - start
                                         if (elapsed < 3000L) {
                                             delay(3000L - elapsed)
@@ -200,7 +199,12 @@ fun InspectorScreen(
                                             errorMessage = null
                                             Toast.makeText(context, strings.inspectionSuccessToast, Toast.LENGTH_SHORT).show()
                                         }.onFailure {
-                                            errorMessage = it.localizedMessage ?: strings.inspectErrorFallback
+                                            val rawMsg = it.localizedMessage ?: ""
+                                            errorMessage = when {
+                                                rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                                                rawMsg.isNotBlank() -> rawMsg
+                                                else -> strings.inspectErrorFallback
+                                            }
                                             Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                                         }
                                     }
@@ -272,12 +276,13 @@ fun InspectorScreen(
                             Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
                             return@Button
                         }
+                        val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.INSPECTOR)
                         isInspecting = true
                         inspectionResult = null
                         errorMessage = null
                         coroutineScope.launch {
                             val start = System.currentTimeMillis()
-                            val res = TikTokDownloaderService.inspectTikTokUrl(urlInput)
+                            val res = TikTokDownloaderService.inspectTikTokUrl(normalized)
                             val elapsed = System.currentTimeMillis() - start
                             if (elapsed < 3000L) {
                                 delay(3000L - elapsed)
@@ -289,7 +294,12 @@ fun InspectorScreen(
                                 errorMessage = null
                                 Toast.makeText(context, strings.inspectionSuccessToast, Toast.LENGTH_SHORT).show()
                             }.onFailure {
-                                errorMessage = it.localizedMessage ?: strings.inspectErrorFallback
+                                val rawMsg = it.localizedMessage ?: ""
+                                errorMessage = when {
+                                    rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                                    rawMsg.isNotBlank() -> rawMsg
+                                    else -> strings.inspectErrorFallback
+                                }
                                 Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                             }
                         }
