@@ -374,6 +374,25 @@ fun LiveTrackerScreen(
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
+                                            text = formatMetric(currentRoom.followerCount),
+                                            fontWeight = FontWeight.Bold,
+                                            color = NeonCyan,
+                                            fontSize = 15.sp
+                                        )
+                                        Text(
+                                            text = strings.followersLabel,
+                                            color = TextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .width(1.dp)
+                                            .height(26.dp)
+                                            .background(GlassBorder)
+                                    )
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
                                             text = formatMetric(currentRoom.likesCount),
                                             fontWeight = FontWeight.Bold,
                                             color = NeonPink,

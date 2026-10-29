@@ -256,7 +256,7 @@ val ArabicStrings = AppStrings(
     winnerCrownText = "الفائز بالجولة 👑",
     sendLikeBtn = "إرسال لايك ❤️",
     liveConnectingText = "جاري الاتصال بغرفة البث المباشر وفك تشفير الجولة...",
-    liveOfflineNotice = "هذا الحساب ليس في بث مباشر حالياً.",
+    liveOfflineNotice = "الحساب موجود ولكنه لا يبث لايف في هذه اللحظة (Offline)",
     userNotFoundOrPrivate = "اسم المستخدم غير موجود أو الحساب خاص",
     interactiveDemoBtn = "عرض جولة تجريبية تفاعلية ⚡"
 )
@@ -381,7 +381,7 @@ val EnglishStrings = AppStrings(
     winnerCrownText = "Round Winner 👑",
     sendLikeBtn = "Send Like ❤️",
     liveConnectingText = "Connecting to Live Webcast & decrypting battle...",
-    liveOfflineNotice = "This account is not currently live.",
+    liveOfflineNotice = "Account found, but not broadcasting live at this moment (Offline)",
     userNotFoundOrPrivate = "Username not found or account is private",
     interactiveDemoBtn = "Show Interactive Demo Battle ⚡"
 )
@@ -506,7 +506,7 @@ val FrenchStrings = AppStrings(
     winnerCrownText = "Vainqueur du Match 👑",
     sendLikeBtn = "Envoyer Like ❤️",
     liveConnectingText = "Connexion au Webcast Live & décodage du match...",
-    liveOfflineNotice = "Ce compte n'est pas en direct actuellement.",
+    liveOfflineNotice = "Compte trouvé, mais ne diffuse pas en direct actuellement (Offline)",
     userNotFoundOrPrivate = "Nom d'utilisateur introuvable ou compte privé",
     interactiveDemoBtn = "Afficher la bataille de démo ⚡"
 )

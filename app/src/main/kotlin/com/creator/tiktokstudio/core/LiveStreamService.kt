@@ -34,6 +34,7 @@ data class LiveRoomData(
     val hostAvatar: String,
     val viewerCount: Long,
     val likesCount: Long,
+    val followerCount: Long = 0L,
     val isPkActive: Boolean,
     val isPunishmentTime: Boolean,
     val battleTimeLeftSec: Int,
@@ -61,6 +62,9 @@ data class LiveRoomData(
 object LiveStreamService {
     private const val TAG = "LiveStreamService"
 
+    private const val BROWSER_USER_AGENT =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
@@ -72,79 +76,261 @@ object LiveStreamService {
 
     suspend fun fetchLiveRoom(input: String): Result<LiveRoomData> = withContext(Dispatchers.IO) {
         try {
-            val clean = input.trim()
-            val normalizedUrl = InputUtils.normalizeTikTokInput(clean, InputTargetType.LIVE_TRACKER)
-            val username = InputUtils.extractCleanUsername(if (clean.startsWith("@") || !clean.contains("/")) clean else normalizedUrl)
-                .ifBlank { "creator_live" }
-
-            // Built-in Demo account always launches the interactive PK battle test
-            if (username.equals("tiktok_hero_live", ignoreCase = true)) {
-                return@withContext Result.success(createDemoRoom(username))
+            val cleanUsername = InputUtils.sanitizeUsername(input)
+            if (cleanUsername.isBlank()) {
+                return@withContext Result.failure(Exception("اسم المستخدم غير صالح"))
             }
 
-            var hostNickname = username
-            var hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
-            var viewers = 0L
-            var likes = 0L
-            var isLiveActive = false
-            var userExists = false
+            // Built-in Demo account always launches the interactive PK battle test
+            if (cleanUsername.equals("tiktok_hero_live", ignoreCase = true)) {
+                return@withContext Result.success(createDemoRoom("tiktok_hero_live"))
+            }
 
-            // Query user info and live status from TikWM API
+            var accountFound = false
+            var isLiveActive = false
+            var hostNickname = cleanUsername
+            var hostUniqueId = cleanUsername
+            var hostAvatar = ""
+            var followers = 0L
+            var likes = 0L
+            var viewers = 0L
+            var title = "بث مباشر رسمي - @$cleanUsername"
+            var streamUrl = ""
+            var foundRoomId = ""
+
+            // ==========================================
+            // Channel 1: TikWM User & Live API (Fastest)
+            // ==========================================
             try {
-                val enc = URLEncoder.encode(username, "UTF-8")
+                val enc = URLEncoder.encode(cleanUsername, "UTF-8")
                 val req = Request.Builder()
                     .url("https://www.tikwm.com/api/user/info?unique_id=$enc")
-                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+                    .addHeader("User-Agent", BROWSER_USER_AGENT)
                     .addHeader("Accept", "application/json")
                     .build()
 
                 httpClient.newCall(req).execute().use { resp ->
-                    val body = resp.body?.string() ?: ""
+                    val body = resp.body?.string().orEmpty()
                     if (body.isNotBlank()) {
                         val json = JSONObject(body)
                         if (json.optInt("code", -1) == 0 && json.has("data")) {
-                            userExists = true
+                            accountFound = true
                             val data = json.getJSONObject("data")
                             val user = data.optJSONObject("user")
                             if (user != null) {
-                                hostNickname = user.optString("nickname", username)
+                                hostNickname = user.optString("nickname", cleanUsername)
+                                hostUniqueId = user.optString("uniqueId", cleanUsername)
                                 val av = user.optString("avatarLarger", user.optString("avatarMedium", user.optString("avatar", "")))
                                 if (av.isNotBlank()) hostAvatar = TikTokDownloaderService.sanitizeUrl(av)
-                                val roomIdStr = user.optString("roomId", "0")
-                                if (roomIdStr != "0" && roomIdStr.isNotBlank()) {
+                                val rId = user.optString("roomId", "0")
+                                if (rId != "0" && rId.isNotBlank()) {
+                                    foundRoomId = rId
                                     isLiveActive = true
                                 }
                             }
                             val stats = data.optJSONObject("stats")
                             if (stats != null) {
-                                val followers = stats.optLong("followerCount", 0L)
+                                followers = stats.optLong("followerCount", 0L)
                                 likes = stats.optLong("heartCount", 0L)
-                                viewers = (followers * 0.08).toLong().coerceIn(1200L, 95000L)
                             }
-                        } else {
-                            return@withContext Result.failure(Exception("اسم المستخدم غير موجود أو الحساب خاص"))
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "User info fetch failed: ${e.message}")
+                Log.w(TAG, "Channel 1 (TikWM) failed: ${e.message}")
             }
 
-            if (!userExists) {
+            // ==========================================
+            // Channel 2: TikTok Webcast API
+            // ==========================================
+            try {
+                val enc = URLEncoder.encode(cleanUsername, "UTF-8")
+                val req = Request.Builder()
+                    .url("https://www.tiktok.com/api-live/user/room/?aid=1988&sourceType=54&uniqueId=$enc")
+                    .addHeader("User-Agent", BROWSER_USER_AGENT)
+                    .addHeader("Referer", "https://www.tiktok.com/")
+                    .addHeader("Accept", "application/json")
+                    .build()
+
+                httpClient.newCall(req).execute().use { resp ->
+                    val body = resp.body?.string().orEmpty()
+                    if (body.isNotBlank()) {
+                        val json = JSONObject(body)
+                        val data = json.optJSONObject("data")
+                        if (data != null) {
+                            accountFound = true
+                            val user = data.optJSONObject("user")
+                            if (user != null) {
+                                if (hostNickname.isBlank() || hostNickname == cleanUsername) {
+                                    hostNickname = user.optString("nickname", cleanUsername)
+                                }
+                                hostUniqueId = user.optString("uniqueId", cleanUsername)
+                                if (hostAvatar.isBlank()) {
+                                    val av = user.optString("avatarLarger", user.optString("avatarMedium", user.optString("avatarThumb", "")))
+                                    if (av.isNotBlank()) hostAvatar = TikTokDownloaderService.sanitizeUrl(av)
+                                }
+                                val userRoomId = user.optString("roomId", "")
+                                if (userRoomId.isNotBlank() && userRoomId != "0") {
+                                    foundRoomId = userRoomId
+                                }
+                                val uStatus = user.optInt("status", 4)
+                                if (uStatus == 2) {
+                                    isLiveActive = true
+                                }
+                            }
+                            val liveRoom = data.optJSONObject("liveRoom")
+                            if (liveRoom != null) {
+                                val lrStatus = liveRoom.optInt("status", 4)
+                                if (lrStatus == 2) {
+                                    isLiveActive = true
+                                }
+                                val lrTitle = liveRoom.optString("title", "")
+                                if (lrTitle.isNotBlank()) title = lrTitle
+                                val lrStats = liveRoom.optJSONObject("liveRoomStats")
+                                if (lrStats != null) {
+                                    val uc = lrStats.optLong("userCount", 0L)
+                                    if (uc > 0) viewers = uc
+                                }
+                            }
+                            val stats = data.optJSONObject("stats")
+                            if (stats != null) {
+                                val fc = stats.optLong("followerCount", 0L)
+                                if (fc > 0 && followers == 0L) followers = fc
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Channel 2-A (api-live) failed: ${e.message}")
+            }
+
+            // If foundRoomId is present, query webcast room info for live stream pull URLs
+            if (foundRoomId.isNotBlank() && foundRoomId != "0") {
+                try {
+                    val req = Request.Builder()
+                        .url("https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id=$foundRoomId")
+                        .addHeader("User-Agent", BROWSER_USER_AGENT)
+                        .addHeader("Referer", "https://www.tiktok.com/")
+                        .addHeader("Accept", "application/json")
+                        .build()
+
+                    httpClient.newCall(req).execute().use { resp ->
+                        val body = resp.body?.string().orEmpty()
+                        if (body.isNotBlank()) {
+                            val json = JSONObject(body)
+                            val data = json.optJSONObject("data")
+                            if (data != null) {
+                                accountFound = true
+                                val status = data.optInt("status", 4)
+                                if (status == 2) {
+                                    isLiveActive = true
+                                }
+                                val streamUrlObj = data.optJSONObject("stream_url")
+                                if (streamUrlObj != null) {
+                                    val hls = streamUrlObj.optString("hls_pull_url", "")
+                                    if (hls.isNotBlank()) {
+                                        streamUrl = hls
+                                        isLiveActive = true
+                                    } else {
+                                        val flv = streamUrlObj.optJSONObject("flv_pull_url")
+                                        if (flv != null) {
+                                            val uhd = flv.optString("FULL_HD1").ifBlank { flv.optString("HD1").ifBlank { flv.optString("SD1", "") } }
+                                            if (uhd.isNotBlank()) {
+                                                streamUrl = uhd
+                                                isLiveActive = true
+                                            }
+                                        }
+                                    }
+                                }
+                                val owner = data.optJSONObject("owner")
+                                if (owner != null) {
+                                    val nick = owner.optString("nickname", "")
+                                    if (nick.isNotBlank()) hostNickname = nick
+                                    val av = owner.optString("avatar_larger", owner.optString("avatar_medium", owner.optString("avatar_thumb", "")))
+                                    if (hostAvatar.isBlank() && av.isNotBlank()) hostAvatar = TikTokDownloaderService.sanitizeUrl(av)
+                                }
+                                val uc = data.optLong("user_count", 0L)
+                                if (uc > 0) viewers = uc
+                                val lc = data.optLong("like_count", 0L)
+                                if (lc > 0 && likes == 0L) likes = lc
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Channel 2-B (webcast room info) failed: ${e.message}")
+                }
+            }
+
+            // ==========================================
+            // Channel 3: HTML Rehydration Parse
+            // ==========================================
+            if (!isLiveActive || streamUrl.isBlank()) {
+                try {
+                    val enc = URLEncoder.encode(cleanUsername, "UTF-8")
+                    val req = Request.Builder()
+                        .url("https://www.tiktok.com/@$enc/live")
+                        .addHeader("User-Agent", BROWSER_USER_AGENT)
+                        .addHeader("Referer", "https://www.tiktok.com/")
+                        .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                        .build()
+
+                    httpClient.newCall(req).execute().use { resp ->
+                        val html = resp.body?.string().orEmpty()
+                        if (html.isNotBlank()) {
+                            val rehydrationMatch = Regex("""<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>(.*?)</script>""").find(html)
+                            val sigiMatch = Regex("""<script id="SIGI_STATE"[^>]*>(.*?)</script>""").find(html)
+                            val jsonContent = rehydrationMatch?.groupValues?.get(1) ?: sigiMatch?.groupValues?.get(1)
+                            if (!jsonContent.isNullOrBlank()) {
+                                accountFound = true
+                                if (jsonContent.contains("\"status\":2")) {
+                                    isLiveActive = true
+                                }
+                                val hlsMatch = Regex(""""hls_pull_url":"([^"]+)"""").find(jsonContent)
+                                if (hlsMatch != null) {
+                                    val rawHls = hlsMatch.groupValues[1].replace("\\u0026", "&").replace("\\/", "/")
+                                    if (rawHls.startsWith("http")) {
+                                        streamUrl = rawHls
+                                        isLiveActive = true
+                                    }
+                                }
+                                val flvMatch = Regex(""""FULL_HD1":"([^"]+)"""").find(jsonContent)
+                                    ?: Regex(""""HD1":"([^"]+)"""").find(jsonContent)
+                                if (streamUrl.isBlank() && flvMatch != null) {
+                                    val rawFlv = flvMatch.groupValues[1].replace("\\u0026", "&").replace("\\/", "/")
+                                    if (rawFlv.startsWith("http")) {
+                                        streamUrl = rawFlv
+                                        isLiveActive = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Channel 3 (Rehydration) failed: ${e.message}")
+                }
+            }
+
+            // Only return error if all 3 channels fail to find the account
+            if (!accountFound) {
                 return@withContext Result.failure(Exception("اسم المستخدم غير موجود أو الحساب خاص"))
             }
 
+            if (hostAvatar.isBlank()) {
+                hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+            }
+
+            // If account is found but offline (status == 4 or not currently live)
             if (!isLiveActive) {
-                // Return creator profile with offline notice
                 val offlineRoom = LiveRoomData(
-                    roomId = "offline_$username",
-                    title = "حساب تيك توك: @$username",
+                    roomId = if (foundRoomId.isNotBlank() && foundRoomId != "0") foundRoomId else "offline_$cleanUsername",
+                    title = title.ifBlank { "حساب تيك توك: @$cleanUsername" },
                     streamUrl = FALLBACK_STREAM_URL,
                     hostName = hostNickname,
-                    hostUniqueId = username,
+                    hostUniqueId = hostUniqueId,
                     hostAvatar = hostAvatar,
                     viewerCount = 0L,
                     likesCount = likes,
+                    followerCount = followers,
                     isPkActive = false,
                     isPunishmentTime = false,
                     battleTimeLeftSec = 0,
@@ -166,21 +352,26 @@ object LiveStreamService {
                     opponentTopContributors = emptyList(),
                     liveComments = emptyList(),
                     isLiveOffline = true,
-                    offlineNotice = "هذا الحساب ليس في بث مباشر حالياً"
+                    offlineNotice = "الحساب موجود ولكنه لا يبث لايف في هذه اللحظة (Offline)"
                 )
                 return@withContext Result.success(offlineRoom)
             }
 
             // Online Live Room
+            val finalStreamUrl = streamUrl.ifBlank { FALLBACK_STREAM_URL }
+            val finalViewers = if (viewers > 0) viewers else maxOf(1200L, (followers * 0.08).toLong().coerceIn(1200L, 95000L))
+            val finalLikes = if (likes > 0) likes else 185000L
+
             val roomData = LiveRoomData(
-                roomId = "room_${(username.hashCode() and 0x7FFFFFFF) % 1000000}",
-                title = "🔴 بث مباشر رسمي وجولة PK حماسية - @$username",
-                streamUrl = FALLBACK_STREAM_URL,
+                roomId = if (foundRoomId.isNotBlank() && foundRoomId != "0") foundRoomId else "room_${(cleanUsername.hashCode() and 0x7FFFFFFF) % 1000000}",
+                title = title.ifBlank { "🔴 بث مباشر رسمي وجولة PK حماسية - @$cleanUsername" },
+                streamUrl = finalStreamUrl,
                 hostName = hostNickname,
-                hostUniqueId = username,
+                hostUniqueId = hostUniqueId,
                 hostAvatar = hostAvatar,
-                viewerCount = viewers,
-                likesCount = likes,
+                viewerCount = finalViewers,
+                likesCount = finalLikes,
+                followerCount = followers,
                 isPkActive = true,
                 isPunishmentTime = false,
                 battleTimeLeftSec = 285,
@@ -235,6 +426,7 @@ object LiveStreamService {
             hostAvatar = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150",
             viewerCount = 14500L,
             likesCount = 328000L,
+            followerCount = 185000L,
             isPkActive = true,
             isPunishmentTime = false,
             battleTimeLeftSec = 285,

@@ -1,5 +1,7 @@
 package com.creator.tiktokstudio.core
 
+import java.util.Locale
+
 enum class InputTargetType {
     INSPECTOR,
     LIVE_TRACKER,
@@ -7,6 +9,49 @@ enum class InputTargetType {
 }
 
 object InputUtils {
+    /**
+     * Sanitizes username:
+     * - Trims whitespace
+     * - Removes zero-width spaces and invisible characters
+     * - Converts to lowercase
+     * - Strips leading @, URL path, query params
+     */
+    fun sanitizeUsername(raw: String): String {
+        if (raw.isBlank()) return ""
+        val cleaned = raw.trim()
+            .replace("\u200B", "")
+            .replace("\u200C", "")
+            .replace("\u200D", "")
+            .replace("\uFEFF", "")
+            .replace("\u00A0", "")
+            .replace("\u200E", "")
+            .replace("\u200F", "")
+            .replace("\u202A", "")
+            .replace("\u202B", "")
+            .replace("\u202C", "")
+            .replace("\u202D", "")
+            .replace("\u202E", "")
+            .trim()
+
+        var user = cleaned
+        if (user.contains("tiktok.com/")) {
+            val part = user.substringAfter("tiktok.com/")
+            if (part.contains("@")) {
+                user = "@" + part.substringAfter("@").substringBefore("/").substringBefore("?")
+            }
+        }
+        val regex = Regex("""@([a-zA-Z0-9_.-]+)""")
+        val match = regex.find(user)
+        if (match != null) {
+            return match.groupValues[1].lowercase(Locale.ROOT)
+        }
+        return user.removePrefix("@")
+            .substringBefore("/")
+            .substringBefore("?")
+            .trim()
+            .lowercase(Locale.ROOT)
+    }
+
     /**
      * Normalizes any raw TikTok input:
      * - Cleans whitespaces (.trim())
@@ -27,7 +72,7 @@ object InputUtils {
         }
 
         // If it starts with a recognized TikTok domain missing scheme, prepend https://
-        val lower = clean.lowercase()
+        val lower = clean.lowercase(Locale.ROOT)
         if (lower.startsWith("tiktok.com") ||
             lower.startsWith("www.tiktok.com") ||
             lower.startsWith("vm.tiktok.com") ||
@@ -38,7 +83,7 @@ object InputUtils {
         }
 
         // It is a direct username (e.g. "@username" or "username")
-        val cleanUser = clean.removePrefix("@").trim()
+        val cleanUser = sanitizeUsername(clean)
 
         return when (targetType) {
             InputTargetType.INSPECTOR -> "https://www.tiktok.com/@$cleanUser"
@@ -51,29 +96,6 @@ object InputUtils {
      * Extracts pure username without '@', slashes, or query parameters.
      */
     fun extractCleanUsername(input: String): String {
-        val clean = input.trim()
-        if (clean.isBlank()) return ""
-
-        // Pattern matching @username anywhere in url/string
-        val regex = Regex("""@([a-zA-Z0-9_.-]+)""")
-        val match = regex.find(clean)
-        if (match != null) {
-            return match.groupValues[1]
-        }
-
-        // Starts with @
-        if (clean.startsWith("@")) {
-            return clean.removePrefix("@").substringBefore("/").substringBefore("?").trim()
-        }
-
-        // Pure username without http or /
-        if (!clean.contains("http://", ignoreCase = true) &&
-            !clean.contains("https://", ignoreCase = true) &&
-            !clean.contains("/")
-        ) {
-            return clean.removePrefix("@").trim()
-        }
-
-        return clean.substringAfterLast("@", "").substringBefore("/").substringBefore("?").trim()
+        return sanitizeUsername(input)
     }
 }
