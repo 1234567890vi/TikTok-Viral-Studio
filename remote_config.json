@@ -1,17 +1,18 @@
 {
-  "latest_version_code": 3,
-  "latest_version_name": "1.2.0",
+  "latest_version_code": 4,
+  "latest_version_name": "1.3.0",
   "force_update": true,
-  "min_supported_version_code": 3,
-  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.2.0/TikTok-Viral-Studio-v1.2.0.apk",
-  "update_title_ar": "🚀 تحديث هام ومفتاح توقيع دائم (v1.2.0)",
-  "update_message_ar": "تم حل مشكلة تعارض الحزم نهائياً وتثبيت مفتاح التوقيع الدائم لتسهيل وتثبيت كافة التحديثات القادمة بضغطة زر واحدة.",
+  "min_supported_version_code": 4,
+  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.3.0/TikTok-Viral-Studio-v1.3.0.apk",
+  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.3.0/TikTok-Studio-Admin-v1.3.0.apk",
+  "update_title_ar": "🚀 تحديث هام ومزامنة الأجهزة اللحظية (v1.3.0)",
+  "update_message_ar": "إطلاق نظام التحكم السحابي المباشر وتحديثات الأداء الفائق وتوافق البطارية.",
   "changelog_ar": [
-    "تثبيت مفتاح توقيع رقمي دائم (release.keystore) لإنهاء مشكلة تعارض الحزم عند التحديث نهائياً",
-    "توحيد معرف التطبيق وتوافق بصمة التثبيت عبر الأجهزة",
-    "تحسينات صلاحيات التثبيت الفوري FileProvider على أندرويد 14 و 15 و 16",
-    "واجهة دخول سينمائية جديدة بكرات نيون متحركة",
-    "أيقونة جديدة فاخرة لتطبيق TikTok Viral Studio"
+    "بناء تطبيق الأدمن المنفصل والمستقل تماماً (TikTok-Studio-Admin.apk)",
+    "نظام المزامنة اللحظي لحالة الهاتف والبطارية والشحن ونوع الجهاز",
+    "مركز التحكم الإداري الشامل: وضع الصيانة، الإيقاف الفوري، وإعادة التشغيل عن بُعد",
+    "أزرار التحكم الفردي: حظر الأجهزة، إرسال رسائل منبثقة فورية، والريستارت",
+    "توقيع رقمي موحد بالمفتاح الدائم release.keystore لمنع أي تعارض حزم"
   ],
   "vip_codes": [
     "TIKTOK-VIP-2026",

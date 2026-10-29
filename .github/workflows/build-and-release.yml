@@ -48,58 +48,76 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: Build Release APKs
+        run: ./gradlew :app:assembleRelease :admin-app:assembleRelease --no-daemon --stacktrace
 
-      - name: Prepare Release APK
+      - name: Prepare Release APKs
         run: |
           mkdir -p release-output
-          # Determine release tag name
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v1.0.0"
+            TAG_NAME="v1.3.0"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
-          # Locate the assembled release APK
-          APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -z "$APK_FILE" ]; then
-            echo "Error: No APK file generated!"
+          # Locate Client APK
+          CLIENT_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$CLIENT_APK" ]; then
+            CLIENT_APK=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
+          echo "Found Client APK at: $CLIENT_APK"
+
+          # Locate Admin APK
+          ADMIN_APK=$(find admin-app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$ADMIN_APK" ]; then
+            ADMIN_APK=$(find admin-app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
+          echo "Found Admin APK at: $ADMIN_APK"
+
+          if [ -z "$CLIENT_APK" ] || [ -z "$ADMIN_APK" ]; then
+            echo "Error: One or both APKs were not generated!"
             exit 1
           fi
-          echo "Found APK at: $APK_FILE"
 
-          # Copy to tag-named APK and ensure standard release APK link
-          cp "$APK_FILE" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$APK_FILE" "release-output/TikTok-Viral-Studio-v1.0.0.apk"
+          # Copy Client APK
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v1.3.0.apk"
+
+          # Copy Admin APK
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v1.3.0.apk"
+
           ls -la release-output/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TikTok-Viral-Studio-APK
+          name: TikTok-Viral-Studio-APKs
           path: release-output/*
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.3.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.3.0' }}"
           body: |
-            ## 🚀 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.0.0' }})
+            ## 🚀 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.3.0' }})
             
-            تطبيق أندرويد احترافي فائق السرعة لصناع المحتوى وتحميل فيديوهات تيك توك بدون علامة مائية.
+            تطبيق أندرويد متكامل لصناع المحتوى وتحميل الفيديوهات 4K بدون علامة مائية + لوحة تحكم الأدمن المستقلة.
             
-            ### ✨ أبرز الميزات:
-            - **نظام التحديث الإجباري السحابي (Remote Config & Mandatory Update)**: تحديث فوري مباشر من داخل التطبيق ومزامنة الهاشتاجات وأكواد الـ VIP عن بُعد.
-            - **التحميل الخارق 4K/Full HD**: تحميل مباشر بدون أي علامات مائية مع استخراج صوت MP3.
-            - **بنية هجينة متقدمة**: واجهات Jetpack Compose بـ 120Hz، ومحرك C++ NDK، ومحرك Python.
-            - **أدوات صناع المحتوى**: أوقات النشر الذهبية، الهاشتاجات المتصدرة بنسخ بنقرة واحدة، بطاقات أفكار الفيديوهات اليومية، زخرفة البايو، وحاسبة الأرباح.
-            - **جناح الـ VIP الملكي**: مولد السكريبتات الفيرال ومحلل خوارزميات FYP المتقدم.
+            ### 📦 الملفات المتاحة للتحميل:
+            1. **تطبيق المستخدمين الأساسي**:
+               - `TikTok-Viral-Studio-v1.3.0.apk`
+            2. **تطبيق لوحة تحكم الأدمن المستقل**:
+               - `TikTok-Studio-Admin-v1.3.0.apk` (رمز المرور الافتراضي: `2026`)
             
-            ### 📥 التحميل والتثبيت:
-            - قم بتحميل ملف الـ APK المرفق أدناه وتثبيته مباشرة على هاتفك.
+            ### ✨ أبرز الميزات الجديدة (v1.3.0):
+            - **تطبيق أدمن مستقل تماماً**: لوحة تحكم سحابية مباشرة لإدارة ومراقبة التطبيق عن بُعد.
+            - **مراقبة الأجهزة اللحظية**: نسبة شحن البطارية وحالة الشحن ⚡، نوع وموديل الهاتف، إصدار الأندرويد، وحالة الاتصال.
+            - **مركز التحكم الشامل**: وضع الصيانة، إيقاف التطبيق، وإعادة تشغيل التطبيقات للجميع.
+            - **أدوات التحكم الفردي**: حظر/فك حظر الأجهزة، إرسال رسائل منبثقة فورية، وإعادة تشغيل الجهاز المستهدف.
+            - **توقيع رقمي ثابت موحد (release.keystore)** يضمن التثبيت والتحديث الفوري دون أي تعارض حزم.
           files: release-output/*
           draft: false
           prerelease: false

@@ -22,4 +22,4 @@ plugins {
 
 rootProject.name = "TikTokStudio"
 
-include(":app")
+include(":app", ":admin-app")

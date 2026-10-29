@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Guardian Shield Background -->
+    <path
+        android:fillColor="#1F1B2A"
+        android:strokeColor="#FFD700"
+        android:strokeWidth="1.8"
+        android:pathData="M54,28 L74,36 C74,56 65,72 54,80 C43,72 34,56 34,36 Z" />
+
+    <!-- Cyan Glow Accent (Left half overlay) -->
+    <path
+        android:fillColor="#4400F2FE"
+        android:pathData="M54,30 L40,37 C40,54 47,68 54,76 Z" />
+
+    <!-- Pink Glow Accent (Right half overlay) -->
+    <path
+        android:fillColor="#44FE0979"
+        android:pathData="M54,30 L68,37 C68,54 61,68 54,76 Z" />
+
+    <!-- Royal Crown Icon Inside Shield -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M44,60 L42,46 L49,52 L54,42 L59,52 L66,46 L64,60 Z" />
+
+    <!-- Crown Base Band -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,62 L64,62 A1.5,1.5 0 0 1 65.5,63.5 A1.5,1.5 0 0 1 64,65 L44,65 A1.5,1.5 0 0 1 42.5,63.5 A1.5,1.5 0 0 1 44,62 Z" />
+
+    <!-- Center Gem Sparkle -->
+    <path
+        android:fillColor="#00F2FE"
+        android:pathData="M54,49 L56,53 L54,57 L52,53 Z" />
+
+</vector>
