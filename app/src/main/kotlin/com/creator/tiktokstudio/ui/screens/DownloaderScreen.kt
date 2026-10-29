@@ -42,6 +42,7 @@ import com.creator.tiktokstudio.data.TikTokVideoInfo
 import com.creator.tiktokstudio.ui.components.AlgorithmExecutionBox
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
 import com.creator.tiktokstudio.ui.components.GlassCard
+import com.creator.tiktokstudio.ui.components.NeonBadge
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
