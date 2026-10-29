@@ -5,10 +5,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -35,58 +35,50 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.creator.tiktokstudio.core.AppStrings
+import com.creator.tiktokstudio.core.Localization
 import com.creator.tiktokstudio.core.TikTokDownloaderService
 import com.creator.tiktokstudio.data.*
+import com.creator.tiktokstudio.ui.components.AlgorithmExecutionBox
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
 import com.creator.tiktokstudio.ui.components.GlassCard
-import com.creator.tiktokstudio.ui.components.NeonBadge
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+fun TikTokContentType.getLocalizedTitle(strings: AppStrings): String = when (this) {
+    TikTokContentType.VIDEO -> strings.typeVideo
+    TikTokContentType.PHOTO_ALBUM -> strings.typePhotos
+    TikTokContentType.STORY -> strings.typeStory
+    TikTokContentType.PROFILE -> strings.typeProfile
+}
+
 @Composable
 fun InspectorScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    initialUrl: String? = null
 ) {
     val context = LocalContext.current
+    val strings = Localization.current
+    val clipboardManager = remember {
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
     val coroutineScope = rememberCoroutineScope()
-    val clipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
 
-    var urlInput by remember { mutableStateOf("") }
+    var urlInput by remember { mutableStateOf(initialUrl ?: "") }
     var detectedClipboardUrl by remember { mutableStateOf<String?>(null) }
     var isInspecting by remember { mutableStateOf(false) }
-    var inspectionStatusText by remember { mutableStateOf("جاري فحص وتفكيك الرابط...") }
     var inspectionResult by remember { mutableStateOf<TikTokDeepInspectionData?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableStateOf(DownloadProgressState()) }
 
-    // Auto-clipboard detection on entry
+    // Auto-clipboard detection
     LaunchedEffect(Unit) {
-        try {
-            val clip = clipboardManager.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val text = clip.getItemAt(0).text?.toString() ?: ""
-                if (text.contains("tiktok.com") && text != urlInput) {
-                    detectedClipboardUrl = text
-                }
-            }
-        } catch (_: Exception) {}
-    }
-
-    // Dynamic status text animation while inspecting
-    LaunchedEffect(isInspecting) {
-        if (isInspecting) {
-            val messages = listOf(
-                "جاري تتبع التحويلات وفك الرابط الأصلي...",
-                "جاري الاتصال بخوادم تيك توك وسحب بيانات المنشور...",
-                "جاري استخراج مواصفات الفيديو ومعدل الإطارات والأبعاد...",
-                "جاري جلب وترتيب التعليقات الأكثر إعجاباً من API..."
-            )
-            var index = 0
-            while (isInspecting) {
-                inspectionStatusText = messages[index % messages.size]
-                delay(1200)
-                index++
+        val clip = clipboardManager.primaryClip
+        if (clip != null && clip.itemCount > 0) {
+            val text = clip.getItemAt(0).text?.toString() ?: ""
+            if (text.contains("tiktok.com") && text != urlInput) {
+                detectedClipboardUrl = text
             }
         }
     }
@@ -95,7 +87,7 @@ fun InspectorScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Header Banner
@@ -127,14 +119,14 @@ fun InspectorScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "الفحص الشامل 🔍 (TikTok Deep Inspector)",
+                            text = strings.inspectorHeaderTitle,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
                             )
                         )
                         Text(
-                            text = "تحليل الفيديوهات، القصص (Story)، الصور، والحسابات ببيانات حقيقية 100%",
+                            text = strings.inspectorHeaderSubtitle,
                             style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
                         )
                     }
@@ -172,7 +164,7 @@ fun InspectorScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "تم التقاط رابط من الحافظة!",
+                                        text = strings.clipboardDetectedTitle,
                                         style = MaterialTheme.typography.labelLarge.copy(
                                             color = TextPrimary,
                                             fontWeight = FontWeight.Bold
@@ -191,16 +183,23 @@ fun InspectorScreen(
                                     urlInput = detectedClipboardUrl!!
                                     detectedClipboardUrl = null
                                     isInspecting = true
+                                    inspectionResult = null
                                     errorMessage = null
                                     coroutineScope.launch {
+                                        val start = System.currentTimeMillis()
                                         val res = TikTokDownloaderService.inspectTikTokUrl(urlInput)
+                                        val elapsed = System.currentTimeMillis() - start
+                                        if (elapsed < 3000L) {
+                                            delay(3000L - elapsed)
+                                        }
+                                        delay(250L)
                                         isInspecting = false
                                         res.onSuccess {
                                             inspectionResult = it
                                             errorMessage = null
-                                            Toast.makeText(context, "تم الفحص والتحليل بنجاح! 🎯", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, strings.inspectionSuccessToast, Toast.LENGTH_SHORT).show()
                                         }.onFailure {
-                                            errorMessage = it.localizedMessage ?: "فشل فحص الرابط"
+                                            errorMessage = it.localizedMessage ?: strings.inspectErrorFallback
                                             Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                                         }
                                     }
@@ -209,7 +208,7 @@ fun InspectorScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                             ) {
-                                Text("فحص فوري", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(strings.instantInspectBtn, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -228,7 +227,7 @@ fun InspectorScreen(
                     },
                     placeholder = {
                         Text(
-                            "ضع أي رابط تيك توك هنا (فيديو، قصة، صورة، أو بروفايل)...",
+                            strings.inspectorInputPlaceholder,
                             color = TextMuted,
                             fontSize = 12.sp
                         )
@@ -247,7 +246,7 @@ fun InspectorScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (urlInput.isNotEmpty()) {
                                 IconButton(onClick = { urlInput = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "مسح", tint = TextMuted)
+                                    Icon(Icons.Default.Clear, contentDescription = strings.clearBtnTooltip, tint = TextMuted)
                                 }
                             }
                             IconButton(onClick = {
@@ -257,7 +256,7 @@ fun InspectorScreen(
                                     if (text.isNotBlank()) urlInput = text
                                 }
                             }) {
-                                Icon(Icons.Default.ContentPaste, contentDescription = "لصق", tint = NeonCyan)
+                                Icon(Icons.Default.ContentPaste, contentDescription = strings.pasteBtnTooltip, tint = NeonCyan)
                             }
                         }
                     },
@@ -269,20 +268,27 @@ fun InspectorScreen(
                 Button(
                     onClick = {
                         if (urlInput.isBlank()) {
-                            Toast.makeText(context, "الرجاء إدخال أو لصق رابط تيك توك", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         isInspecting = true
+                        inspectionResult = null
                         errorMessage = null
                         coroutineScope.launch {
+                            val start = System.currentTimeMillis()
                             val res = TikTokDownloaderService.inspectTikTokUrl(urlInput)
+                            val elapsed = System.currentTimeMillis() - start
+                            if (elapsed < 3000L) {
+                                delay(3000L - elapsed)
+                            }
+                            delay(250L)
                             isInspecting = false
                             res.onSuccess {
                                 inspectionResult = it
                                 errorMessage = null
-                                Toast.makeText(context, "تم الفحص الشامل بنجاح! 🚀", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, strings.inspectionSuccessToast, Toast.LENGTH_SHORT).show()
                             }.onFailure {
-                                errorMessage = it.localizedMessage ?: "فشل فحص الرابط"
+                                errorMessage = it.localizedMessage ?: strings.inspectErrorFallback
                                 Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                             }
                         }
@@ -296,50 +302,40 @@ fun InspectorScreen(
                     ),
                     enabled = !isInspecting
                 ) {
-                    if (isInspecting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = OnAccentDark,
-                            strokeWidth = 2.5.dp
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            "جاري فك الرابط والاتصال بـ API...",
-                            color = OnAccentDark,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Bolt,
-                            contentDescription = null,
-                            tint = OnAccentDark
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "بدء الفحص الشامل والتحليل العميق 🔍",
-                            color = OnAccentDark,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                    }
-                }
-
-                if (isInspecting) {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Icon(
+                        imageVector = Icons.Default.Bolt,
+                        contentDescription = null,
+                        tint = OnAccentDark
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = inspectionStatusText,
-                        color = NeonCyan,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        strings.startDeepInspectionBtn,
+                        color = OnAccentDark,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
+            }
+        }
+
+        // Live Animated Algorithm Execution Box (Active during Inspection)
+        if (isInspecting) {
+            item {
+                AnimatedVisibility(
+                    visible = isInspecting,
+                    enter = fadeIn(tween(400)) + expandVertically(),
+                    exit = fadeOut(tween(300)) + shrinkVertically()
+                ) {
+                    AlgorithmExecutionBox(
+                        modifier = Modifier.fillMaxWidth(),
+                        targetDurationMs = 3000L
                     )
                 }
             }
         }
 
         // Error Card (if any real failure occurs)
-        if (errorMessage != null) {
+        if (errorMessage != null && !isInspecting) {
             item {
                 GlassCard(
                     borderColor = ErrorRed.copy(alpha = 0.8f),
@@ -350,7 +346,7 @@ fun InspectorScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "تنبيه أثناء الفحص",
+                                text = strings.inspectionAlertTitle,
                                 style = MaterialTheme.typography.titleSmall.copy(color = TextPrimary, fontWeight = FontWeight.Bold)
                             )
                             Text(
@@ -374,7 +370,7 @@ fun InspectorScreen(
                         totalBytes = downloadProgress.totalBytes
                     )
                     Text(
-                        text = "جاري الحفظ بدون علامة مائية...",
+                        text = strings.savingWatermarkFreeText,
                         color = TextPrimary,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center,
@@ -385,7 +381,7 @@ fun InspectorScreen(
         }
 
         // RESULT VIEW
-        if (inspectionResult != null) {
+        if (inspectionResult != null && !isInspecting) {
             val data = inspectionResult!!
 
             // 1. Author & Content Header Card
@@ -401,7 +397,7 @@ fun InspectorScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         NeonBadge(
-                            text = "${data.contentType.badgeIcon} ${data.contentType.titleArabic}",
+                            text = "${data.contentType.badgeIcon} ${data.contentType.getLocalizedTitle(strings)}",
                             textColor = if (data.contentType == TikTokContentType.STORY) NeonPink else NeonCyan,
                             borderColor = if (data.contentType == TikTokContentType.STORY) NeonPink else NeonCyan
                         )
@@ -409,7 +405,7 @@ fun InspectorScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("موثق", color = NeonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(strings.verifiedShort, color = NeonCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -482,7 +478,7 @@ fun InspectorScreen(
                             IconButton(
                                 onClick = {
                                     coroutineScope.launch {
-                                        Toast.makeText(context, "جاري حفظ صورة البروفايل...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.savingAvatarToast, Toast.LENGTH_SHORT).show()
                                         val saveRes = TikTokDownloaderService.downloadImageFile(
                                             context = context,
                                             downloadUrl = data.authorAvatar,
@@ -490,16 +486,16 @@ fun InspectorScreen(
                                             onProgress = { downloadProgress = it }
                                         )
                                         saveRes.onSuccess {
-                                            Toast.makeText(context, "تم حفظ صورة البروفايل في المعرض! 🖼️", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, strings.avatarSavedSuccessToast, Toast.LENGTH_SHORT).show()
                                         }.onFailure {
-                                            Toast.makeText(context, "تعذر حفظ الصورة: ${it.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "${strings.downloadFailedToast}: ${it.message}", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Download,
-                                    contentDescription = "حفظ الصورة",
+                                    contentDescription = strings.saveAvatarTooltip,
                                     tint = NeonCyan
                                 )
                             }
@@ -517,10 +513,10 @@ fun InspectorScreen(
                                 .padding(vertical = 10.dp, horizontal = 12.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            StatBox(label = "متابع", value = formatCounter(data.followerCount))
-                            StatBox(label = "يتابع", value = formatCounter(data.followingCount))
-                            StatBox(label = "إعجابات", value = formatCounter(data.authorTotalLikes))
-                            StatBox(label = "فيديوهات", value = formatCounter(data.authorVideoCount))
+                            StatBox(label = strings.followersLabel, value = formatCounter(data.followerCount))
+                            StatBox(label = strings.followingLabel, value = formatCounter(data.followingCount))
+                            StatBox(label = strings.totalLikesLabel, value = formatCounter(data.authorTotalLikes))
+                            StatBox(label = strings.videosCountLabel, value = formatCounter(data.authorVideoCount))
                         }
                     }
                 }
@@ -548,7 +544,7 @@ fun InspectorScreen(
                                     .addHeader("Referer", "https://www.tiktok.com/")
                                     .crossfade(true)
                                     .build(),
-                                contentDescription = "غلاف المنشور",
+                                contentDescription = data.title,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -562,7 +558,7 @@ fun InspectorScreen(
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "${data.contentType.badgeIcon} ${data.contentType.titleArabic}",
+                                    text = "${data.contentType.badgeIcon} ${data.contentType.getLocalizedTitle(strings)}",
                                     color = NeonCyan,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -584,7 +580,7 @@ fun InspectorScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "الوصف / العنوان:",
+                                    text = strings.captionLabel,
                                     style = MaterialTheme.typography.labelMedium.copy(color = NeonCyan)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -597,10 +593,10 @@ fun InspectorScreen(
                                 onClick = {
                                     val clip = ClipData.newPlainText("TikTok Title", data.title)
                                     clipboardManager.setPrimaryClip(clip)
-                                    Toast.makeText(context, "تم نسخ النص! 📋", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, strings.captionCopiedToast, Toast.LENGTH_SHORT).show()
                                 }
                             ) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "نسخ", tint = TextMuted)
+                                Icon(Icons.Default.ContentCopy, contentDescription = strings.copyCaptionTooltip, tint = TextMuted)
                             }
                         }
                     }
@@ -611,7 +607,7 @@ fun InspectorScreen(
             if (data.contentType != TikTokContentType.PROFILE) {
                 item {
                     Text(
-                        text = "مواصفات وإحصائيات المحتوى الحقيقية (100% Real Analytics)",
+                        text = strings.realAnalyticsHeader,
                         style = MaterialTheme.typography.titleSmall.copy(
                             color = NeonCyan,
                             fontWeight = FontWeight.Bold
@@ -631,7 +627,7 @@ fun InspectorScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "تاريخ وتوقيت النشر الدقيق",
+                                    text = strings.publishDateLabel,
                                     style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary)
                                 )
                                 Text(
@@ -656,14 +652,14 @@ fun InspectorScreen(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Outlined.Visibility,
                             value = formatCounter(data.viewsCount),
-                            label = "المشاهدات",
+                            label = strings.viewsLabel,
                             accentColor = NeonCyan
                         )
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.Favorite,
                             value = formatCounter(data.likesCount),
-                            label = "الإعجابات",
+                            label = strings.likesLabel,
                             accentColor = NeonPink
                         )
                     }
@@ -678,14 +674,14 @@ fun InspectorScreen(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.ChatBubbleOutline,
                             value = formatCounter(data.commentsCount),
-                            label = "التعليقات",
+                            label = strings.commentsLabel,
                             accentColor = NeonPurple
                         )
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.BookmarkBorder,
                             value = formatCounter(data.collectCount),
-                            label = "المحفوظات",
+                            label = strings.bookmarksLabel,
                             accentColor = GoldVip
                         )
                     }
@@ -701,14 +697,14 @@ fun InspectorScreen(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.HighQuality,
                             value = data.resolution,
-                            label = "الدقة والأبعاد",
+                            label = strings.resolutionLabel,
                             accentColor = NeonCyan
                         )
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.SdCard,
-                            value = if (data.fileSizeMB > 0) "${data.fileSizeMB} MB | ${data.durationSec} ث" else "${data.durationSec} ثانية",
-                            label = "الحجم والمدة",
+                            value = if (data.fileSizeMB > 0) "${data.fileSizeMB} MB | ${data.durationSec} ${strings.secondsSuffix}" else "${data.durationSec} ${strings.secondsSuffix}",
+                            label = strings.sizeDurationLabel,
                             accentColor = SuccessGreen
                         )
                     }
@@ -725,7 +721,7 @@ fun InspectorScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "ألبوم صور (${data.photos.size} صور)",
+                                text = "${strings.photoAlbumHeader} (${data.photos.size})",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = NeonCyan
@@ -734,7 +730,7 @@ fun InspectorScreen(
                             Button(
                                 onClick = {
                                     coroutineScope.launch {
-                                        Toast.makeText(context, "جاري تحميل كافة صور الألبوم...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.savingAllPhotosToast, Toast.LENGTH_SHORT).show()
                                         for (photo in data.photos) {
                                             TikTokDownloaderService.downloadImageFile(
                                                 context = context,
@@ -743,14 +739,14 @@ fun InspectorScreen(
                                                 onProgress = { downloadProgress = it }
                                             )
                                         }
-                                        Toast.makeText(context, "تم حفظ كافة الصور في الاستوديو! 📸", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, strings.allPhotosSavedToast, Toast.LENGTH_LONG).show()
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
                                 shape = RoundedCornerShape(10.dp),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                             ) {
-                                Text("تحميل الكل 📥", color = OnAccentDark, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text(strings.downloadAllPhotosBtn, color = OnAccentDark, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -774,7 +770,7 @@ fun InspectorScreen(
                                             .addHeader("Referer", "https://www.tiktok.com/")
                                             .crossfade(true)
                                             .build(),
-                                        contentDescription = "صورة ${photo.index}",
+                                        contentDescription = "${strings.photoAlbumHeader} ${photo.index}",
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()
                                     )
@@ -783,7 +779,7 @@ fun InspectorScreen(
                                             .align(Alignment.BottomEnd)
                                             .padding(4.dp)
                                             .clip(RoundedCornerShape(4.dp))
-                                            .background(Color(0xCC000000))
+                                            .background(Color(0xCC0F0F13))
                                             .padding(horizontal = 4.dp, vertical = 2.dp)
                                     ) {
                                         Text(
@@ -805,7 +801,7 @@ fun InspectorScreen(
                 item {
                     GlassCard(borderColor = NeonCyan.copy(alpha = 0.5f)) {
                         Text(
-                            text = "تحميل المحتوى الصافي بدون علامة مائية:",
+                            text = strings.pureMediaDownloadTitle,
                             style = MaterialTheme.typography.labelMedium.copy(color = NeonCyan),
                             modifier = Modifier.padding(bottom = 10.dp)
                         )
@@ -816,10 +812,10 @@ fun InspectorScreen(
                                 coroutineScope.launch {
                                     val targetUrl = if (data.videoHdUrl.isNotBlank()) data.videoHdUrl else data.videoSdUrl
                                     if (targetUrl.isBlank()) {
-                                        Toast.makeText(context, "رابط الفيديو غير متوفر", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.downloadFailedToast, Toast.LENGTH_SHORT).show()
                                         return@launch
                                     }
-                                    Toast.makeText(context, "بدأ التحميل بدون علامة مائية...", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, strings.downloadInProgressTitle, Toast.LENGTH_SHORT).show()
                                     val dlRes = TikTokDownloaderService.downloadMediaFile(
                                         context = context,
                                         downloadUrl = targetUrl,
@@ -828,9 +824,9 @@ fun InspectorScreen(
                                         onProgress = { downloadProgress = it }
                                     )
                                     dlRes.onSuccess {
-                                        Toast.makeText(context, "تم حفظ الفيديو بنجاح في المعرض! 🎬", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, strings.saveVideoSuccessToast, Toast.LENGTH_LONG).show()
                                     }.onFailure {
-                                        Toast.makeText(context, "فشل التحميل: ${it.message}", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "${strings.downloadFailedToast}: ${it.message}", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
@@ -843,7 +839,7 @@ fun InspectorScreen(
                             Icon(Icons.Default.Download, contentDescription = null, tint = OnAccentDark)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                if (data.contentType == TikTokContentType.STORY) "تحميل القصة بدون علامة مائية ⏱️" else "تحميل الفيديو بدون علامة مائية (FHD)",
+                                if (data.contentType == TikTokContentType.STORY) strings.downloadStoryBtn else strings.downloadVideoFhdBtn,
                                 color = OnAccentDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
@@ -856,7 +852,7 @@ fun InspectorScreen(
                             OutlinedButton(
                                 onClick = {
                                     coroutineScope.launch {
-                                        Toast.makeText(context, "جاري استخراج وتحميل الصوت MP3...", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, strings.savingAudioToast, Toast.LENGTH_SHORT).show()
                                         val dlRes = TikTokDownloaderService.downloadMediaFile(
                                             context = context,
                                             downloadUrl = data.audioUrl,
@@ -865,9 +861,9 @@ fun InspectorScreen(
                                             onProgress = { downloadProgress = it }
                                         )
                                         dlRes.onSuccess {
-                                            Toast.makeText(context, "تم حفظ المقطع الصوتي MP3! 🎵", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, strings.audioSavedToast, Toast.LENGTH_LONG).show()
                                         }.onFailure {
-                                            Toast.makeText(context, "فشل حفظ الصوت: ${it.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "${strings.downloadFailedToast}: ${it.message}", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 },
@@ -880,7 +876,7 @@ fun InspectorScreen(
                                 Icon(Icons.Default.MusicNote, contentDescription = null, tint = NeonPink)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "تحميل الصوت الأصلي فقط (MP3)",
+                                    strings.downloadOriginalAudioBtn,
                                     color = NeonPink,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
@@ -900,14 +896,14 @@ fun InspectorScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "🔥 التعليقات الحقيقية الأكثر إعجاباً (Top Liked Comments)",
+                            text = strings.topCommentsHeader,
                             style = MaterialTheme.typography.titleSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = NeonPink
                             )
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        NeonBadge(text = "${data.topComments.size} تعليق", textColor = NeonPink, borderColor = NeonPink)
+                        NeonBadge(text = "${data.topComments.size} ${strings.commentsPillSuffix}", textColor = NeonPink, borderColor = NeonPink)
                     }
                 }
 
@@ -1030,18 +1026,18 @@ fun InspectorScreen(
                                         onClick = {
                                             val clip = ClipData.newPlainText("Comment", comment.text)
                                             clipboardManager.setPrimaryClip(clip)
-                                            Toast.makeText(context, "تم نسخ التعليق! 📋", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, strings.commentCopiedToast, Toast.LENGTH_SHORT).show()
                                         },
                                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.ContentCopy,
-                                            contentDescription = "نسخ",
+                                            contentDescription = strings.copyCommentBtn,
                                             tint = NeonCyan,
                                             modifier = Modifier.size(14.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("نسخ التعليق", color = NeonCyan, fontSize = 11.sp)
+                                        Text(strings.copyCommentBtn, color = NeonCyan, fontSize = 11.sp)
                                     }
                                 }
                             }
@@ -1055,7 +1051,7 @@ fun InspectorScreen(
                         backgroundColor = DarkSurfaceCard
                     ) {
                         Text(
-                            text = "لا توجد تعليقات عامة متاحة لهذا المنشور حالياً.",
+                            text = strings.noCommentsFound,
                             color = TextSecondary,
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center,
@@ -1126,9 +1122,9 @@ fun StatBox(label: String, value: String) {
 
 fun formatCounter(count: Long): String {
     return when {
-        count >= 1_000_000_000 -> String.format("%.1fB", count / 1_000_000_000.0)
-        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
-        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
+        count >= 1_000_000_000 -> String.format(java.util.Locale.US, "%.1fB", count / 1_000_000_000.0)
+        count >= 1_000_000 -> String.format(java.util.Locale.US, "%.1fM", count / 1_000_000.0)
+        count >= 1_000 -> String.format(java.util.Locale.US, "%.1fK", count / 1_000.0)
         else -> count.toString()
     }
 }

@@ -33,8 +33,12 @@ class MainActivity : ComponentActivity() {
             val isDark by ThemeAndLocaleManager.isDarkMode.collectAsState()
             val currentLang by ThemeAndLocaleManager.currentLanguage.collectAsState()
             val layoutDirection = if (currentLang.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+            val strings = com.creator.tiktokstudio.core.Localization.current
 
-            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            CompositionLocalProvider(
+                LocalLayoutDirection provides layoutDirection,
+                com.creator.tiktokstudio.core.LocalAppStrings provides strings
+            ) {
                 TikTokStudioTheme(darkTheme = isDark) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),

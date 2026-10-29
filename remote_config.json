@@ -1,18 +1,17 @@
 {
-  "latest_version_code": 7,
-  "latest_version_name": "1.6.0",
+  "latest_version_code": 9,
+  "latest_version_name": "1.8.0",
   "force_update": true,
-  "min_supported_version_code": 7,
-  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.6.0/TikTok-Viral-Studio-v1.6.0.apk",
-  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.6.0/TikTok-Studio-Admin-v1.6.0.apk",
-  "update_title_ar": "✨ تحديث فاخر v1.6.0: مظهر أنيق وتعدد لغات",
-  "update_message_ar": "واجهة فائقة النقاء، دعم كامل للغات (العربية، الإنجليزية، الفرنسية)، مع التبديل السريع بين الوضع النهاري والليلي.",
+  "min_supported_version_code": 9,
+  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.8.0/TikTok-Viral-Studio-v1.8.0.apk",
+  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v1.8.0/TikTok-Studio-Admin-v1.8.0.apk",
+  "update_title_ar": "⚡ تحديث خارق v1.8.0: خوارزميات حية وترجمة كاملة 100%",
+  "update_message_ar": "إضافة مربع الخوارزميات الحي والمتحرك بمؤقت 3 ثوانٍ وموجات رادار نيونية، وحل مشكلة الترجمة التفاعلية بالكامل لجميع اللغات.",
   "changelog_ar": [
-    "شاشة بداية نظيفة وبسيطة بأيقونة متوهجة واسم التطبيق",
-    "شاشة تحميل وشاشة فحص شامل فائقة النقاء بدون أي نصوص أو بطاقات زائدة",
-    "دعم كامل لتعدد اللغات (العربية 🇸🇦، الإنجليزية 🇺🇸، الفرنسية 🇫🇷) مع قلب اتجاه الواجهة تلقائياً (RTL / LTR)",
-    "إضافة الوضع النهاري الفاخر (Light Mode ☀️) بجانب الوضع الليلي الأنيق (Dark Mode 🌙) مع حفظ تفضيلك تلقائياً",
-    "تحسين سرعة الاستجابة واستقرار البنية الهجينة C++ NDK + Python"
+    "إضافة مربع الخوارزميات الحي والمتحرك (Live Algorithm Execution Box) بمؤقت 3.0 ثوانٍ تفاعلي ورسومات رادار نيونية",
+    "4 مراحل معالجة خوارزمية ذكية تتتابع حركياً من الدوران 🔄 إلى علامة الصح الخضراء ✅",
+    "ترجمة شاملة بنسبة 100% لكافة النصوص، الأزرار، والبطاقات والإحصائيات باللغات الثلاث (العربية 🇸🇦، الإنجليزية 🇺🇸، الفرنسية 🇫🇷)",
+    "ضبط وتزامن اتجاه الواجهة (RTL / LTR) ديناميكياً وفورياً عند اختيار اللغة"
   ],
   "vip_codes": [
     "TIKTOK-VIP-2026",
