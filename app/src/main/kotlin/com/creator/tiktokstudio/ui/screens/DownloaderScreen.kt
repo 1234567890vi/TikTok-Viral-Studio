@@ -39,7 +39,7 @@ import com.creator.tiktokstudio.core.TikTokDownloaderService
 import com.creator.tiktokstudio.data.DownloadProgressState
 import com.creator.tiktokstudio.data.DownloadedMedia
 import com.creator.tiktokstudio.data.TikTokVideoInfo
-import com.creator.tiktokstudio.ui.components.AlgorithmExecutionBox
+import com.creator.tiktokstudio.ui.components.ProcessingStepsBox
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
 import com.creator.tiktokstudio.ui.components.GlassCard
 import com.creator.tiktokstudio.ui.components.NeonBadge
@@ -268,7 +268,7 @@ fun DownloaderScreen(
                     enter = fadeIn(tween(400)) + expandVertically(),
                     exit = fadeOut(tween(300)) + shrinkVertically()
                 ) {
-                    AlgorithmExecutionBox(
+                    ProcessingStepsBox(
                         modifier = Modifier.fillMaxWidth(),
                         targetDurationMs = 3000L
                     )

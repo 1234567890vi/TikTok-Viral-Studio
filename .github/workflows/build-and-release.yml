@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v1.9.0"
+            TAG_NAME="v2.1.0"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v1.9.0.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.1.0.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v1.9.0.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.1.0.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,24 +101,28 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v1.9.0' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v1.9.0' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.1.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.1.0' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v1.9.0' }})
+            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.1.0' }})
             
-            تحديث شامل لتطبيق الإدارة (Admin App) وميزة التحديث التلقائي OTA:
-            - **فاحص ومحدث الإصدار التلقائي داخل تطبيق الإدارة (Admin OTA In-App Updater)**: التحقق اللحظي من توفر تحديثات جديدة عبر `remote_config.json`، مع نافذة تحديث نيونية تفاعلية وتحميل وتثبيت الإصدار بضغطة زر واحدة.
-            - **تأمين وتحسين شاشة تسجيل الدخول الإدارية**: اعتماد رمز الدخول `Admin2026` ودعم لوحة المفاتيح الأبجدية الرقمية.
-            - **تحسين تحليلات الجلسات النشطة (Active Sessions Analytics)**: عرض مباشر لطراز الجهاز والمصنع، نظام أندرويد، إصدار التطبيق، وحالة الطاقة المفصلة (شحن فوري ⚡ / نسبة استهلاك البطارية 🔋)، وزمن آخر ظهور.
-            - **إعدادات حالة الخدمة المركزية**: وضع التشغيل العادي 🟢، وضع الصيانة 🛠️، إيقاف الخدمة الشامل 🛑، إرسال إشعارات فورية للنظام (Broadcast Alert) 📢، وإعادة التشغيل الإجبارية 🔄 لجميع الأجهزة.
-            - **توقيع دائم موحد**: تم بناء وتوقيع الحزم باستخدام `app/release.keystore` الثابت لضمان التوافق التام بدون أي تعارض حزم.
+            تحديث شامل وإطلاق قسم تتبع البث المباشر وجولات التحدي الحقيقية ومربع مراحل المعالجة:
+            - **تتبع البث المباشر وجولات PK الحقيقية (60FPS Zero-Lag Live Tracker)**: تشغيل الفيديو بتسريع العتاد عبر Media3 ExoPlayer وعزل طبقات العرض لمنع أي تقطيع أثناء التحديات.
+            - **تتبع القفازات المشتعلة (Boosting Gloves x2/x3/x5)**: رصد توهج القفاز والمؤقت التنازلي لمضاعفة النقاط لحظياً.
+            - **تأثير الغيمة السحرية (Magic Mist)**: ضباب متحرك يحجب النقاط ويحولها إلى (???) في الوقت الحقيقي طوال فترة الغيمة.
+            - **رصد وقت الحكم الحقيقي (Punishment Time)**: عداد تنازلي حقيقي لوقت الحكم بعد انتهاء الجولة وشارة التتويج للفائز WIN 👑.
+            - **زر الشاشة الصافية (Clean Mode)**: إخفاء الواجهة والتعليقات بلمسة واحدة للاستمتاع بالمشاهدة النقية.
+            - **مربع مراحل المعالجة التفاعلي (ProcessingStepsBox)**: مؤقت 3.0s وموجات رقمية بألوان السيان والوردي مع 4 مراحل معالجة متتالية تتغير حركياً من دوران 🔄 إلى صح خضراء ✅.
+            - **ترجمة تفاعلية شاملة 100% (AR, EN, FR)**: تغطية كافة الشاشات والقوائم مع دعم التبديل التلقائي لاتجاه الواجهة RTL/LTR ودعم الوضعين الليلي والنهاري.
+            - **تحديث سحابي لتطبيق الإدارة (:admin-app)**: فاحص التحديثات السحابي OTA المدمج داخل لوحة الإدارة وتثبيت التحديثات بنقرة زر واحدة.
+            - **توافق تام للحزم**: توقيع الحزم بنفس المفتاح الثابت `app/release.keystore`.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v1.9.0.apk`
+               - `TikTok-Viral-Studio-v2.1.0.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v1.9.0.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.1.0.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false

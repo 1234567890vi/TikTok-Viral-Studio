@@ -10,6 +10,7 @@ data class AppStrings(
     val appSubtitle: String,
     val tabDownloader: String,
     val tabInspector: String,
+    val tabLiveTracker: String,
     val themeDark: String,
     val themeLight: String,
     val languageSelect: String,
@@ -100,7 +101,37 @@ data class AppStrings(
     val algoStep3: String,
     val algoStep4: String,
     val algoCompleted: String,
-    val algoSecondsSuffix: String
+    val algoSecondsSuffix: String,
+
+    // Processing Steps Box
+    val procStep1: String,
+    val procStep2: String,
+    val procStep3: String,
+    val procStep4: String,
+    val procStepCompleted: String,
+
+    // Live Stream & Real-Time PK Battle Tracker
+    val liveHeaderTitle: String,
+    val liveHeaderSubtitle: String,
+    val liveInputPlaceholder: String,
+    val startLiveTrackingBtn: String,
+    val cleanModeBtn: String,
+    val normalModeBtn: String,
+    val battleActiveBadge: String,
+    val punishmentTimeBadge: String,
+    val hostScoreLabel: String,
+    val opponentScoreLabel: String,
+    val gloveActiveBadge: String,
+    val magicMistBadge: String,
+    val magicMistHiddenScore: String,
+    val topContributorsTitle: String,
+    val liveChatTitle: String,
+    val viewersCountSuffix: String,
+    val likesCountSuffix: String,
+    val winnerCrownText: String,
+    val sendLikeBtn: String,
+    val liveConnectingText: String,
+    val liveOfflineNotice: String
 )
 
 val ArabicStrings = AppStrings(
@@ -108,6 +139,7 @@ val ArabicStrings = AppStrings(
     appSubtitle = "تحميل الفيديوهات وفحص المحتوى الشامل بدون علامة مائية",
     tabDownloader = "التحميل السريع 📥",
     tabInspector = "فحص شامل 🔍",
+    tabLiveTracker = "تتبع اللايف والجولات 🔴",
     themeDark = "الوضع الليلي 🌙",
     themeLight = "الوضع النهاري ☀️",
     languageSelect = "اختيار اللغة",
@@ -194,7 +226,35 @@ val ArabicStrings = AppStrings(
     algoStep3 = "[3/4] عزل العلامة المائية وفحص جودة 4K...",
     algoStep4 = "[4/4] التحقق النهائي وتجهيز المخرجات بنجاح ✨",
     algoCompleted = "اكتملت المعالجة الخوارزمية 100% ✨",
-    algoSecondsSuffix = "ث"
+    algoSecondsSuffix = "ث",
+
+    procStep1 = "[1/4] التحقق من الرابط وتجهيز الاتصال...",
+    procStep2 = "[2/4] قراءة البيانات الوصفية والإحصائيات...",
+    procStep3 = "[3/4] معالجة التدفق المرئي بأعلى جودة (Full HD / 4K)...",
+    procStep4 = "[4/4] اكتملت المعالجة بنجاح (100%) ✨",
+    procStepCompleted = "اكتملت المعالجة بنجاح (100%) ✨",
+
+    liveHeaderTitle = "البث المباشر وتتبع الجولات (Live & PK Tracker)",
+    liveHeaderSubtitle = "مشاهدة حية بدون لاق 60FPS مع تتبع القفازات والغيمة ووقت الحكم",
+    liveInputPlaceholder = "ضع رابط البث المباشر (TikTok Live) أو اسم المستخدم...",
+    startLiveTrackingBtn = "تتبع البث المباشر والجولة لحظياً 🔴",
+    cleanModeBtn = "الشاشة الصافية",
+    normalModeBtn = "عرض كامل للواجهة",
+    battleActiveBadge = "⚡ جولة حماسية مشتعلة (PK MATCH)",
+    punishmentTimeBadge = "👑 وقت الحكم الحقيقي (PUNISHMENT)",
+    hostScoreLabel = "نقاط المضيف",
+    opponentScoreLabel = "نقاط الخصم",
+    gloveActiveBadge = "قفاز مضاعف نشط 🥊",
+    magicMistBadge = "غيمة سحرية نشطة ☁️",
+    magicMistHiddenScore = "???",
+    topContributorsTitle = "أبرز الداعمين (Top MVP)",
+    liveChatTitle = "الدردشة الحية والهدايا",
+    viewersCountSuffix = "مشاهد حي",
+    likesCountSuffix = "لايك",
+    winnerCrownText = "الفائز بالجولة 👑",
+    sendLikeBtn = "إرسال لايك ❤️",
+    liveConnectingText = "جاري الاتصال بغرفة البث المباشر وفك تشفير الجولة...",
+    liveOfflineNotice = "البث المباشر غير متاح حالياً أو انتهت الجولة."
 )
 
 val EnglishStrings = AppStrings(
@@ -202,6 +262,7 @@ val EnglishStrings = AppStrings(
     appSubtitle = "Fast video downloader & deep content inspector without watermark",
     tabDownloader = "Downloader 📥",
     tabInspector = "Inspector 🔍",
+    tabLiveTracker = "Live & PK Battle 🔴",
     themeDark = "Dark Mode 🌙",
     themeLight = "Light Mode ☀️",
     languageSelect = "Select Language",
@@ -288,7 +349,35 @@ val EnglishStrings = AppStrings(
     algoStep3 = "[3/4] Bypassing Watermark & 4K Quality Analysis...",
     algoStep4 = "[4/4] Final Verification & Completed 100% ✨",
     algoCompleted = "100% Algorithmic Processing Complete ✨",
-    algoSecondsSuffix = "s"
+    algoSecondsSuffix = "s",
+
+    procStep1 = "[1/4] Checking link & preparing connection...",
+    procStep2 = "[2/4] Reading metadata & statistics...",
+    procStep3 = "[3/4] Processing video stream in highest quality (Full HD / 4K)...",
+    procStep4 = "[4/4] Processing completed successfully (100%) ✨",
+    procStepCompleted = "Processing completed successfully (100%) ✨",
+
+    liveHeaderTitle = "Live Stream & PK Battle Tracker",
+    liveHeaderSubtitle = "Zero-lag 60FPS live view tracking gloves, magic mist & punishment time",
+    liveInputPlaceholder = "Paste TikTok Live URL or @username...",
+    startLiveTrackingBtn = "Track Live & PK Battle in Real-Time 🔴",
+    cleanModeBtn = "Clean Screen",
+    normalModeBtn = "Full View",
+    battleActiveBadge = "⚡ LIVE PK BATTLE ACTIVE",
+    punishmentTimeBadge = "👑 REAL PUNISHMENT TIME",
+    hostScoreLabel = "Host Score",
+    opponentScoreLabel = "Opponent Score",
+    gloveActiveBadge = "Boosting Glove Active 🥊",
+    magicMistBadge = "Magic Mist Active ☁️",
+    magicMistHiddenScore = "???",
+    topContributorsTitle = "Top MVP Contributors",
+    liveChatTitle = "Live Chat & Gifts",
+    viewersCountSuffix = "live viewers",
+    likesCountSuffix = "likes",
+    winnerCrownText = "Round Winner 👑",
+    sendLikeBtn = "Send Like ❤️",
+    liveConnectingText = "Connecting to Live Webcast & decrypting battle...",
+    liveOfflineNotice = "Live stream is currently offline or battle has ended."
 )
 
 val FrenchStrings = AppStrings(
@@ -296,6 +385,7 @@ val FrenchStrings = AppStrings(
     appSubtitle = "Téléchargeur et inspecteur de contenu sans filigrane",
     tabDownloader = "Télécharger 📥",
     tabInspector = "Inspecteur 🔍",
+    tabLiveTracker = "Live & Match PK 🔴",
     themeDark = "Mode Sombre 🌙",
     themeLight = "Mode Clair ☀️",
     languageSelect = "Choisir la langue",
@@ -382,7 +472,35 @@ val FrenchStrings = AppStrings(
     algoStep3 = "[3/4] Contournement du filigrane et analyse 4K...",
     algoStep4 = "[4/4] Vérification finale et prêt à 100% ✨",
     algoCompleted = "Traitement algorithmique 100% terminé ✨",
-    algoSecondsSuffix = "s"
+    algoSecondsSuffix = "s",
+
+    procStep1 = "[1/4] Vérification du lien et initialisation de la connexion...",
+    procStep2 = "[2/4] Lecture des métadonnées et statistiques...",
+    procStep3 = "[3/4] Traitement du flux vidéo en haute qualité (Full HD / 4K)...",
+    procStep4 = "[4/4] Traitement terminé avec succès (100%) ✨",
+    procStepCompleted = "Traitement terminé avec succès (100%) ✨",
+
+    liveHeaderTitle = "Direct & Suivi des Matchs PK (Live & PK Tracker)",
+    liveHeaderSubtitle = "Diffusion 60FPS sans lag avec suivi des gants, brume et temps de jugement",
+    liveInputPlaceholder = "Collez l'URL TikTok Live ou @nom d'utilisateur...",
+    startLiveTrackingBtn = "Suivre le Live et le Match PK en Direct 🔴",
+    cleanModeBtn = "Écran Épuré",
+    normalModeBtn = "Vue Complète",
+    battleActiveBadge = "⚡ MATCH PK ACTIF",
+    punishmentTimeBadge = "👑 TEMPS DE JUGEMENT RÉEL",
+    hostScoreLabel = "Score de l'Hôte",
+    opponentScoreLabel = "Score de l'Adversaire",
+    gloveActiveBadge = "Gant Booster Actif 🥊",
+    magicMistBadge = "Brume Magique Active ☁️",
+    magicMistHiddenScore = "???",
+    topContributorsTitle = "Meilleurs Contributeurs (Top MVP)",
+    liveChatTitle = "Chat en Direct & Cadeaux",
+    viewersCountSuffix = "spectateurs",
+    likesCountSuffix = "j'aime",
+    winnerCrownText = "Vainqueur du Match 👑",
+    sendLikeBtn = "Envoyer Like ❤️",
+    liveConnectingText = "Connexion au Webcast Live & décodage du match...",
+    liveOfflineNotice = "Le live est actuellement hors-ligne ou le match est terminé."
 )
 
 val LocalAppStrings = staticCompositionLocalOf { ArabicStrings }

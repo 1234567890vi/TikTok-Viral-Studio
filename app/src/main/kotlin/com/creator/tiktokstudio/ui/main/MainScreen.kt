@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,6 +32,7 @@ import com.creator.tiktokstudio.core.Localization
 import com.creator.tiktokstudio.core.ThemeAndLocaleManager
 import com.creator.tiktokstudio.ui.screens.DownloaderScreen
 import com.creator.tiktokstudio.ui.screens.InspectorScreen
+import com.creator.tiktokstudio.ui.screens.LiveTrackerScreen
 import com.creator.tiktokstudio.ui.theme.*
 
 @Composable
@@ -183,7 +185,7 @@ fun MainScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Navigation Tabs
+                // Navigation Tabs (3 Tabs: Downloader, Inspector, Live PK)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -207,6 +209,13 @@ fun MainScreen(
                         isSelected = selectedTab == 1,
                         onClick = { selectedTab = 1 }
                     )
+                    NavTabItem(
+                        modifier = Modifier.weight(1f),
+                        title = strings.tabLiveTracker,
+                        icon = Icons.Default.LiveTv,
+                        isSelected = selectedTab == 2,
+                        onClick = { selectedTab = 2 }
+                    )
                 }
             }
         }
@@ -221,6 +230,7 @@ fun MainScreen(
             when (tabIndex) {
                 0 -> DownloaderScreen(modifier = Modifier.fillMaxSize())
                 1 -> InspectorScreen(modifier = Modifier.fillMaxSize())
+                2 -> LiveTrackerScreen(modifier = Modifier.fillMaxSize())
             }
         }
     }

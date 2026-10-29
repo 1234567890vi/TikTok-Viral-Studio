@@ -13,8 +13,8 @@ android {
         applicationId = "com.creator.tiktokstudio"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.9.0"
+        versionCode = 12
+        versionName = "2.1.0"
 
     externalNativeBuild {
       cmake {
@@ -100,6 +100,11 @@ dependencies {
   // Networking & HTTP & Image Loading
   implementation(libs.okhttp)
   implementation(libs.coil.compose)
+
+  // Media3 ExoPlayer for 60FPS Zero-Lag Live Stream & Hardware Decoding
+  implementation(libs.androidx.media3.exoplayer)
+  implementation(libs.androidx.media3.ui)
+  implementation(libs.androidx.media3.exoplayer.hls)
 
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)

@@ -39,7 +39,7 @@ import com.creator.tiktokstudio.core.AppStrings
 import com.creator.tiktokstudio.core.Localization
 import com.creator.tiktokstudio.core.TikTokDownloaderService
 import com.creator.tiktokstudio.data.*
-import com.creator.tiktokstudio.ui.components.AlgorithmExecutionBox
+import com.creator.tiktokstudio.ui.components.ProcessingStepsBox
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
 import com.creator.tiktokstudio.ui.components.GlassCard
 import com.creator.tiktokstudio.ui.components.NeonBadge
@@ -327,7 +327,7 @@ fun InspectorScreen(
                     enter = fadeIn(tween(400)) + expandVertically(),
                     exit = fadeOut(tween(300)) + shrinkVertically()
                 ) {
-                    AlgorithmExecutionBox(
+                    ProcessingStepsBox(
                         modifier = Modifier.fillMaxWidth(),
                         targetDurationMs = 3000L
                     )
