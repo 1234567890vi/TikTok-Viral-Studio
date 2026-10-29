@@ -256,30 +256,6 @@ fun SplashScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Subtitle: Clean & Elegant
-            Text(
-                text = "تحميل مباشر بدون علامة مائية بدقة 4K",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = NeonCyan,
-                    letterSpacing = 0.2.sp
-                ),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "بنية هجينة فائقة السرعة [C++ NDK + Python]",
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextMuted,
-                    fontSize = 12.sp
-                ),
-                textAlign = TextAlign.Center
-            )
-
             Spacer(modifier = Modifier.height(48.dp))
 
             // Modern glowing progress bar at bottom

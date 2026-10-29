@@ -120,7 +120,7 @@ fun InspectorScreen(
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = null,
-                            tint = DeepDarkBackground,
+                            tint = OnAccentDark,
                             modifier = Modifier.size(26.dp)
                         )
                     }
@@ -220,12 +220,6 @@ fun InspectorScreen(
         // Search Input Box
         item {
             GlassCard {
-                Text(
-                    text = "رابط الفيديو، القصة (Story)، ألبوم الصور، أو الحساب (@username)",
-                    style = MaterialTheme.typography.labelLarge.copy(color = NeonCyan),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
                 OutlinedTextField(
                     value = urlInput,
                     onValueChange = {
@@ -305,13 +299,13 @@ fun InspectorScreen(
                     if (isInspecting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = DeepDarkBackground,
+                            color = OnAccentDark,
                             strokeWidth = 2.5.dp
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             "جاري فك الرابط والاتصال بـ API...",
-                            color = DeepDarkBackground,
+                            color = OnAccentDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
                         )
@@ -319,12 +313,12 @@ fun InspectorScreen(
                         Icon(
                             imageVector = Icons.Default.Bolt,
                             contentDescription = null,
-                            tint = DeepDarkBackground
+                            tint = OnAccentDark
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             "بدء الفحص الشامل والتحليل العميق 🔍",
-                            color = DeepDarkBackground,
+                            color = OnAccentDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
@@ -386,34 +380,6 @@ fun InspectorScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                }
-            }
-        }
-
-        // If no inspection yet, show informative guide card
-        if (inspectionResult == null && !isInspecting && errorMessage == null) {
-            item {
-                GlassCard(
-                    borderColor = NeonCyan.copy(alpha = 0.2f),
-                    backgroundColor = DarkSurfaceCard
-                ) {
-                    Text(
-                        text = "ما الذي يوفره لك الفحص الشامل؟",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = NeonCyan,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    InspectorFeatureRow(icon = Icons.Default.Movie, title = "فيديوهات فائقة الدقة", desc = "استخراج جودة FHD والأبعاد وحجم الملف الصافي")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.HistoryToggleOff, title = "قصص تيك توك (Stories)", desc = "تمييز القصص تلقائياً وإظهار إحصائياتها الدقيقة الحقيقية")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.PhotoLibrary, title = "ألبومات الصور (Photo Mode)", desc = "فحص كافة صور الألبوم وتنزيلها بجودة أصلية")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.Person, title = "صور الحسابات (Avatars)", desc = "عرض صور البروفايل وصور المعلقين بدقة عالية عبر Coil")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    InspectorFeatureRow(icon = Icons.Default.Favorite, title = "🔥 التعليقات الحقيقية الأكثر إعجاباً", desc = "جلب التعليقات الحقيقية من API مرتبة حسب الإعجابات")
                 }
             }
         }
@@ -784,7 +750,7 @@ fun InspectorScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                             ) {
-                                Text("تحميل الكل 📥", color = DeepDarkBackground, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("تحميل الكل 📥", color = OnAccentDark, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -874,11 +840,11 @@ fun InspectorScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = NeonCyan)
                         ) {
-                            Icon(Icons.Default.Download, contentDescription = null, tint = DeepDarkBackground)
+                            Icon(Icons.Default.Download, contentDescription = null, tint = OnAccentDark)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 if (data.contentType == TikTokContentType.STORY) "تحميل القصة بدون علامة مائية ⏱️" else "تحميل الفيديو بدون علامة مائية (FHD)",
-                                color = DeepDarkBackground,
+                                color = OnAccentDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
@@ -1098,30 +1064,6 @@ fun InspectorScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun InspectorFeatureRow(
-    icon: ImageVector,
-    title: String,
-    desc: String
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(DarkSurfaceElevated),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(18.dp))
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        Column {
-            Text(title, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Text(desc, color = TextSecondary, fontSize = 11.sp)
         }
     }
 }

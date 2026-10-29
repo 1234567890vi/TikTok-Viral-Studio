@@ -80,50 +80,6 @@ fun DownloaderScreen(
         contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App Header Banner
-        item {
-            GlassCard(
-                borderColor = NeonCyan.copy(alpha = 0.4f),
-                backgroundColor = DarkSurfaceCard
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(listOf(NeonCyan, NeonPink))
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = null,
-                            tint = DeepDarkBackground,
-                            modifier = Modifier.size(26.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "تحميل",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = TextPrimary
-                            )
-                        )
-                        Text(
-                            text = "تحميل مباشر بدون علامة مائية بدقة 4K / Full HD",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = TextSecondary)
-                        )
-                    }
-                }
-            }
-        }
-
         // Auto-Clipboard Detection Pill
         if (detectedClipboardUrl != null) {
             item {
@@ -273,25 +229,25 @@ fun DownloaderScreen(
                     if (isExtracting) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = DeepDarkBackground,
+                            color = OnAccentDark,
                             strokeWidth = 2.5.dp
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             "جاري فك التشفير واستخراج الروابط...",
-                            color = DeepDarkBackground,
+                            color = OnAccentDark,
                             fontWeight = FontWeight.Bold
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Bolt,
                             contentDescription = null,
-                            tint = DeepDarkBackground
+                            tint = OnAccentDark
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             "فحص واستخراج الفيديو الخارق",
-                            color = DeepDarkBackground,
+                            color = OnAccentDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp
                         )
