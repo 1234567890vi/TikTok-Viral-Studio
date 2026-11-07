@@ -123,6 +123,7 @@ object InstagramService {
                         var authorAvatar = ""
                         var caption = ""
                         var likesCount = 0L
+                        var commentsCount = 0L
 
                         // Video URL
                         val vMatcher = Pattern.compile("\"video_url\"\\s*:\\s*\"([^\"]+)\"").matcher(html)
@@ -158,6 +159,12 @@ object InstagramService {
                         val lMatcher = Pattern.compile("([0-9,.]+[KMB]?)\\s+likes", Pattern.CASE_INSENSITIVE).matcher(html)
                         if (lMatcher.find()) {
                             likesCount = parseFormattedCount(lMatcher.group(1).orEmpty())
+                        }
+
+                        // Comments
+                        val cmMatcher = Pattern.compile("([0-9,.]+[KMB]?)\\s+comments", Pattern.CASE_INSENSITIVE).matcher(html)
+                        if (cmMatcher.find()) {
+                            commentsCount = parseFormattedCount(cmMatcher.group(1).orEmpty())
                         }
 
                         // Caption
@@ -466,7 +473,6 @@ object InstagramService {
         }
 
         Result.failure(Exception("اسم المستخدم غير موجود أو الحساب خاص أو تعذر الاتصال بخوادم إنستغرام."))
-    }
     }
 
     // ==============================================================================
