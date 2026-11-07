@@ -4,7 +4,6 @@ import java.util.Locale
 
 enum class InputTargetType {
     INSPECTOR,
-    LIVE_TRACKER,
     DOWNLOADER
 }
 
@@ -87,7 +86,6 @@ object InputUtils {
 
         return when (targetType) {
             InputTargetType.INSPECTOR -> "https://www.tiktok.com/@$cleanUser"
-            InputTargetType.LIVE_TRACKER -> "https://www.tiktok.com/@$cleanUser/live"
             InputTargetType.DOWNLOADER -> "https://www.tiktok.com/@$cleanUser"
         }
     }

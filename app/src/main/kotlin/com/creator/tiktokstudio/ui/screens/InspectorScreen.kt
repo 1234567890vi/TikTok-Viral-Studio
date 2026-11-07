@@ -37,10 +37,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.creator.tiktokstudio.core.*
 import com.creator.tiktokstudio.data.*
-import com.creator.tiktokstudio.ui.components.ProcessingStepsBox
-import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
-import com.creator.tiktokstudio.ui.components.GlassCard
-import com.creator.tiktokstudio.ui.components.NeonBadge
+import com.creator.tiktokstudio.ui.components.*
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -524,10 +521,26 @@ fun InspectorScreen(
                                 .padding(vertical = 10.dp, horizontal = 12.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            StatBox(label = strings.followersLabel, value = formatCounter(data.followerCount))
-                            StatBox(label = strings.followingLabel, value = formatCounter(data.followingCount))
-                            StatBox(label = strings.totalLikesLabel, value = formatCounter(data.authorTotalLikes))
-                            StatBox(label = strings.videosCountLabel, value = formatCounter(data.authorVideoCount))
+                            StatBox(
+                                label = strings.followersLabel,
+                                value = formatCounter(data.followerCount),
+                                customIcon = { RealEyeViewerIcon(size = 14.dp, isPulsing = false) }
+                            )
+                            StatBox(
+                                label = strings.followingLabel,
+                                value = formatCounter(data.followingCount),
+                                customIcon = { RealCrownIcon(size = 14.dp) }
+                            )
+                            StatBox(
+                                label = strings.totalLikesLabel,
+                                value = formatCounter(data.authorTotalLikes),
+                                customIcon = { RealHeartLikeIcon(size = 14.dp, isPulsing = false) }
+                            )
+                            StatBox(
+                                label = strings.videosCountLabel,
+                                value = formatCounter(data.authorVideoCount),
+                                customIcon = { RealTrophyIcon(rank = 1, size = 14.dp) }
+                            )
                         }
                     }
                 }
@@ -661,14 +674,14 @@ fun InspectorScreen(
                     ) {
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
-                            icon = Icons.Outlined.Visibility,
+                            customIcon = { RealEyeViewerIcon(size = 20.dp, isPulsing = false) },
                             value = formatCounter(data.viewsCount),
                             label = strings.viewsLabel,
                             accentColor = NeonCyan
                         )
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
-                            icon = Icons.Default.Favorite,
+                            customIcon = { RealHeartLikeIcon(size = 20.dp, isPulsing = false) },
                             value = formatCounter(data.likesCount),
                             label = strings.likesLabel,
                             accentColor = NeonPink
@@ -683,14 +696,14 @@ fun InspectorScreen(
                     ) {
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
-                            icon = Icons.Default.ChatBubbleOutline,
+                            customIcon = { RealChatBubbleIcon(size = 20.dp) },
                             value = formatCounter(data.commentsCount),
                             label = strings.commentsLabel,
                             accentColor = NeonPurple
                         )
                         BentoMetricCard(
                             modifier = Modifier.weight(1f),
-                            icon = Icons.Default.BookmarkBorder,
+                            customIcon = { RealDiamondIcon(size = 20.dp) },
                             value = formatCounter(data.collectCount),
                             label = strings.bookmarksLabel,
                             accentColor = GoldVip
@@ -1078,7 +1091,8 @@ fun InspectorScreen(
 @Composable
 fun BentoMetricCard(
     modifier: Modifier = Modifier,
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    customIcon: (@Composable () -> Unit)? = null,
     value: String,
     label: String,
     accentColor: Color
@@ -1102,12 +1116,16 @@ fun BentoMetricCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = accentColor,
-                    modifier = Modifier.size(18.dp)
-                )
+                if (customIcon != null) {
+                    customIcon()
+                } else if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -1124,8 +1142,16 @@ fun BentoMetricCard(
 }
 
 @Composable
-fun StatBox(label: String, value: String) {
+fun StatBox(
+    label: String,
+    value: String,
+    customIcon: (@Composable () -> Unit)? = null
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        if (customIcon != null) {
+            customIcon()
+            Spacer(modifier = Modifier.height(4.dp))
+        }
         Text(text = value, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Text(text = label, color = TextSecondary, fontSize = 10.sp)
     }

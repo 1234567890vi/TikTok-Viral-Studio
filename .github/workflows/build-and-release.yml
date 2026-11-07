@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v2.3.4"
+            TAG_NAME="v2.5.0"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.3.4.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.5.0.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.3.4.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.5.0.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,24 +101,24 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.4' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.4' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.5.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.5.0' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.3.4' }})
+            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.5.0' }})
             
-            إصلاح جذري وشامل لثبات التطبيق (Hotfix App Stability):
-            - **إصلاح انهيار الدخول إلى تبويب تتبع البث المباشر (Crash on Tab Enter)**: ضبط قيود Jetpack Compose Layout وإلغاء أي تمرير غير محدود الارتفاع.
-            - **التحميل الآمن والكسول لمشغل الفيديو ExoPlayer**: الانتقال إلى DefaultHttpDataSource القياسي المدمج لمنع أي تعارض في حزم المكتبات، وعدم تشغيل المشغل إلا برابط بث نشط ومؤكد.
-            - **حماية الأيقونات الرسومية والكانفاس**: منع أخطاء Gradients وNaN في RealTikTokIcons وProcessingStepsBox.
-            - **حماية خوارزميات بايثون وJNI**: تأمين الاستيرادات الاحتياطية Fallback ضد أي استثناءات في Chaquopy.
-            - **الحفاظ الكامل على جلب البيانات الحقيقية 100%**: لايكات 7.5M، ألماس، جولات 2v2/1v1، ومؤقت الجولة 03:30.
+            إصدار مستقر وخفيف: تحسين أداء التحميل السريع والفحص الشامل، دعم البحث المباشر باليوزر، ومربع الخوارزميات المتحرك:
+            - **إزالة وحدة تتبع البث المباشر (Live Tracker)**: ترشيد حجم التطبيق وزيادة سرعته واستقراره بنسبة 100%.
+            - **قسمان رئيسيان فائقا السرعة**: قسم "التحميل السريع" بدقة Full HD/4K بدون علامة مائية، وقسم "الفحص الشامل" مع جلب كافة البيانات الحقيقية والتعليقات والصور والقصص.
+            - **دعم الإدخال المرن**: دعم كامل لإدخال اسم المستخدم المباشر (`@username` أو `username`) أو الروابط المباشرة والمختصرة.
+            - **مربع مراحل المعالجة التفاعلي**: مؤقت 3 ثوانٍ سلس مع أمواج الساين التفاعلية وشبكة العقد المتحركة.
+            - **ترجمة فورية 100%**: دعم اللغات الثلاث (AR, EN, FR) مع ضبط اتجاه RTL/LTR التلقائي وتبديل الوضع الليلي والنهاري.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.3.4.apk`
+               - `TikTok-Viral-Studio-v2.5.0.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.3.4.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.5.0.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false
