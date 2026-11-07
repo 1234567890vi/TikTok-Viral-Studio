@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.creator.tiktokstudio.core.RemoteUpdateManager
+import com.creator.tiktokstudio.ui.components.TikTokDownloaderLogo
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -212,34 +213,7 @@ fun SplashScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Download & Play icon fusion
-                    Box(contentAlignment = Alignment.Center) {
-                        // Offset Cyan Shadow
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = null,
-                            tint = NeonCyan.copy(alpha = 0.6f),
-                            modifier = Modifier
-                                .size(56.dp)
-                                .offset(x = (-2).dp, y = (-1).dp)
-                        )
-                        // Offset Pink Shadow
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = null,
-                            tint = NeonPink.copy(alpha = 0.6f),
-                            modifier = Modifier
-                                .size(56.dp)
-                                .offset(x = 2.dp, y = 1.dp)
-                        )
-                        // Crisp White Main Arrow
-                        Icon(
-                            imageVector = Icons.Default.Download,
-                            contentDescription = null,
-                            tint = TextPrimary,
-                            modifier = Modifier.size(54.dp)
-                        )
-                    }
+                    TikTokDownloaderLogo(size = 72.dp)
                 }
             }
 

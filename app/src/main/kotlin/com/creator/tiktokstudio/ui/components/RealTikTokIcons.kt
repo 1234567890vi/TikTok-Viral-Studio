@@ -1,10 +1,14 @@
 package com.creator.tiktokstudio.ui.components
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -669,5 +673,129 @@ fun RealChatBubbleIcon(
         drawCircle(Color.White, radius = w * 0.05f, center = Offset(w * 0.35f, h * 0.45f))
         drawCircle(Color.White, radius = w * 0.05f, center = Offset(w * 0.50f, h * 0.45f))
         drawCircle(Color.White, radius = w * 0.05f, center = Offset(w * 0.65f, h * 0.45f))
+    }
+}
+
+// ==============================================================================
+// 11. Real TikTok Downloader Logo (3D Chromatic Musical Note + Download Arrow)
+// ==============================================================================
+@Composable
+fun TikTokDownloaderLogo(
+    modifier: Modifier = Modifier,
+    size: Dp = 38.dp
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(size * 0.28f))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF161528), Color(0xFF090812)),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                )
+            )
+            .border(
+                BorderStroke(
+                    1.2.dp,
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFF00F2FE), Color(0xFFFE0979))
+                    )
+                ),
+                RoundedCornerShape(size * 0.28f)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(size * 0.14f)
+        ) {
+            if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+            val w = this.size.width
+            val h = this.size.height
+
+            fun createNotePath(dx: Float, dy: Float): Path = Path().apply {
+                val headCenterX = w * 0.40f + dx
+                val headCenterY = h * 0.50f + dy
+                val headRadiusX = w * 0.22f
+                val headRadiusY = h * 0.17f
+                val stemLeft = w * 0.52f + dx
+                val stemRight = w * 0.64f + dx
+                val stemTop = h * 0.12f + dy
+                val flagEndX = w * 0.88f + dx
+                val flagEndY = h * 0.30f + dy
+
+                moveTo(stemLeft, headCenterY)
+                cubicTo(
+                    headCenterX - headRadiusX, headCenterY + headRadiusY * 0.2f,
+                    headCenterX - headRadiusX, headCenterY + headRadiusY,
+                    headCenterX, headCenterY + headRadiusY
+                )
+                cubicTo(
+                    headCenterX + headRadiusX, headCenterY + headRadiusY,
+                    stemRight, headCenterY + headRadiusY * 0.4f,
+                    stemRight, headCenterY
+                )
+                lineTo(stemRight, stemTop)
+                cubicTo(
+                    stemRight + w * 0.12f, stemTop,
+                    flagEndX, stemTop + h * 0.08f,
+                    flagEndX, flagEndY
+                )
+                lineTo(flagEndX - w * 0.08f, flagEndY)
+                cubicTo(
+                    flagEndX - w * 0.08f, stemTop + h * 0.12f,
+                    stemLeft + w * 0.10f, stemTop + h * 0.08f,
+                    stemLeft, stemTop + h * 0.12f
+                )
+                lineTo(stemLeft, headCenterY)
+                close()
+            }
+
+            fun createArrowPath(dx: Float, dy: Float): Path = Path().apply {
+                val cx = w * 0.50f + dx
+                val shaftTop = h * 0.58f + dy
+                val shaftWidth = w * 0.07f
+                val arrowHeadY = h * 0.86f + dy
+                val arrowWingL = cx - w * 0.18f
+                val arrowWingR = cx + w * 0.18f
+                val arrowWingTop = h * 0.74f + dy
+
+                moveTo(cx - shaftWidth, shaftTop)
+                lineTo(cx + shaftWidth, shaftTop)
+                lineTo(cx + shaftWidth, arrowWingTop)
+                lineTo(arrowWingR, arrowWingTop)
+                lineTo(cx, arrowHeadY)
+                lineTo(arrowWingL, arrowWingTop)
+                lineTo(cx - shaftWidth, arrowWingTop)
+                close()
+            }
+
+            fun createTrayPath(dx: Float, dy: Float): Path = Path().apply {
+                val trayY = h * 0.94f + dy
+                moveTo(w * 0.25f + dx, trayY)
+                lineTo(w * 0.75f + dx, trayY)
+            }
+
+            val glitch = w * 0.045f
+            val cyanColor = Color(0xFF00F2FE)
+            val pinkColor = Color(0xFFFE0979)
+
+            // 1. Cyan Glitch
+            drawPath(createNotePath(-glitch, -glitch * 0.5f), cyanColor)
+            drawPath(createArrowPath(-glitch, -glitch * 0.5f), cyanColor)
+            drawPath(createTrayPath(-glitch, -glitch * 0.5f), cyanColor, style = Stroke(width = w * 0.09f, cap = StrokeCap.Round))
+
+            // 2. Pink Glitch
+            drawPath(createNotePath(glitch, glitch * 0.5f), pinkColor)
+            drawPath(createArrowPath(glitch, glitch * 0.5f), pinkColor)
+            drawPath(createTrayPath(glitch, glitch * 0.5f), pinkColor, style = Stroke(width = w * 0.09f, cap = StrokeCap.Round))
+
+            // 3. Crisp White Core
+            drawPath(createNotePath(0f, 0f), Color.White)
+            drawPath(createArrowPath(0f, 0f), Color.White)
+            drawPath(createTrayPath(0f, 0f), Color.White, style = Stroke(width = w * 0.09f, cap = StrokeCap.Round))
+        }
     }
 }

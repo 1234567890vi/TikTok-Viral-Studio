@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,9 +30,11 @@ import androidx.compose.ui.unit.sp
 import com.creator.tiktokstudio.core.AppLanguage
 import com.creator.tiktokstudio.core.Localization
 import com.creator.tiktokstudio.core.ThemeAndLocaleManager
+import com.creator.tiktokstudio.ui.components.TikTokDownloaderLogo
 import com.creator.tiktokstudio.ui.screens.DownloaderScreen
 import com.creator.tiktokstudio.ui.screens.InspectorScreen
 import com.creator.tiktokstudio.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -43,71 +46,106 @@ fun MainScreen(
     val currentLang by ThemeAndLocaleManager.currentLanguage.collectAsState()
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = DeepDarkBackground,
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(DeepDarkBackground)
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = true,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = DarkSurfaceElevated,
+                drawerContentColor = TextPrimary,
+                modifier = Modifier.width(280.dp)
             ) {
-                // Top Brand & Controls Bar
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(DarkSurfaceElevated, DeepDarkBackground)
+                            )
+                        )
                 ) {
-                    // Left Brand: App Emblem & Title
+                    // Empty Navigation Drawer Container ready for future customization
+                }
+            }
+        }
+    ) {
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            containerColor = DeepDarkBackground,
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(DeepDarkBackground)
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    // Top Brand & Controls Bar
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f, fill = false)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(
-                                    Brush.linearGradient(listOf(NeonCyan, NeonPink))
-                                ),
-                            contentAlignment = Alignment.Center
+                        // Left Brand: Hamburger Menu, App Emblem & Title
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f, fill = false)
                         ) {
-                            Text(
-                                text = "TS",
-                                color = OnAccentDark,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = strings.appTitle,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = strings.appSubtitle,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondary,
-                                    fontSize = 11.sp
-                                ),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
+                            // Hamburger Menu Icon Button
+                            IconButton(
+                                onClick = {
+                                    coroutineScope.launch {
+                                        if (drawerState.isClosed) drawerState.open() else drawerState.close()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(DarkSurfaceElevated)
+                                    .border(1.dp, GlassBorder, CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Menu",
+                                    tint = NeonCyan,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                    // Right Controls: Theme Toggle + Language Selector
+                            // TikTok Downloader 3D Vector Logo
+                            TikTokDownloaderLogo(size = 38.dp)
+
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = strings.appTitle,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = strings.appSubtitle,
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = TextSecondary,
+                                        fontSize = 11.sp
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Right Controls: Theme Toggle + Language Selector
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -224,6 +262,7 @@ fun MainScreen(
             }
         }
     }
+}
 }
 
 @Composable

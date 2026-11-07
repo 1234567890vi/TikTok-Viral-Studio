@@ -13,8 +13,8 @@ android {
         applicationId = "com.creator.tiktokstudio"
         minSdk = 26
         targetSdk = 36
-        versionCode = 23
-        versionName = "2.5.0"
+        versionCode = 24
+        versionName = "2.5.1"
 
     externalNativeBuild {
       cmake {
