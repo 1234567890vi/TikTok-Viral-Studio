@@ -566,10 +566,40 @@ fun InstagramInspectorSection() {
     val coroutineScope = rememberCoroutineScope()
 
     var usernameInput by remember { mutableStateOf("") }
+    var sessionIdInput by remember { mutableStateOf("") }
+    var isSessionModeExpanded by remember { mutableStateOf(false) }
     var isInspecting by remember { mutableStateOf(false) }
     var showProcessingBox by remember { mutableStateOf(false) }
     var inspectedProfile by remember { mutableStateOf<InstagramProfileInfo?>(null) }
     var avatarDownloadProgress by remember { mutableStateOf(DownloadProgressState()) }
+    var isInspectingPrivacyOnly by remember { mutableStateOf(false) }
+
+    fun triggerInspect(targetUsername: String) {
+        val clean = targetUsername.trim()
+        if (clean.isBlank()) {
+            Toast.makeText(context, "الرجاء إدخال اسم المستخدم أو الرابط", Toast.LENGTH_SHORT).show()
+            return
+        }
+        usernameInput = clean
+        isInspecting = true
+        showProcessingBox = true
+        inspectedProfile = null
+
+        coroutineScope.launch {
+            val res = InstagramService.inspectProfile(
+                usernameOrUrl = clean,
+                sessionId = if (isSessionModeExpanded && sessionIdInput.isNotBlank()) sessionIdInput else null
+            )
+            delay(2500L)
+            isInspecting = false
+            res.onSuccess { prof ->
+                inspectedProfile = prof
+                Toast.makeText(context, "تم فحص الحساب بنجاح! 🎯", Toast.LENGTH_SHORT).show()
+            }.onFailure { err ->
+                Toast.makeText(context, err.message ?: "تعذر جلب بيانات البروفايل", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -625,29 +655,81 @@ fun InstagramInspectorSection() {
                     singleLine = true
                 )
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Session Mode Expandable Toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSessionModeExpanded) Color(0xFF833AB4).copy(alpha = 0.15f) else Color.Transparent)
+                        .clickable { isSessionModeExpanded = !isSessionModeExpanded }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (isSessionModeExpanded) Icons.Default.LockOpen else Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = if (isSessionModeExpanded) Color(0xFF00F2FE) else TextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "فحص متقدم بالجلسة (تاريخ الأسماء، المحظورين، والمفضلين)",
+                        color = if (isSessionModeExpanded) Color(0xFF00F2FE) else TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        if (isSessionModeExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                if (isSessionModeExpanded) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = sessionIdInput,
+                        onValueChange = { sessionIdInput = it },
+                        placeholder = {
+                            Text(
+                                strings.igSessionIdPlaceholder,
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF00F2FE),
+                            unfocusedBorderColor = GlassBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedContainerColor = DarkSurfaceElevated,
+                            unfocusedContainerColor = DarkSurfaceElevated
+                        ),
+                        leadingIcon = {
+                            Icon(Icons.Default.Key, contentDescription = null, tint = Color(0xFF00F2FE), modifier = Modifier.size(18.dp))
+                        },
+                        singleLine = true
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = strings.igPrivacyNoticeText,
+                        color = TextSecondary,
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
                     onClick = {
-                        if (usernameInput.isBlank()) {
-                            Toast.makeText(context, "الرجاء إدخال اسم المستخدم أو الرابط", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        isInspecting = true
-                        showProcessingBox = true
-                        inspectedProfile = null
-
-                        coroutineScope.launch {
-                            val res = InstagramService.inspectProfile(usernameInput)
-                            delay(2500L)
-                            isInspecting = false
-                            res.onSuccess { prof ->
-                                inspectedProfile = prof
-                                Toast.makeText(context, "تم فحص الحساب بنجاح! 🎯", Toast.LENGTH_SHORT).show()
-                            }.onFailure { err ->
-                                Toast.makeText(context, err.message ?: "تعذر جلب بيانات البروفايل", Toast.LENGTH_LONG).show()
-                            }
-                        }
+                        triggerInspect(usernameInput)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -672,7 +754,7 @@ fun InstagramInspectorSection() {
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("جاري تحليل البروفايل بالخوارزمية...", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("جاري فحص الحساب بالخوارزمية الدقيقة...", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             }
                         } else {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -840,6 +922,320 @@ fun InstagramInspectorSection() {
                 }
             }
 
+            // 1. Account Identity & History Card (Deep OSINT)
+            item {
+                GlassCard(
+                    borderColor = Color(0xFF00F2FE).copy(alpha = 0.5f),
+                    backgroundColor = DarkSurfaceCard
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = Color(0xFF00F2FE), modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(strings.igHistoryTitle, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OsintInfoBox(
+                            modifier = Modifier.weight(1f),
+                            label = strings.igUserIdLabel,
+                            value = if (prof.userPk.isNotBlank()) prof.userPk else "متاح في الفحص المباشر",
+                            icon = Icons.Default.Badge,
+                            tint = Color(0xFF00F2FE)
+                        )
+                        OsintInfoBox(
+                            modifier = Modifier.weight(1f),
+                            label = strings.igDateJoinedLabel,
+                            value = prof.dateJoined,
+                            icon = Icons.Default.Schedule,
+                            tint = Color(0xFFFF007A)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OsintInfoBox(
+                            modifier = Modifier.weight(1f),
+                            label = strings.igAccountTypeLabel,
+                            value = prof.accountType,
+                            icon = Icons.Default.Category,
+                            tint = Color(0xFFFCB045)
+                        )
+                        OsintInfoBox(
+                            modifier = Modifier.weight(1f),
+                            label = strings.igCategoryLabel,
+                            value = if (prof.categoryName.isNotBlank()) prof.categoryName else "شخصي / عام",
+                            icon = Icons.Default.Star,
+                            tint = Color(0xFF00E676)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DarkSurfaceElevated)
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.History, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(strings.igFormerUsernamesLabel + ":", color = TextSecondary, fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (prof.formerUsernamesCount > 0) "${prof.formerUsernamesCount} مرات" else "0 (أو يتطلب وضع الجلسة)",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    if (prof.bioLinks.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(DarkSurfaceElevated)
+                                .padding(10.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFF00F2FE), modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(strings.igBioLinksLabel, color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            prof.bioLinks.forEach { link ->
+                                Text(
+                                    text = "• $link",
+                                    color = Color(0xFF00F2FE),
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Top Connected & Interacting Friends Card
+            item {
+                GlassCard(
+                    borderColor = Color(0xFFE1306C).copy(alpha = 0.5f),
+                    backgroundColor = DarkSurfaceCard
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.People, contentDescription = null, tint = Color(0xFFE1306C), modifier = Modifier.size(22.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(strings.igTopFriendsTitle, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                    Text(
+                        text = strings.igTopFriendsSubtitle,
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = strings.igClickToInspectHint,
+                        color = Color(0xFF00F2FE),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (prof.topConnectedFriends.isNotEmpty()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            prof.topConnectedFriends.forEach { friend ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(DarkSurfaceElevated)
+                                        .clickable { triggerInspect(friend.username) }
+                                        .padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (friend.avatarUrl.isNotBlank()) {
+                                        AsyncImage(
+                                            model = buildInstagramImageRequest(context, friend.avatarUrl),
+                                            contentDescription = friend.username,
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(CircleShape)
+                                                .border(1.5.dp, Color(0xFFE1306C), CircleShape),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF833AB4).copy(alpha = 0.3f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = friend.username.take(1).uppercase(),
+                                                color = Color.White,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 16.sp
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(10.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "@${friend.username}",
+                                            color = TextPrimary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                        Text(
+                                            text = friend.fullName,
+                                            color = TextSecondary,
+                                            fontSize = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(Color(0xFFE1306C).copy(alpha = 0.2f))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = friend.relationType,
+                                                color = Color(0xFFE1306C),
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "${friend.interactionCount} ${strings.igInteractionsCountSuffix}",
+                                            color = Color(0xFF00F2FE),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = "Inspect",
+                                        tint = TextSecondary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = strings.igNoFriendsFound,
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            // 3. Privacy Session Data Card (if session data returned)
+            if (prof.privacyData != null) {
+                val pData = prof.privacyData!!
+                item {
+                    GlassCard(
+                        borderColor = Color(0xFF00E676).copy(alpha = 0.5f),
+                        backgroundColor = DarkSurfaceCard
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LockOpen, contentDescription = null, tint = Color(0xFF00E676), modifier = Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(strings.igPrivacySessionTitle, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        }
+
+                        // Close Friends
+                        if (pData.closeFriends.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(strings.igCloseFriendsTitle + " (${pData.closeFriends.size})", color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            pData.closeFriends.forEach { cf ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AsyncImage(
+                                        model = buildInstagramImageRequest(context, cf.avatarUrl),
+                                        contentDescription = cf.username,
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .border(1.dp, Color(0xFF00E676), CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("@${cf.username} (${cf.fullName})", color = TextPrimary, fontSize = 12.sp)
+                                }
+                            }
+                        }
+
+                        // Blocked Users
+                        if (pData.blockedUsers.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(strings.igBlockedUsersTitle + " (${pData.blockedUsers.size})", color = Color(0xFFFF5252), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            pData.blockedUsers.forEach { bu ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Block, contentDescription = null, tint = Color(0xFFFF5252), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("@${bu.username} (${bu.fullName})", color = TextPrimary, fontSize = 12.sp)
+                                }
+                            }
+                        }
+
+                        // Direct Message Friends
+                        if (pData.directFriends.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(strings.igDirectFriendsTitle + " (${pData.directFriends.size})", color = Color(0xFF00F2FE), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            pData.directFriends.take(6).forEach { df ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Forum, contentDescription = null, tint = Color(0xFF00F2FE), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text("@${df.username} (${df.fullName})", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(df.lastMessageSnippet, color = TextSecondary, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // Latest Posts preview
             if (prof.latestPosts.isNotEmpty()) {
                 item {
@@ -972,5 +1368,37 @@ fun formatCountCompact(count: Long): String {
         count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
         count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
         else -> count.toString()
+    }
+}
+
+@Composable
+fun OsintInfoBox(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurfaceElevated)
+            .border(0.5.dp, tint.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(label, color = TextSecondary, fontSize = 11.sp)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

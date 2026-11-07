@@ -171,7 +171,30 @@ data class AppStrings(
     val igPrivateNotice: String,
     val igDownloadVideoSuccessToast: String,
     val igDownloadAllSuccessToast: String,
-    val igExtractErrorFallback: String
+    val igExtractErrorFallback: String,
+
+    // Instagram Deep OSINT & History Strings
+    val igHistoryTitle: String,
+    val igUserIdLabel: String,
+    val igDateJoinedLabel: String,
+    val igFormerUsernamesLabel: String,
+    val igAccountTypeLabel: String,
+    val igCategoryLabel: String,
+    val igAccountLocationLabel: String,
+    val igBioLinksLabel: String,
+    val igTopFriendsTitle: String,
+    val igTopFriendsSubtitle: String,
+    val igClickToInspectHint: String,
+    val igInteractionsCountSuffix: String,
+    val igPrivacySessionTitle: String,
+    val igPrivacySessionSubtitle: String,
+    val igSessionIdPlaceholder: String,
+    val igInspectPrivacyBtn: String,
+    val igBlockedUsersTitle: String,
+    val igCloseFriendsTitle: String,
+    val igDirectFriendsTitle: String,
+    val igPrivacyNoticeText: String,
+    val igNoFriendsFound: String
 )
 
 val ArabicStrings = AppStrings(
@@ -334,7 +357,30 @@ val ArabicStrings = AppStrings(
     igPrivateNotice = "تنبيه: هذا الحساب خاص (Private Account) ولا يمكن جلب بياناته بدون متابعة",
     igDownloadVideoSuccessToast = "تم حفظ المقطع في Movies/InstagramStudio بنجاح!",
     igDownloadAllSuccessToast = "تم حفظ جميع القصص في المعرض بنجاح! 🎉",
-    igExtractErrorFallback = "تعذر استخراج محتوى إنستغرام: يرجى التحقق من صحة الرابط أو الحساب"
+    igExtractErrorFallback = "تعذر استخراج محتوى إنستغرام: يرجى التحقق من صحة الرابط أو الحساب",
+
+    // Instagram Deep OSINT & History Strings
+    igHistoryTitle = "هوية وتاريخ الحساب (Deep OSINT & History)",
+    igUserIdLabel = "معرف الحساب (User ID)",
+    igDateJoinedLabel = "تاريخ إنشاء الحساب (Date Joined)",
+    igFormerUsernamesLabel = "تغييرات اسم المستخدم",
+    igAccountTypeLabel = "نوع الحساب",
+    igCategoryLabel = "الفئة والتصنيف",
+    igAccountLocationLabel = "دولة الحساب",
+    igBioLinksLabel = "الروابط الخارجية في البايو",
+    igTopFriendsTitle = "الأصدقاء الأكثر تفاعلاً وارتباطاً (Top Connected Friends)",
+    igTopFriendsSubtitle = "تحليل حقيقي للإشارات (@mentions)، والوسوم المشتركة، وحسابات التعاون الفعلي",
+    igClickToInspectHint = "اضغط على أي صديق لفحص حسابه فوراً 🔍",
+    igInteractionsCountSuffix = "تفاعل",
+    igPrivacySessionTitle = "فحص بيانات الخصوصية لحسابك (Session Mode)",
+    igPrivacySessionSubtitle = "فحص متقدم لقائمة المحظورين، الأصدقاء المقربين، وأكثر الأصدقاء مراسلة في Direct",
+    igSessionIdPlaceholder = "أدخل قيمة sessionid لحسابك الاختياري...",
+    igInspectPrivacyBtn = "فحص بيانات الخصوصية 🔒",
+    igBlockedUsersTitle = "قائمة الحسابات المحظورة (Blocked List)",
+    igCloseFriendsTitle = "الأصدقاء المقربون (Close Friends)",
+    igDirectFriendsTitle = "أكثر الأصدقاء مراسلة (Direct Inbox)",
+    igPrivacyNoticeText = "ملاحظة أمنية: الفحص باليوزر يعرض البيانات العامة وتاريخ الإنشاء والأصدقاء المتفاعلين علناً. للوصول إلى قائمة المحظورين والمفضلين ورسائل الديركت، يتطلب إدخال معرف الجلسة الخاص بك.",
+    igNoFriendsFound = "لم يتم رصد إشارات أو وسوم لأصدقاء في المنشورات الأخيرة"
 )
 
 val EnglishStrings = AppStrings(
@@ -497,7 +543,30 @@ val EnglishStrings = AppStrings(
     igPrivateNotice = "Notice: This account is Private and cannot be inspected publicly",
     igDownloadVideoSuccessToast = "Media saved to Movies/InstagramStudio successfully!",
     igDownloadAllSuccessToast = "All stories saved to Gallery successfully! 🎉",
-    igExtractErrorFallback = "Unable to fetch Instagram media: Check URL or username"
+    igExtractErrorFallback = "Unable to fetch Instagram media: Check URL or username",
+
+    // Instagram Deep OSINT & History Strings
+    igHistoryTitle = "Account Identity & History (Deep OSINT)",
+    igUserIdLabel = "User ID (PK)",
+    igDateJoinedLabel = "Date Joined",
+    igFormerUsernamesLabel = "Former Usernames",
+    igAccountTypeLabel = "Account Type",
+    igCategoryLabel = "Category",
+    igAccountLocationLabel = "Account Location",
+    igBioLinksLabel = "Bio Links",
+    igTopFriendsTitle = "Top Connected & Interacting Friends",
+    igTopFriendsSubtitle = "Real analysis of mentions (@mentions), tags, and co-author collaborations",
+    igClickToInspectHint = "Tap any friend to inspect their profile 🔍",
+    igInteractionsCountSuffix = "interactions",
+    igPrivacySessionTitle = "My Account Privacy Inspector (Session Mode)",
+    igPrivacySessionSubtitle = "Advanced inspection for blocked users, close friends, and direct inbox",
+    igSessionIdPlaceholder = "Enter your sessionid cookie value...",
+    igInspectPrivacyBtn = "Inspect Privacy Data 🔒",
+    igBlockedUsersTitle = "Blocked Accounts List",
+    igCloseFriendsTitle = "Close Friends (Besties)",
+    igDirectFriendsTitle = "Top Direct Message Friends",
+    igPrivacyNoticeText = "Security Notice: Username lookup only analyzes public history and interactions. Blocked list, close friends, and direct messages require session authentication.",
+    igNoFriendsFound = "No friend mentions or tags found in recent posts"
 )
 
 val FrenchStrings = AppStrings(
@@ -660,7 +729,30 @@ val FrenchStrings = AppStrings(
     igPrivateNotice = "Remarque : Ce compte est privé et ne peut être analysé",
     igDownloadVideoSuccessToast = "Média enregistré dans Movies/InstagramStudio avec succès !",
     igDownloadAllSuccessToast = "Toutes les stories enregistrées dans la Galerie ! 🎉",
-    igExtractErrorFallback = "Impossible d'extraire le média Instagram : Vérifiez le lien ou le compte"
+    igExtractErrorFallback = "Impossible d'extraire le média Instagram : Vérifiez le lien ou le compte",
+
+    // Instagram Deep OSINT & History Strings
+    igHistoryTitle = "Identité & Historique du Compte (Deep OSINT)",
+    igUserIdLabel = "Identifiant Unique (PK)",
+    igDateJoinedLabel = "Date de Création",
+    igFormerUsernamesLabel = "Anciens Noms d'Utilisateur",
+    igAccountTypeLabel = "Type de Compte",
+    igCategoryLabel = "Catégorie",
+    igAccountLocationLabel = "Pays d'Origine",
+    igBioLinksLabel = "Liens Externes",
+    igTopFriendsTitle = "Amis & Comptes les Plus Connectés",
+    igTopFriendsSubtitle = "Analyse réelle des mentions (@mentions), tags et collaborations",
+    igClickToInspectHint = "Appuyez sur un ami pour inspecter son profil 🔍",
+    igInteractionsCountSuffix = "interactions",
+    igPrivacySessionTitle = "Inspecteur de Confidentialité (Mode Session)",
+    igPrivacySessionSubtitle = "Inspection avancée des comptes bloqués, amis proches et messages directs",
+    igSessionIdPlaceholder = "Entrez la valeur du cookie sessionid...",
+    igInspectPrivacyBtn = "Inspecter la Confidentialité 🔒",
+    igBlockedUsersTitle = "Comptes Bloqués (Blocked List)",
+    igCloseFriendsTitle = "Amis Proches (Close Friends)",
+    igDirectFriendsTitle = "Conversations Directes les Plus Actives",
+    igPrivacyNoticeText = "Note de sécurité : La recherche par nom affiche l'historique public et les amis en interaction. Les listes bloquées, amis proches et messages nécessitent une session.",
+    igNoFriendsFound = "Aucune mention ou tag d'amis trouvé dans les publications récentes"
 )
 
 val LocalAppStrings = staticCompositionLocalOf { ArabicStrings }

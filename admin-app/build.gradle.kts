@@ -12,8 +12,8 @@ android {
         applicationId = "com.creator.tiktokstudio.admin"
         minSdk = 26
         targetSdk = 36
-        versionCode = 26
-        versionName = "2.6.1"
+        versionCode = 27
+        versionName = "2.7.0"
     }
 
   signingConfigs {

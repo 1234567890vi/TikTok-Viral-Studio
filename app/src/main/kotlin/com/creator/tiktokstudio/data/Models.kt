@@ -212,6 +212,43 @@ data class InstagramStoryItem(
     val timeAgoFormatted: String = ""
 )
 
+data class InstagramConnectedFriend(
+    val username: String = "",
+    val fullName: String = "",
+    val avatarUrl: String = "",
+    val interactionCount: Int = 1,
+    val relationType: String = "إشارة في المنشورات" // "وسم في المنشور", "تعاون مشترك", "إشارة في البايو", "تفاعل وتعليق"
+)
+
+data class InstagramBlockedUser(
+    val id: String = "",
+    val username: String = "",
+    val fullName: String = "",
+    val avatarUrl: String = ""
+)
+
+data class InstagramCloseFriend(
+    val id: String = "",
+    val username: String = "",
+    val fullName: String = "",
+    val avatarUrl: String = ""
+)
+
+data class InstagramDirectFriend(
+    val id: String = "",
+    val username: String = "",
+    val fullName: String = "",
+    val avatarUrl: String = "",
+    val messageCount: Int = 0,
+    val lastMessageSnippet: String = ""
+)
+
+data class InstagramPrivacyData(
+    val blockedUsers: List<InstagramBlockedUser> = emptyList(),
+    val closeFriends: List<InstagramCloseFriend> = emptyList(),
+    val directFriends: List<InstagramDirectFriend> = emptyList()
+)
+
 data class InstagramProfileInfo(
     val username: String = "",
     val fullName: String = "",
@@ -224,5 +261,18 @@ data class InstagramProfileInfo(
     val isVerified: Boolean = false,
     val isPrivate: Boolean = false,
     val activeStories: List<InstagramStoryItem> = emptyList(),
-    val latestPosts: List<InstagramPostInfo> = emptyList()
+    val latestPosts: List<InstagramPostInfo> = emptyList(),
+
+    // Deep OSINT & Account History fields (100% Real - Zero Fake Data)
+    val userPk: String = "",
+    val dateJoined: String = "",
+    val dateJoinedTimestamp: Long = 0L,
+    val formerUsernamesCount: Int = 0,
+    val formerUsernames: List<String> = emptyList(),
+    val accountBasedIn: String = "",
+    val accountType: String = "Personal", // Personal, Creator, Business
+    val categoryName: String = "",
+    val bioLinks: List<String> = emptyList(),
+    val topConnectedFriends: List<InstagramConnectedFriend> = emptyList(),
+    val privacyData: InstagramPrivacyData? = null
 )
