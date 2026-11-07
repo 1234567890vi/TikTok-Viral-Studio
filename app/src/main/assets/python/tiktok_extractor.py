@@ -71,6 +71,21 @@ def normalize_tiktok_input(raw_input: str, target_type: str = "INSPECTOR") -> st
 def extract_clean_username(raw_input: str) -> str:
     return sanitize_username(raw_input)
 
+def format_count(count_str: str) -> int:
+    if not count_str:
+        return 0
+    s = count_str.replace(",", "").strip().upper()
+    try:
+        if s.endswith("B"):
+            return int(float(s[:-1]) * 1_000_000_000)
+        elif s.endswith("M"):
+            return int(float(s[:-1]) * 1_000_000)
+        elif s.endswith("K"):
+            return int(float(s[:-1]) * 1_000)
+        return int(float(s))
+    except Exception:
+        return 0
+
 def format_arabic_timestamp(ts: int) -> str:
     """Formats unix timestamp into an Arabic readable string with elapsed time."""
     if not ts or ts <= 0:
@@ -217,6 +232,7 @@ def inspect_tiktok_deep(url: str) -> dict:
                 "success": False,
                 "error": "اسم المستخدم غير موجود أو الحساب خاص"
             }
+        # Channel 1: TikWM User Info API
         try:
             api_endpoint = f"https://www.tikwm.com/api/user/info?unique_id={urllib.parse.quote(username)}"
             req = urllib.request.Request(
@@ -245,16 +261,78 @@ def inspect_tiktok_deep(url: str) -> dict:
                         "create_time_formatted": "حساب نشط ومسجل",
                         "top_comments": []
                     }
-                else:
-                    return {
-                        "success": False,
-                        "error": "اسم المستخدم غير موجود أو الحساب خاص"
-                    }
         except Exception:
-            return {
-                "success": False,
-                "error": "اسم المستخدم غير موجود أو الحساب خاص"
-            }
+            pass
+
+        # Channel 2: TikTok Web Profile SSR Meta Tag Parser (Zero Cloudflare block)
+        try:
+            tt_web_url = f"https://www.tiktok.com/@{username}"
+            tt_req = urllib.request.Request(
+                tt_web_url,
+                headers={
+                    "User-Agent": "Twitterbot/1.0",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9"
+                }
+            )
+            with urllib.request.urlopen(tt_req, context=create_ssl_context(), timeout=12) as tt_resp:
+                html = tt_resp.read().decode("utf-8", errors="ignore")
+                if html:
+                    followers = 0
+                    following = 0
+                    total_likes = 0
+                    avatar_url = ""
+                    nickname = username
+                    has_parsed = False
+
+                    desc_m = re.search(r'<meta[^>]+(?:property|name)="og:description"[^>]+content="([^"]+)"', html)
+                    if desc_m:
+                        desc = desc_m.group(1)
+                        f_m = re.search(r'([0-9.,]+[KMBkmb]?)\s+Followers', desc, re.IGNORECASE)
+                        if f_m:
+                            followers = format_count(f_m.group(1))
+                            has_parsed = True
+                        fo_m = re.search(r'([0-9.,]+[KMBkmb]?)\s+Following', desc, re.IGNORECASE)
+                        if fo_m:
+                            following = format_count(fo_m.group(1))
+                        l_m = re.search(r'([0-9.,]+[KMBkmb]?)\s+Likes', desc, re.IGNORECASE)
+                        if l_m:
+                            total_likes = format_count(l_m.group(1))
+
+                    img_m = re.search(r'<meta[^>]+(?:property|name)="og:image"[^>]+content="([^"]+)"', html)
+                    if img_m:
+                        avatar_url = img_m.group(1).replace("&amp;", "&")
+
+                    title_m = re.search(r'<meta[^>]+(?:property|name)="og:title"[^>]+content="([^"]+)"', html)
+                    if title_m:
+                        title_val = title_m.group(1)
+                        if " on TikTok" in title_val:
+                            nickname = title_val.split(" on TikTok")[0].strip()
+
+                    if has_parsed or avatar_url:
+                        return {
+                            "success": True,
+                            "content_type": "PROFILE",
+                            "title": f"حساب تيك توك: @{username}",
+                            "author_name": nickname,
+                            "author_unique_id": username,
+                            "author_avatar": avatar_url,
+                            "author_bio": f"حساب تيك توك رسمي: @{username}",
+                            "followers_count": followers,
+                            "following_count": following,
+                            "total_likes": total_likes,
+                            "video_count": 0,
+                            "is_verified": False,
+                            "create_time_formatted": "حساب نشط ومسجل",
+                            "top_comments": []
+                        }
+        except Exception:
+            pass
+
+        return {
+            "success": False,
+            "error": "اسم المستخدم غير موجود أو الحساب خاص"
+        }
 
     # Fetch post data for Video, Photo, or Story
     try:

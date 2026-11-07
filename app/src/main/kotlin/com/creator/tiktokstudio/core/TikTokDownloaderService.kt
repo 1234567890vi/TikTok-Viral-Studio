@@ -71,6 +71,21 @@ object TikTokDownloaderService {
         return u
     }
 
+    fun parseFormattedCount(countStr: String): Long {
+        if (countStr.isBlank()) return 0L
+        val s = countStr.replace(",", "").trim().uppercase()
+        return try {
+            when {
+                s.endsWith("B") -> (s.dropLast(1).toDouble() * 1_000_000_000.0).toLong()
+                s.endsWith("M") -> (s.dropLast(1).toDouble() * 1_000_000.0).toLong()
+                s.endsWith("K") -> (s.dropLast(1).toDouble() * 1_000.0).toLong()
+                else -> s.toDouble().toLong()
+            }
+        } catch (e: Exception) {
+            0L
+        }
+    }
+
     fun formatArabicTimestamp(seconds: Long): String {
         if (seconds <= 0L) return "تاريخ النشر غير متوفر"
         return try {
@@ -202,62 +217,133 @@ object TikTokDownloaderService {
                 }
 
                 val profileApi = "https://www.tikwm.com/api/user/info?unique_id=${URLEncoder.encode(username, "UTF-8")}"
-                val req = Request.Builder()
-                    .url(profileApi)
-                    .addHeader("User-Agent", USER_AGENT)
-                    .addHeader("Accept", "application/json")
-                    .build()
-                val resp = httpClient.newCall(req).execute()
-                val body = resp.body?.string()
-                if (resp.isSuccessful && !body.isNullOrBlank()) {
-                    val json = JSONObject(body)
-                    if (json.optInt("code", -1) == 0 && json.has("data")) {
-                        val data = json.getJSONObject("data")
-                        val user = data.optJSONObject("user")
-                        val stats = data.optJSONObject("stats")
-                        val uniqueId = user?.optString("uniqueId") ?: username
-                        val nickname = user?.optString("nickname") ?: uniqueId
-                        val avatarRaw = user?.optString("avatarLarger").orEmpty().ifBlank {
-                            user?.optString("avatarMedium").orEmpty().ifBlank {
-                                user?.optString("avatarThumb").orEmpty().ifBlank {
-                                    user?.optString("avatar").orEmpty()
+                try {
+                    val req = Request.Builder()
+                        .url(profileApi)
+                        .addHeader("User-Agent", USER_AGENT)
+                        .addHeader("Accept", "application/json")
+                        .build()
+                    val resp = httpClient.newCall(req).execute()
+                    val body = resp.body?.string()
+                    if (resp.isSuccessful && !body.isNullOrBlank()) {
+                        val json = JSONObject(body)
+                        if (json.optInt("code", -1) == 0 && json.has("data")) {
+                            val data = json.getJSONObject("data")
+                            val user = data.optJSONObject("user")
+                            val stats = data.optJSONObject("stats")
+                            val uniqueId = user?.optString("uniqueId") ?: username
+                            val nickname = user?.optString("nickname") ?: uniqueId
+                            val avatarRaw = user?.optString("avatarLarger").orEmpty().ifBlank {
+                                user?.optString("avatarMedium").orEmpty().ifBlank {
+                                    user?.optString("avatarThumb").orEmpty().ifBlank {
+                                        user?.optString("avatar").orEmpty()
+                                    }
                                 }
                             }
-                        }
-                        val avatar = sanitizeUrl(avatarRaw).ifBlank {
-                            "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200"
-                        }
-                        val signature = user?.optString("signature", "") ?: ""
-                        val followers = stats?.optLong("followerCount", 0L) ?: 0L
-                        val following = stats?.optLong("followingCount", 0L) ?: 0L
-                        val heart = stats?.optLong("heartCount", 0L) ?: 0L
-                        val videos = stats?.optLong("videoCount", 0L) ?: 0L
-                        val isVerified = user?.optBoolean("verified", false) ?: false
+                            val avatar = sanitizeUrl(avatarRaw)
+                            val signature = user?.optString("signature", "") ?: ""
+                            val followers = stats?.optLong("followerCount", 0L) ?: 0L
+                            val following = stats?.optLong("followingCount", 0L) ?: 0L
+                            val heart = stats?.optLong("heartCount", 0L) ?: 0L
+                            val videos = stats?.optLong("videoCount", 0L) ?: 0L
+                            val isVerified = user?.optBoolean("verified", false) ?: false
 
-                        return@withContext Result.success(
-                            TikTokDeepInspectionData(
-                                url = normalizedUrl,
-                                contentType = TikTokContentType.PROFILE,
-                                title = "حساب تيك توك: @$uniqueId",
-                                authorName = nickname,
-                                authorUniqueId = uniqueId,
-                                authorAvatar = avatar,
-                                authorBio = signature,
-                                followerCount = followers,
-                                followingCount = following,
-                                authorTotalLikes = heart,
-                                authorVideoCount = videos,
-                                isVerified = isVerified,
-                                createTimeFormatted = "حساب نشط ومسجل",
-                                topComments = emptyList()
+                            return@withContext Result.success(
+                                TikTokDeepInspectionData(
+                                    url = normalizedUrl,
+                                    contentType = TikTokContentType.PROFILE,
+                                    title = "حساب تيك توك: @$uniqueId",
+                                    authorName = nickname,
+                                    authorUniqueId = uniqueId,
+                                    authorAvatar = avatar,
+                                    authorBio = signature,
+                                    followerCount = followers,
+                                    followingCount = following,
+                                    authorTotalLikes = heart,
+                                    authorVideoCount = videos,
+                                    isVerified = isVerified,
+                                    createTimeFormatted = "حساب نشط ومسجل",
+                                    topComments = emptyList()
+                                )
                             )
-                        )
-                    } else {
-                        return@withContext Result.failure(
-                            Exception("اسم المستخدم غير موجود أو الحساب خاص")
-                        )
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.w(TAG, "TikWM Profile Channel 1 failed: ${e.message}")
                 }
+
+                // Channel 2: Official TikTok Web Profile Parser via SSR Meta Tags (Zero Cloudflare block)
+                try {
+                    val ttWebUrl = "https://www.tiktok.com/@$username"
+                    val ttReq = Request.Builder()
+                        .url(ttWebUrl)
+                        .addHeader("User-Agent", "Twitterbot/1.0")
+                        .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                        .addHeader("Accept-Language", "en-US,en;q=0.9")
+                        .build()
+
+                    httpClient.newCall(ttReq).execute().use { ttResp ->
+                        val html = ttResp.body?.string().orEmpty()
+                        if (html.isNotBlank()) {
+                            var followers = 0L
+                            var following = 0L
+                            var totalLikes = 0L
+                            var avatarUrl = ""
+                            var nickname = username
+                            var hasParsed = false
+
+                            val descMatcher = java.util.regex.Pattern.compile("<meta[^>]+(?:property|name)=\"og:description\"[^>]+content=\"([^\"]+)\"").matcher(html)
+                            if (descMatcher.find()) {
+                                val desc = descMatcher.group(1).orEmpty()
+                                val fM = java.util.regex.Pattern.compile("([0-9.,]+[KMBkmb]?)\\s+Followers", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(desc)
+                                if (fM.find()) {
+                                    followers = parseFormattedCount(fM.group(1).orEmpty())
+                                    hasParsed = true
+                                }
+                                val foM = java.util.regex.Pattern.compile("([0-9.,]+[KMBkmb]?)\\s+Following", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(desc)
+                                if (foM.find()) following = parseFormattedCount(foM.group(1).orEmpty())
+
+                                val lM = java.util.regex.Pattern.compile("([0-9.,]+[KMBkmb]?)\\s+Likes", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(desc)
+                                if (lM.find()) totalLikes = parseFormattedCount(lM.group(1).orEmpty())
+                            }
+
+                            val imgMatcher = java.util.regex.Pattern.compile("<meta[^>]+(?:property|name)=\"og:image\"[^>]+content=\"([^\"]+)\"").matcher(html)
+                            if (imgMatcher.find()) {
+                                avatarUrl = imgMatcher.group(1).orEmpty().replace("&amp;", "&")
+                            }
+
+                            val titleMatcher = java.util.regex.Pattern.compile("<meta[^>]+(?:property|name)=\"og:title\"[^>]+content=\"([^\"]+)\"").matcher(html)
+                            if (titleMatcher.find()) {
+                                val title = titleMatcher.group(1).orEmpty()
+                                nickname = title.substringBefore(" on TikTok").trim()
+                            }
+
+                            if (hasParsed || avatarUrl.isNotBlank()) {
+                                return@withContext Result.success(
+                                    TikTokDeepInspectionData(
+                                        url = normalizedUrl,
+                                        contentType = TikTokContentType.PROFILE,
+                                        title = "حساب تيك توك: @$username",
+                                        authorName = nickname,
+                                        authorUniqueId = username,
+                                        authorAvatar = avatarUrl,
+                                        authorBio = "حساب تيك توك رسمي: @$username",
+                                        followerCount = followers,
+                                        followingCount = following,
+                                        authorTotalLikes = totalLikes,
+                                        authorVideoCount = 0L,
+                                        isVerified = false,
+                                        createTimeFormatted = "حساب نشط ومسجل",
+                                        topComments = emptyList()
+                                    )
+                                )
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "TikTok Web Channel 2 failed: ${e.message}")
+                }
+
                 return@withContext Result.failure(
                     Exception("اسم المستخدم غير موجود أو الحساب خاص")
                 )

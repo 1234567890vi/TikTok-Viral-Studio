@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.creator.tiktokstudio.core.InstagramService
 import com.creator.tiktokstudio.core.Localization
 import com.creator.tiktokstudio.data.*
@@ -39,6 +40,16 @@ import com.creator.tiktokstudio.ui.components.*
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+fun buildInstagramImageRequest(context: Context, url: String): ImageRequest {
+    val cleanUrl = url.replace("&amp;", "&")
+    return ImageRequest.Builder(context)
+        .data(cleanUrl)
+        .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+        .addHeader("Referer", "https://www.instagram.com/")
+        .crossfade(true)
+        .build()
+}
 
 val InstagramGradient = Brush.linearGradient(
     colors = listOf(
@@ -363,7 +374,7 @@ fun InstagramDownloaderSection() {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         AsyncImage(
-                            model = post.authorAvatar,
+                            model = buildInstagramImageRequest(context, post.authorAvatar),
                             contentDescription = "Avatar",
                             modifier = Modifier
                                 .size(44.dp)
@@ -421,7 +432,7 @@ fun InstagramDownloaderSection() {
                         contentAlignment = Alignment.Center
                     ) {
                         AsyncImage(
-                            model = post.thumbnailUrl,
+                            model = buildInstagramImageRequest(context, post.thumbnailUrl),
                             contentDescription = "Media Thumbnail",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
@@ -703,7 +714,7 @@ fun InstagramInspectorSection() {
                     ) {
                         Box(contentAlignment = Alignment.BottomEnd) {
                             AsyncImage(
-                                model = prof.hdProfilePicUrl,
+                                model = buildInstagramImageRequest(context, prof.hdProfilePicUrl),
                                 contentDescription = "Profile Avatar",
                                 modifier = Modifier
                                     .size(76.dp)
@@ -858,7 +869,7 @@ fun InstagramInspectorSection() {
                                 contentAlignment = Alignment.Center
                             ) {
                                 AsyncImage(
-                                    model = post.thumbnailUrl,
+                                    model = buildInstagramImageRequest(context, post.thumbnailUrl),
                                     contentDescription = "Post Thumbnail",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
