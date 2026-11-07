@@ -151,3 +151,78 @@ data class TikTokDeepInspectionData(
     // Top Liked Comments
     val topComments: List<TikTokCommentItem> = emptyList()
 )
+
+// ==============================================================================
+// Studio Platform Switcher
+// ==============================================================================
+enum class StudioPlatform {
+    TIKTOK,
+    INSTAGRAM
+}
+
+// ==============================================================================
+// Instagram Models (Reels, Posts, Carousels, Stories & Profile)
+// ==============================================================================
+enum class InstagramContentType(val titleArabic: String, val badgeIcon: String) {
+    REEL("ريلز (Reels)", "🎥"),
+    POST_VIDEO("فيديو منشور", "🎬"),
+    POST_IMAGE("صورة واحدة", "🖼️"),
+    CAROUSEL("ألبوم وسائط متعدد", "📚"),
+    STORY("قصة نشطة (Story)", "⏱️"),
+    PROFILE("حساب إنستغرام", "👤")
+}
+
+data class InstagramMediaItem(
+    val id: String = "",
+    val url: String = "",
+    val hdUrl: String = "",
+    val isVideo: Boolean = false,
+    val thumbnailUrl: String = "",
+    val width: Int = 1080,
+    val height: Int = 1920
+)
+
+data class InstagramPostInfo(
+    val id: String = "",
+    val shortcode: String = "",
+    val originalUrl: String = "",
+    val caption: String = "",
+    val authorName: String = "",
+    val authorUsername: String = "",
+    val authorAvatar: String = "",
+    val isVerified: Boolean = false,
+    val likesCount: Long = 0L,
+    val commentsCount: Long = 0L,
+    val viewsCount: Long = 0L,
+    val isVideo: Boolean = true,
+    val videoUrl: String = "",
+    val thumbnailUrl: String = "",
+    val mediaItems: List<InstagramMediaItem> = emptyList(),
+    val takenAtSec: Long = 0L,
+    val timeAgoFormatted: String = ""
+)
+
+data class InstagramStoryItem(
+    val id: String = "",
+    val mediaUrl: String = "",
+    val isVideo: Boolean = false,
+    val thumbnailUrl: String = "",
+    val takenAtSec: Long = 0L,
+    val durationSec: Int = 0,
+    val timeAgoFormatted: String = ""
+)
+
+data class InstagramProfileInfo(
+    val username: String = "",
+    val fullName: String = "",
+    val biography: String = "",
+    val externalUrl: String = "",
+    val hdProfilePicUrl: String = "",
+    val followersCount: Long = 0L,
+    val followingCount: Long = 0L,
+    val postsCount: Long = 0L,
+    val isVerified: Boolean = false,
+    val isPrivate: Boolean = false,
+    val activeStories: List<InstagramStoryItem> = emptyList(),
+    val latestPosts: List<InstagramPostInfo> = emptyList()
+)

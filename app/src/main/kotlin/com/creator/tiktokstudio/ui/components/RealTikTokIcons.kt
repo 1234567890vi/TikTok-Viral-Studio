@@ -799,3 +799,190 @@ fun TikTokDownloaderLogo(
         }
     }
 }
+
+// ==============================================================================
+// 12. Real Instagram Camera Vector Icon (Official Gradient: Purple -> Pink -> Orange)
+// ==============================================================================
+@Composable
+fun RealInstagramIcon(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+        val w = this.size.width
+        val h = this.size.height
+
+        val igBrush = Brush.linearGradient(
+            colors = listOf(
+                Color(0xFF833AB4), // Purple
+                Color(0xFFFD1D1D), // Pink/Red
+                Color(0xFFFCB045)  // Orange/Yellow
+            ),
+            start = Offset(0f, h),
+            end = Offset(w, 0f)
+        )
+
+        val strokeWidth = w * 0.095f
+        val cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.28f, h * 0.28f)
+
+        // Outer rounded rectangle
+        drawRoundRect(
+            brush = igBrush,
+            topLeft = Offset(strokeWidth * 0.5f, strokeWidth * 0.5f),
+            size = Size(w - strokeWidth, h - strokeWidth),
+            cornerRadius = cornerRadius,
+            style = Stroke(width = strokeWidth)
+        )
+
+        // Center lens circle
+        val centerPoint = Offset(w * 0.5f, h * 0.5f)
+        val lensRadius = w * 0.22f
+        drawCircle(
+            brush = igBrush,
+            radius = lensRadius,
+            center = centerPoint,
+            style = Stroke(width = strokeWidth)
+        )
+
+        // Top right flash dot
+        val flashCenter = Offset(w * 0.74f, h * 0.26f)
+        val flashRadius = w * 0.055f
+        drawCircle(
+            brush = igBrush,
+            radius = flashRadius,
+            center = flashCenter,
+            style = Fill
+        )
+    }
+}
+
+// ==============================================================================
+// 13. Instagram Studio 3D Badge Logo
+// ==============================================================================
+@Composable
+fun InstagramStudioLogo(
+    modifier: Modifier = Modifier,
+    size: Dp = 38.dp
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(size * 0.28f))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF833AB4),
+                        Color(0xFFE1306C),
+                        Color(0xFFFD1D1D),
+                        Color(0xFFFCB045)
+                    ),
+                    start = Offset(0f, size.value * 2),
+                    end = Offset(size.value * 2, 0f)
+                )
+            )
+            .border(
+                BorderStroke(
+                    1.2.dp,
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFFFDF00), Color(0xFFFF007F))
+                    )
+                ),
+                RoundedCornerShape(size * 0.28f)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(size * 0.20f)
+        ) {
+            if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+            val w = this.size.width
+            val h = this.size.height
+            val strokeWidth = w * 0.11f
+            val cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.30f, h * 0.30f)
+
+            // Crisp White Camera body
+            drawRoundRect(
+                color = Color.White,
+                topLeft = Offset(strokeWidth * 0.5f, strokeWidth * 0.5f),
+                size = Size(w - strokeWidth, h - strokeWidth),
+                cornerRadius = cornerRadius,
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Center lens
+            drawCircle(
+                color = Color.White,
+                radius = w * 0.24f,
+                center = Offset(w * 0.5f, h * 0.5f),
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Flash dot
+            drawCircle(
+                color = Color.White,
+                radius = w * 0.065f,
+                center = Offset(w * 0.74f, h * 0.26f),
+                style = Fill
+            )
+        }
+    }
+}
+
+// ==============================================================================
+// 14. Real Verified Badge Icon (Authentic Blue Rosette + White Checkmark)
+// ==============================================================================
+@Composable
+fun RealVerifiedBadgeIcon(
+    modifier: Modifier = Modifier,
+    size: Dp = 16.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+        val w = this.size.width
+        val h = this.size.height
+        val cx = w * 0.5f
+        val cy = h * 0.5f
+        val r = w * 0.48f
+
+        // Draw 8-point scalloped star / rosette
+        val rosettePath = Path()
+        val numPoints = 16
+        for (i in 0 until numPoints) {
+            val angle = (i * 2.0 * Math.PI / numPoints) - (Math.PI / 2.0)
+            val currentR = if (i % 2 == 0) r else r * 0.86f
+            val px = (cx + currentR * kotlin.math.cos(angle)).toFloat()
+            val py = (cy + currentR * kotlin.math.sin(angle)).toFloat()
+            if (i == 0) rosettePath.moveTo(px, py) else rosettePath.lineTo(px, py)
+        }
+        rosettePath.close()
+
+        // Authentic Verified Blue Gradient
+        drawPath(
+            rosettePath,
+            brush = Brush.radialGradient(
+                colors = listOf(Color(0xFF29B6F6), Color(0xFF0095F6), Color(0xFF1976D2)),
+                center = Offset(cx, cy),
+                radius = r
+            )
+        )
+
+        // Crisp White Checkmark
+        val checkPath = Path().apply {
+            moveTo(w * 0.28f, h * 0.52f)
+            lineTo(w * 0.44f, h * 0.68f)
+            lineTo(w * 0.74f, h * 0.35f)
+        }
+        drawPath(
+            checkPath,
+            color = Color.White,
+            style = Stroke(
+                width = w * 0.12f,
+                cap = StrokeCap.Round,
+                join = androidx.compose.ui.graphics.StrokeJoin.Round
+            )
+        )
+    }
+}

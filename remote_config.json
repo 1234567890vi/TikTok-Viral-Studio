@@ -1,19 +1,20 @@
 {
-  "latest_version_code": 24,
-  "latest_version_name": "2.5.1",
+  "latest_version_code": 25,
+  "latest_version_name": "2.6.0",
   "force_update": true,
-  "min_supported_version_code": 24,
-  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v2.5.1/TikTok-Viral-Studio-v2.5.1.apk",
-  "admin_latest_version_code": 24,
-  "admin_latest_version_name": "2.5.1",
-  "admin_apk_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v2.5.1/TikTok-Studio-Admin-v2.5.1.apk",
-  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v2.5.1/TikTok-Studio-Admin-v2.5.1.apk",
-  "update_title_ar": "⚡ تحديث شامل v2.5.1: أيقونة تنزيل تيك توك الرسومية وقائمة جانبية تفاعلية",
-  "update_message_ar": "إصدار v2.5.1: استبدال شعار TS بأيقونة رسومية متطورة ثلاثية الأبعاد لشعار تيك توك وسهم التنزيل، إضافة قائمة جانبية منبثقة، وتحسينات بصرية شاملة.",
+  "min_supported_version_code": 25,
+  "apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v2.6.0/TikTok-Viral-Studio-v2.6.0.apk",
+  "admin_latest_version_code": 25,
+  "admin_latest_version_name": "2.6.0",
+  "admin_apk_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v2.6.0/TikTok-Studio-Admin-v2.6.0.apk",
+  "admin_apk_download_url": "https://github.com/1234567890vi/TikTok-Viral-Studio/releases/download/v2.6.0/TikTok-Studio-Admin-v2.6.0.apk",
+  "update_title_ar": "⚡ تحديث شامل v2.6.0: إضافة استوديو إنستغرام والشريط الجانبي التفاعلي",
+  "update_message_ar": "إصدار v2.6.0: شريط جانبي احترافي للتبديل بين تيك توك وإنستغرام، قسم إنستغرام متكامل لتحميل الريلز والقصص وفحص الحسابات باليوزر، مع أدوات سريعة لمسح الكاش وسجل التحميلات.",
   "changelog_ar": [
-    "شعار تنزيل تيك توك رسومي حقيقي ثلاثي الأبعاد مع سهم متوهج وتأثير Glitch",
-    "قائمة جانبية منبثقة (Side Navigation Drawer) مدمجة مع زر Hamburger نيون",
-    "تحديث شاشة البداية (Splash Screen) بالأيقونة الجديدة المتطورة"
+    "شريط جانبي متطور (Navigation Drawer) يضم محول المنصات (تيك توك / إنستغرام)",
+    "استوديو إنستغرام كامل: تحميل الفيديوهات، الريلز، والقصص النشطة بجودة Full HD",
+    "فحص حسابات إنستغرام الشامل باليوزر (@username): جلب صورة البروفايل HD والإحصائيات والريلز الحديثة",
+    "أدوات سريعة في الشريط الجانبي: سجل التحميلات ومسح الذاكرة المؤقتة (Clear Cache)"
   ],
   "vip_codes": [
     "TIKTOK-VIP-2026",

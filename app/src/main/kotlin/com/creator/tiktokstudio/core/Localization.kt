@@ -133,7 +133,45 @@ data class AppStrings(
     val liveConnectingText: String,
     val liveOfflineNotice: String,
     val userNotFoundOrPrivate: String,
-    val interactiveDemoBtn: String
+    val interactiveDemoBtn: String,
+
+    // Navigation Drawer
+    val drawerTitle: String,
+    val drawerSubtitle: String,
+    val drawerVersionBadge: String,
+    val drawerSectionPlatforms: String,
+    val drawerPlatformTikTok: String,
+    val drawerPlatformTikTokDesc: String,
+    val drawerPlatformInstagram: String,
+    val drawerPlatformInstagramDesc: String,
+    val drawerSectionUtilities: String,
+    val drawerDownloadsHistory: String,
+    val drawerClearCache: String,
+    val cacheClearedToast: String,
+
+    // Instagram Studio
+    val igAppTitle: String,
+    val igAppSubtitle: String,
+    val igTabDownloader: String,
+    val igTabInspector: String,
+    val igInputPlaceholderDownloader: String,
+    val igInputPlaceholderInspector: String,
+    val igFetchBtn: String,
+    val igInspectBtn: String,
+    val igReelBadge: String,
+    val igStoryBadge: String,
+    val igPostBadge: String,
+    val igDownloadStoryBtn: String,
+    val igDownloadAllStoriesBtn: String,
+    val igDownloadHdAvatarBtn: String,
+    val igActiveStoriesHeader: String,
+    val igLatestPostsHeader: String,
+    val igDownloadPostBtn: String,
+    val igNoStoriesFound: String,
+    val igPrivateNotice: String,
+    val igDownloadVideoSuccessToast: String,
+    val igDownloadAllSuccessToast: String,
+    val igExtractErrorFallback: String
 )
 
 val ArabicStrings = AppStrings(
@@ -258,7 +296,45 @@ val ArabicStrings = AppStrings(
     liveConnectingText = "جاري الاتصال بغرفة البث المباشر وفك تشفير الجولة...",
     liveOfflineNotice = "الحساب موجود ولكنه لا يبث لايف في هذه اللحظة (Offline)",
     userNotFoundOrPrivate = "اسم المستخدم غير موجود أو الحساب خاص",
-    interactiveDemoBtn = "عرض جولة تجريبية تفاعلية"
+    interactiveDemoBtn = "عرض جولة تجريبية تفاعلية",
+
+    // Navigation Drawer
+    drawerTitle = "Creator Viral Studio",
+    drawerSubtitle = "منصة صناع المحتوى الاحترافية المزدوجة",
+    drawerVersionBadge = "v2.6.0 • Dual Studio",
+    drawerSectionPlatforms = "المنصات الرئيسية",
+    drawerPlatformTikTok = "استوديو تيك توك (TikTok)",
+    drawerPlatformTikTokDesc = "تحميل بدون علامة مائية وفحص شامل",
+    drawerPlatformInstagram = "استوديو إنستغرام (Instagram)",
+    drawerPlatformInstagramDesc = "تحميل الريلز، القصص وفحص الحسابات",
+    drawerSectionUtilities = "الأدوات السريعة",
+    drawerDownloadsHistory = "سجل التحميلات المحفوظة",
+    drawerClearCache = "مسح الذاكرة المؤقتة",
+    cacheClearedToast = "تم مسح الذاكرة المؤقتة بنجاح! 🧹",
+
+    // Instagram Studio
+    igAppTitle = "Instagram Viral Studio",
+    igAppSubtitle = "تحميل الفيديوهات، الريلز، القصص وفحص الحسابات بدقة فائقة",
+    igTabDownloader = "تحميل الفيديو والقصص 📥",
+    igTabInspector = "فحص حسابات إنستا 🔍",
+    igInputPlaceholderDownloader = "ضع رابط ريلز، منشور، ستوري، أو يوزر (@username)...",
+    igInputPlaceholderInspector = "أدخل اسم المستخدم (@username) أو رابط الحساب...",
+    igFetchBtn = "جلب وتحميل الميديا ⚡",
+    igInspectBtn = "بدء فحص الحساب الشامل 🔍",
+    igReelBadge = "ريلز (Reel)",
+    igStoryBadge = "ستوري (Story)",
+    igPostBadge = "منشور (Post)",
+    igDownloadStoryBtn = "تحميل القصة 📥",
+    igDownloadAllStoriesBtn = "تحميل جميع القصص (Bulk Download) 📦",
+    igDownloadHdAvatarBtn = "تحميل صورة البروفايل بدقة HD 🖼️",
+    igActiveStoriesHeader = "القصص النشطة خلال آخر 24 ساعة",
+    igLatestPostsHeader = "أحدث المنشورات والريلز المنشورة",
+    igDownloadPostBtn = "تحميل الميديا 📥",
+    igNoStoriesFound = "لا توجد قصص نشطة لهذا الحساب حالياً",
+    igPrivateNotice = "تنبيه: هذا الحساب خاص (Private Account) ولا يمكن جلب بياناته بدون متابعة",
+    igDownloadVideoSuccessToast = "تم حفظ المقطع في Movies/InstagramStudio بنجاح!",
+    igDownloadAllSuccessToast = "تم حفظ جميع القصص في المعرض بنجاح! 🎉",
+    igExtractErrorFallback = "تعذر استخراج محتوى إنستغرام: يرجى التحقق من صحة الرابط أو الحساب"
 )
 
 val EnglishStrings = AppStrings(
@@ -383,7 +459,45 @@ val EnglishStrings = AppStrings(
     liveConnectingText = "Connecting to Live Webcast & decrypting battle...",
     liveOfflineNotice = "Account found, but not broadcasting live at this moment (Offline)",
     userNotFoundOrPrivate = "Username not found or account is private",
-    interactiveDemoBtn = "Show Interactive Demo Battle"
+    interactiveDemoBtn = "Show Interactive Demo Battle",
+
+    // Navigation Drawer
+    drawerTitle = "Creator Viral Studio",
+    drawerSubtitle = "Professional Dual Creator Platform",
+    drawerVersionBadge = "v2.6.0 • Dual Studio",
+    drawerSectionPlatforms = "Main Platforms",
+    drawerPlatformTikTok = "TikTok Studio",
+    drawerPlatformTikTokDesc = "No watermark downloader & deep inspector",
+    drawerPlatformInstagram = "Instagram Studio",
+    drawerPlatformInstagramDesc = "Reels, Stories downloader & profile inspector",
+    drawerSectionUtilities = "Quick Utilities",
+    drawerDownloadsHistory = "Downloads History",
+    drawerClearCache = "Clear Cache",
+    cacheClearedToast = "Cache cleared successfully! 🧹",
+
+    // Instagram Studio
+    igAppTitle = "Instagram Viral Studio",
+    igAppSubtitle = "Download Videos, Reels, Stories & inspect profiles in high quality",
+    igTabDownloader = "Reels & Stories 📥",
+    igTabInspector = "Profile Inspector 🔍",
+    igInputPlaceholderDownloader = "Paste Reel, Post, Story link or @username...",
+    igInputPlaceholderInspector = "Enter @username or profile URL...",
+    igFetchBtn = "Fetch & Download Media ⚡",
+    igInspectBtn = "Deep Inspect Profile 🔍",
+    igReelBadge = "Reel",
+    igStoryBadge = "Story",
+    igPostBadge = "Post",
+    igDownloadStoryBtn = "Download Story 📥",
+    igDownloadAllStoriesBtn = "Download All Stories (Bulk) 📦",
+    igDownloadHdAvatarBtn = "Download HD Profile Pic 🖼️",
+    igActiveStoriesHeader = "Active Stories (Last 24 Hours)",
+    igLatestPostsHeader = "Latest Posts & Reels",
+    igDownloadPostBtn = "Download Media 📥",
+    igNoStoriesFound = "No active stories found for this profile",
+    igPrivateNotice = "Notice: This account is Private and cannot be inspected publicly",
+    igDownloadVideoSuccessToast = "Media saved to Movies/InstagramStudio successfully!",
+    igDownloadAllSuccessToast = "All stories saved to Gallery successfully! 🎉",
+    igExtractErrorFallback = "Unable to fetch Instagram media: Check URL or username"
 )
 
 val FrenchStrings = AppStrings(
@@ -508,7 +622,45 @@ val FrenchStrings = AppStrings(
     liveConnectingText = "Connexion au Webcast Live & décodage du match...",
     liveOfflineNotice = "Compte trouvé, mais ne diffuse pas en direct actuellement (Offline)",
     userNotFoundOrPrivate = "Nom d'utilisateur introuvable ou compte privé",
-    interactiveDemoBtn = "Afficher la bataille de démo"
+    interactiveDemoBtn = "Afficher la bataille de démo",
+
+    // Navigation Drawer
+    drawerTitle = "Creator Viral Studio",
+    drawerSubtitle = "Plateforme Double pour Créateurs Professionnels",
+    drawerVersionBadge = "v2.6.0 • Double Studio",
+    drawerSectionPlatforms = "Plateformes Principales",
+    drawerPlatformTikTok = "Studio TikTok",
+    drawerPlatformTikTokDesc = "Téléchargement sans filigrane & inspection",
+    drawerPlatformInstagram = "Studio Instagram",
+    drawerPlatformInstagramDesc = "Téléchargement Reels, Stories & profils",
+    drawerSectionUtilities = "Utilitaires Rapides",
+    drawerDownloadsHistory = "Historique des Téléchargements",
+    drawerClearCache = "Vider le Cache",
+    cacheClearedToast = "Mémoire cache vidée avec succès ! 🧹",
+
+    // Instagram Studio
+    igAppTitle = "Instagram Viral Studio",
+    igAppSubtitle = "Téléchargez Vidéos, Reels, Stories et inspectez les profils",
+    igTabDownloader = "Reels & Stories 📥",
+    igTabInspector = "Inspecteur Profil 🔍",
+    igInputPlaceholderDownloader = "Collez lien Reel, Post, Story ou @username...",
+    igInputPlaceholderInspector = "Entrez @nom d'utilisateur ou lien profil...",
+    igFetchBtn = "Récupérer & Télécharger ⚡",
+    igInspectBtn = "Inspecter le Profil 🔍",
+    igReelBadge = "Reel",
+    igStoryBadge = "Story",
+    igPostBadge = "Publication",
+    igDownloadStoryBtn = "Télécharger Story 📥",
+    igDownloadAllStoriesBtn = "Télécharger Toutes les Stories 📦",
+    igDownloadHdAvatarBtn = "Télécharger Photo Profil HD 🖼️",
+    igActiveStoriesHeader = "Stories Actives (Dernières 24 Heures)",
+    igLatestPostsHeader = "Dernières Publications & Reels",
+    igDownloadPostBtn = "Télécharger Média 📥",
+    igNoStoriesFound = "Aucune story active trouvée pour ce compte",
+    igPrivateNotice = "Remarque : Ce compte est privé et ne peut être analysé",
+    igDownloadVideoSuccessToast = "Média enregistré dans Movies/InstagramStudio avec succès !",
+    igDownloadAllSuccessToast = "Toutes les stories enregistrées dans la Galerie ! 🎉",
+    igExtractErrorFallback = "Impossible d'extraire le média Instagram : Vérifiez le lien ou le compte"
 )
 
 val LocalAppStrings = staticCompositionLocalOf { ArabicStrings }
