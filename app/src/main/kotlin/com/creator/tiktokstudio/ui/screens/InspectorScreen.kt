@@ -218,112 +218,63 @@ fun InspectorScreen(
             }
         }
 
-        // Search Input Box
+        // Modern Floating Search Pill
         item {
-            GlassCard {
-                OutlinedTextField(
-                    value = urlInput,
-                    onValueChange = {
-                        urlInput = it
-                        if (errorMessage != null) errorMessage = null
-                    },
-                    placeholder = {
-                        Text(
-                            strings.inspectorInputPlaceholder,
-                            color = TextMuted,
-                            fontSize = 12.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = DarkSurfaceElevated,
-                        unfocusedContainerColor = DarkSurfaceElevated,
-                        focusedBorderColor = NeonCyan,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
-                    trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (urlInput.isNotEmpty()) {
-                                IconButton(onClick = { urlInput = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = strings.clearBtnTooltip, tint = TextMuted)
-                                }
-                            }
-                            IconButton(onClick = {
-                                val clip = clipboardManager.primaryClip
-                                if (clip != null && clip.itemCount > 0) {
-                                    val text = clip.getItemAt(0).text?.toString() ?: ""
-                                    if (text.isNotBlank()) urlInput = text
-                                }
-                            }) {
-                                Icon(Icons.Default.ContentPaste, contentDescription = strings.pasteBtnTooltip, tint = NeonCyan)
-                            }
+            FloatingSearchPill(
+                value = urlInput,
+                onValueChange = {
+                    urlInput = it
+                    if (errorMessage != null) errorMessage = null
+                },
+                placeholder = strings.inspectorInputPlaceholder,
+                label = strings.inspectorHeaderTitle,
+                actionButtonText = strings.startDeepInspectionBtn,
+                activeGradient = Brush.horizontalGradient(listOf(NeonCyan, NeonPink)),
+                accentColor = NeonCyan,
+                leadingIcon = Icons.Default.Search,
+                isLoading = isInspecting,
+                onClearClick = { urlInput = "" },
+                onPasteClick = {
+                    val clip = clipboardManager.primaryClip
+                    if (clip != null && clip.itemCount > 0) {
+                        val text = clip.getItemAt(0).text?.toString() ?: ""
+                        if (text.isNotBlank()) urlInput = text
+                    }
+                },
+                onActionClick = {
+                    if (urlInput.isBlank()) {
+                        Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
+                        return@FloatingSearchPill
+                    }
+                    val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.INSPECTOR)
+                    isInspecting = true
+                    inspectionResult = null
+                    errorMessage = null
+                    coroutineScope.launch {
+                        val start = System.currentTimeMillis()
+                        val res = TikTokDownloaderService.inspectTikTokUrl(normalized)
+                        val elapsed = System.currentTimeMillis() - start
+                        if (elapsed < 3000L) {
+                            delay(3000L - elapsed)
                         }
-                    },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = {
-                        if (urlInput.isBlank()) {
-                            Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.INSPECTOR)
-                        isInspecting = true
-                        inspectionResult = null
-                        errorMessage = null
-                        coroutineScope.launch {
-                            val start = System.currentTimeMillis()
-                            val res = TikTokDownloaderService.inspectTikTokUrl(normalized)
-                            val elapsed = System.currentTimeMillis() - start
-                            if (elapsed < 3000L) {
-                                delay(3000L - elapsed)
+                        delay(250L)
+                        isInspecting = false
+                        res.onSuccess {
+                            inspectionResult = it
+                            errorMessage = null
+                            Toast.makeText(context, strings.inspectionSuccessToast, Toast.LENGTH_SHORT).show()
+                        }.onFailure {
+                            val rawMsg = it.localizedMessage ?: ""
+                            errorMessage = when {
+                                rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                                rawMsg.isNotBlank() -> rawMsg
+                                else -> strings.inspectErrorFallback
                             }
-                            delay(250L)
-                            isInspecting = false
-                            res.onSuccess {
-                                inspectionResult = it
-                                errorMessage = null
-                                Toast.makeText(context, strings.inspectionSuccessToast, Toast.LENGTH_SHORT).show()
-                            }.onFailure {
-                                val rawMsg = it.localizedMessage ?: ""
-                                errorMessage = when {
-                                    rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
-                                    rawMsg.isNotBlank() -> rawMsg
-                                    else -> strings.inspectErrorFallback
-                                }
-                                Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
-                            }
+                            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = NeonCyan
-                    ),
-                    enabled = !isInspecting
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Bolt,
-                        contentDescription = null,
-                        tint = OnAccentDark
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        strings.startDeepInspectionBtn,
-                        color = OnAccentDark,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
+                    }
                 }
-            }
+            )
         }
 
         // Live Animated Algorithm Execution Box (Active during Inspection)
@@ -510,37 +461,51 @@ fun InspectorScreen(
                         }
                     }
 
-                    // Profile Stats (if Profile or followers present)
+                    // Profile Stats (Modern Bento Grid)
                     if (data.followerCount > 0 || data.contentType == TikTokContentType.PROFILE) {
                         Spacer(modifier = Modifier.height(14.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(DarkSurfaceElevated)
-                                .padding(vertical = 10.dp, horizontal = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceAround
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            StatBox(
-                                label = strings.followersLabel,
-                                value = formatCounter(data.followerCount),
-                                customIcon = { RealEyeViewerIcon(size = 14.dp, isPulsing = false) }
-                            )
-                            StatBox(
-                                label = strings.followingLabel,
-                                value = formatCounter(data.followingCount),
-                                customIcon = { RealCrownIcon(size = 14.dp) }
-                            )
-                            StatBox(
-                                label = strings.totalLikesLabel,
-                                value = formatCounter(data.authorTotalLikes),
-                                customIcon = { RealHeartLikeIcon(size = 14.dp, isPulsing = false) }
-                            )
-                            StatBox(
-                                label = strings.videosCountLabel,
-                                value = formatCounter(data.authorVideoCount),
-                                customIcon = { RealTrophyIcon(rank = 1, size = 14.dp) }
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                BentoStatCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = strings.followersLabel,
+                                    value = formatCounter(data.followerCount),
+                                    accentColor = NeonCyan,
+                                    icon = { RealEyeViewerIcon(size = 18.dp, isPulsing = false) }
+                                )
+                                BentoStatCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = strings.totalLikesLabel,
+                                    value = formatCounter(data.authorTotalLikes),
+                                    accentColor = NeonPink,
+                                    icon = { RealHeartLikeIcon(size = 18.dp, isPulsing = false) }
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                BentoStatCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = strings.followingLabel,
+                                    value = formatCounter(data.followingCount),
+                                    accentColor = Color(0xFFFCB045),
+                                    icon = { RealCrownIcon(size = 18.dp) }
+                                )
+                                BentoStatCard(
+                                    modifier = Modifier.weight(1f),
+                                    label = strings.videosCountLabel,
+                                    value = formatCounter(data.authorVideoCount),
+                                    accentColor = Color(0xFF00E676),
+                                    icon = { RealTrophyIcon(rank = 1, size = 18.dp) }
+                                )
+                            }
                         }
                     }
                 }
@@ -1136,6 +1101,47 @@ fun BentoMetricCard(
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun BentoStatCard(
+    label: String,
+    value: String,
+    accentColor: Color,
+    icon: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurfaceElevated)
+            .border(1.dp, accentColor.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+            .bounceClick()
+            .padding(12.dp)
+    ) {
+        Column {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = label,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                icon()
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = value,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
             )
         }
     }

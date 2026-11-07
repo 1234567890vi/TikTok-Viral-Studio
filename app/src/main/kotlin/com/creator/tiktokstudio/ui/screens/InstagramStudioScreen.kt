@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -67,88 +69,38 @@ fun InstagramStudioScreen(
     val context = LocalContext.current
     val strings = Localization.current
     val coroutineScope = rememberCoroutineScope()
-    var selectedIgTab by rememberSaveable { mutableIntStateOf(0) }
+    val igPagerState = rememberPagerState(pageCount = { 2 })
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(DeepDarkBackground)
     ) {
-        // Tab Selector (0: Downloader, 1: Profile Inspector)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(DarkSurfaceElevated)
-                .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
-                .padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            IgTabItem(
-                modifier = Modifier.weight(1f),
-                title = strings.igTabDownloader,
-                icon = Icons.Default.Download,
-                isSelected = selectedIgTab == 0,
-                onClick = { selectedIgTab = 0 }
-            )
-            IgTabItem(
-                modifier = Modifier.weight(1f),
-                title = strings.igTabInspector,
-                icon = Icons.Default.Search,
-                isSelected = selectedIgTab == 1,
-                onClick = { selectedIgTab = 1 }
-            )
-        }
+        // Tab Selector with Fluid Spring Glass Pill Indicator
+        SpringPillTabBar(
+            selectedTab = igPagerState.currentPage,
+            onTabSelected = { page ->
+                coroutineScope.launch {
+                    igPagerState.animateScrollToPage(page)
+                }
+            },
+            tabs = listOf(
+                strings.igTabDownloader to Icons.Default.Download,
+                strings.igTabInspector to Icons.Default.Search
+            ),
+            activeGradient = InstagramGradient,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
 
-        Crossfade(
-            targetState = selectedIgTab,
-            label = "IgTabCrossfade",
+        // Swipeable Pages
+        HorizontalPager(
+            state = igPagerState,
             modifier = Modifier.fillMaxSize()
-        ) { tabIndex ->
-            when (tabIndex) {
+        ) { page ->
+            when (page) {
                 0 -> InstagramDownloaderSection()
                 1 -> InstagramInspectorSection()
             }
-        }
-    }
-}
-
-@Composable
-fun IgTabItem(
-    modifier: Modifier = Modifier,
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-                if (isSelected) InstagramGradient else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
-            )
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) Color.White else TextSecondary,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = title,
-                color = if (isSelected) Color.White else TextSecondary,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 13.sp
-            )
         }
     }
 }
@@ -220,6 +172,7 @@ fun InstagramDownloaderSection() {
                                 inputUrl = detectedClipboard ?: ""
                                 detectedClipboard = null
                             },
+                            modifier = Modifier.bounceClick(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE1306C)),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             shape = RoundedCornerShape(8.dp)
@@ -231,120 +184,48 @@ fun InstagramDownloaderSection() {
             }
         }
 
-        // Input Card
+        // Input Floating Search Pill
         item {
-            GlassCard(
-                borderColor = Color(0xFFE1306C).copy(alpha = 0.3f),
-                backgroundColor = DarkSurfaceCard
-            ) {
-                Text(
-                    text = "رابط الريلز أو المنشور أو الستوري من إنستغرام",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+            FloatingSearchPill(
+                value = inputUrl,
+                onValueChange = { inputUrl = it },
+                placeholder = strings.igInputPlaceholderDownloader,
+                label = "رابط الريلز أو المنشور أو الستوري من إنستغرام",
+                actionButtonText = strings.igFetchBtn,
+                onActionClick = {
+                    if (inputUrl.isBlank()) {
+                        Toast.makeText(context, "الرجاء إدخال أو لصق رابط إنستغرام", Toast.LENGTH_SHORT).show()
+                        return@FloatingSearchPill
+                    }
+                    isExtracting = true
+                    showProcessingBox = true
+                    extractedPost = null
 
-                OutlinedTextField(
-                    value = inputUrl,
-                    onValueChange = { inputUrl = it },
-                    placeholder = {
-                        Text(
-                            strings.igInputPlaceholderDownloader,
-                            color = TextSecondary,
-                            fontSize = 12.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFE1306C),
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkSurfaceElevated,
-                        unfocusedContainerColor = DarkSurfaceElevated
-                    ),
-                    trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (inputUrl.isNotBlank()) {
-                                IconButton(onClick = { inputUrl = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextSecondary)
-                                }
-                            }
-                            IconButton(onClick = {
-                                val clip = clipboardManager.primaryClip
-                                if (clip != null && clip.itemCount > 0) {
-                                    inputUrl = clip.getItemAt(0).text?.toString()?.trim().orEmpty()
-                                }
-                            }) {
-                                Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = Color(0xFFFCB045))
-                            }
-                        }
-                    },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = {
-                        if (inputUrl.isBlank()) {
-                            Toast.makeText(context, "الرجاء إدخال أو لصق رابط إنستغرام", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        isExtracting = true
-                        showProcessingBox = true
-                        extractedPost = null
-
-                        coroutineScope.launch {
-                            val res = InstagramService.extractPostOrReel(inputUrl)
-                            // Allow processing steps box to finish smoothly
-                            delay(2500L)
-                            isExtracting = false
-                            res.onSuccess { post ->
-                                extractedPost = post
-                                Toast.makeText(context, "تم استخراج الميديا بنجاح! 🎯", Toast.LENGTH_SHORT).show()
-                            }.onFailure { err ->
-                                Toast.makeText(context, err.message ?: strings.igExtractErrorFallback, Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isExtracting
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(InstagramGradient)
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isExtracting) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("جاري فك تشفير وسائط إنستغرام...", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            }
-                        } else {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Bolt, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(strings.igFetchBtn, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            }
+                    coroutineScope.launch {
+                        val res = InstagramService.extractPostOrReel(inputUrl)
+                        // Allow processing steps box to finish smoothly
+                        delay(2500L)
+                        isExtracting = false
+                        res.onSuccess { post ->
+                            extractedPost = post
+                            Toast.makeText(context, "تم استخراج الميديا بنجاح! 🎯", Toast.LENGTH_SHORT).show()
+                        }.onFailure { err ->
+                            Toast.makeText(context, err.message ?: strings.igExtractErrorFallback, Toast.LENGTH_LONG).show()
                         }
                     }
-                }
-            }
+                },
+                onPasteClick = {
+                    val clip = clipboardManager.primaryClip
+                    if (clip != null && clip.itemCount > 0) {
+                        inputUrl = clip.getItemAt(0).text?.toString()?.trim().orEmpty()
+                    }
+                },
+                onClearClick = { inputUrl = "" },
+                isLoading = isExtracting,
+                activeGradient = InstagramGradient,
+                accentColor = Color(0xFFE1306C),
+                leadingIcon = Icons.Default.Download
+            )
         }
 
         // 3-Second Processing Box
@@ -507,7 +388,8 @@ fun InstagramDownloaderSection() {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .height(48.dp)
+                            .bounceClick(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(),
                         shape = RoundedCornerShape(12.dp)
@@ -564,6 +446,9 @@ fun InstagramInspectorSection() {
     val context = LocalContext.current
     val strings = Localization.current
     val coroutineScope = rememberCoroutineScope()
+    val clipboardManager = remember {
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
 
     var usernameInput by remember { mutableStateOf("") }
     var sessionIdInput by remember { mutableStateOf("") }
@@ -608,76 +493,55 @@ fun InstagramInspectorSection() {
         contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Search Input Card
+        // Floating Search Pill for Inspector
+        item {
+            FloatingSearchPill(
+                value = usernameInput,
+                onValueChange = { usernameInput = it },
+                placeholder = strings.igInputPlaceholderInspector,
+                label = "فحص حسابات إنستغرام الشامل باليوزر (@username)",
+                actionButtonText = strings.igInspectBtn,
+                onActionClick = { triggerInspect(usernameInput) },
+                onPasteClick = {
+                    val clip = clipboardManager.primaryClip
+                    if (clip != null && clip.itemCount > 0) {
+                        usernameInput = clip.getItemAt(0).text?.toString()?.trim().orEmpty()
+                    }
+                },
+                onClearClick = { usernameInput = "" },
+                isLoading = isInspecting,
+                activeGradient = InstagramGradient,
+                accentColor = Color(0xFFE1306C),
+                leadingIcon = Icons.Default.Search
+            )
+        }
+
+        // Expandable Session Mode Pill / Card
         item {
             GlassCard(
-                borderColor = Color(0xFF833AB4).copy(alpha = 0.4f),
-                backgroundColor = DarkSurfaceCard
+                borderColor = if (isSessionModeExpanded) Color(0xFF00F2FE).copy(alpha = 0.5f) else GlassBorder,
+                backgroundColor = DarkSurfaceCard,
+                cornerRadius = 16.dp
             ) {
-                Text(
-                    text = "فحص حسابات إنستغرام الشامل باليوزر (@username)",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = usernameInput,
-                    onValueChange = { usernameInput = it },
-                    placeholder = {
-                        Text(
-                            strings.igInputPlaceholderInspector,
-                            color = TextSecondary,
-                            fontSize = 12.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF833AB4),
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = DarkSurfaceElevated,
-                        unfocusedContainerColor = DarkSurfaceElevated
-                    ),
-                    leadingIcon = {
-                        RealInstagramIcon(size = 20.dp)
-                    },
-                    trailingIcon = {
-                        if (usernameInput.isNotBlank()) {
-                            IconButton(onClick = { usernameInput = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextSecondary)
-                            }
-                        }
-                    },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Session Mode Expandable Toggle
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isSessionModeExpanded) Color(0xFF833AB4).copy(alpha = 0.15f) else Color.Transparent)
-                        .clickable { isSessionModeExpanded = !isSessionModeExpanded }
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                        .clip(RoundedCornerShape(10.dp))
+                        .bounceClick { isSessionModeExpanded = !isSessionModeExpanded }
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         if (isSessionModeExpanded) Icons.Default.LockOpen else Icons.Default.Lock,
                         contentDescription = null,
                         tint = if (isSessionModeExpanded) Color(0xFF00F2FE) else TextSecondary,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "فحص متقدم بالجلسة (تاريخ الأسماء، المحظورين، والمفضلين)",
                         color = if (isSessionModeExpanded) Color(0xFF00F2FE) else TextSecondary,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f)
                     )
@@ -685,24 +549,24 @@ fun InstagramInspectorSection() {
                         if (isSessionModeExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = null,
                         tint = TextSecondary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
                 if (isSessionModeExpanded) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
                         value = sessionIdInput,
                         onValueChange = { sessionIdInput = it },
                         placeholder = {
                             Text(
                                 strings.igSessionIdPlaceholder,
-                                color = TextSecondary,
+                                color = TextMuted,
                                 fontSize = 11.sp
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF00F2FE),
                             unfocusedBorderColor = GlassBorder,
@@ -723,47 +587,6 @@ fun InstagramInspectorSection() {
                         fontSize = 10.sp,
                         lineHeight = 14.sp
                     )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = {
-                        triggerInspect(usernameInput)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = !isInspecting
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(InstagramGradient)
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isInspecting) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("جاري فحص الحساب بالخوارزمية الدقيقة...", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            }
-                        } else {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Search, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(strings.igInspectBtn, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -909,7 +732,9 @@ fun InstagramInspectorSection() {
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bounceClick(),
                         shape = RoundedCornerShape(10.dp),
                         border = BorderStroke(1.dp, Color(0xFFE1306C))
                     ) {
@@ -937,17 +762,25 @@ fun InstagramInspectorSection() {
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val userPkDisplay = if (prof.userPk.isNotBlank()) prof.userPk else "غير معروف"
                         OsintInfoBox(
                             modifier = Modifier.weight(1f),
                             label = strings.igUserIdLabel,
-                            value = if (prof.userPk.isNotBlank()) prof.userPk else "متاح في الفحص المباشر",
+                            value = userPkDisplay,
                             icon = Icons.Default.Badge,
-                            tint = Color(0xFF00F2FE)
+                            tint = Color(0xFF00F2FE),
+                            onClick = if (prof.userPk.isNotBlank()) {
+                                {
+                                    val clip = android.content.ClipData.newPlainText("User PK", prof.userPk)
+                                    clipboardManager.setPrimaryClip(clip)
+                                    Toast.makeText(context, "تم نسخ معرف الحساب: ${prof.userPk} 📋", Toast.LENGTH_SHORT).show()
+                                }
+                            } else null
                         )
                         OsintInfoBox(
                             modifier = Modifier.weight(1f),
                             label = strings.igDateJoinedLabel,
-                            value = prof.dateJoined,
+                            value = if (prof.dateJoined.isNotBlank()) prof.dateJoined else "غير متوفر",
                             icon = Icons.Default.Schedule,
                             tint = Color(0xFFFF007A)
                         )
@@ -1058,7 +891,7 @@ fun InstagramInspectorSection() {
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(DarkSurfaceElevated)
-                                        .clickable { triggerInspect(friend.username) }
+                                        .bounceClick { triggerInspect(friend.username) }
                                         .padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -1318,6 +1151,7 @@ fun InstagramInspectorSection() {
                                         }
                                     }
                                 },
+                                modifier = Modifier.bounceClick(),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE1306C)),
                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                                 shape = RoundedCornerShape(8.dp)
@@ -1361,6 +1195,7 @@ fun ProfileStatItem(
             .clip(RoundedCornerShape(10.dp))
             .background(DarkSurfaceElevated)
             .border(1.dp, GlassBorder, RoundedCornerShape(10.dp))
+            .bounceClick()
             .padding(vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -1385,13 +1220,17 @@ fun OsintInfoBox(
     label: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    tint: Color
+    tint: Color,
+    onClick: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(10.dp))
             .background(DarkSurfaceElevated)
             .border(0.5.dp, tint.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+            .then(
+                if (onClick != null) Modifier.bounceClick { onClick() } else Modifier
+            )
             .padding(horizontal = 10.dp, vertical = 8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

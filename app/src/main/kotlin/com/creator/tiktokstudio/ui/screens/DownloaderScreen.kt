@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +42,8 @@ import com.creator.tiktokstudio.ui.components.ProcessingStepsBox
 import com.creator.tiktokstudio.ui.components.CircularDownloadProgress
 import com.creator.tiktokstudio.ui.components.GlassCard
 import com.creator.tiktokstudio.ui.components.NeonBadge
+import com.creator.tiktokstudio.ui.components.FloatingSearchPill
+import com.creator.tiktokstudio.ui.components.bounceClick
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -165,111 +168,58 @@ fun DownloaderScreen(
             }
         }
 
-        // URL Input and Paste Box
+        // Modern Floating Search Pill
         item {
-            GlassCard {
-                Text(
-                    text = strings.urlInputLabel,
-                    style = MaterialTheme.typography.labelLarge.copy(color = NeonCyan),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                OutlinedTextField(
-                    value = urlInput,
-                    onValueChange = { urlInput = it },
-                    placeholder = {
-                        Text(
-                            strings.urlInputPlaceholder,
-                            color = TextMuted,
-                            fontSize = 13.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = DarkSurfaceElevated,
-                        unfocusedContainerColor = DarkSurfaceElevated,
-                        focusedBorderColor = NeonCyan,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
-                    trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (urlInput.isNotEmpty()) {
-                                IconButton(onClick = { urlInput = "" }) {
-                                    Icon(Icons.Default.Clear, contentDescription = strings.clearBtnTooltip, tint = TextMuted)
-                                }
-                            }
-                            IconButton(onClick = {
-                                val clip = clipboardManager.primaryClip
-                                if (clip != null && clip.itemCount > 0) {
-                                    val text = clip.getItemAt(0).text?.toString() ?: ""
-                                    if (text.isNotBlank()) urlInput = text
-                                }
-                            }) {
-                                Icon(Icons.Default.ContentPaste, contentDescription = strings.pasteBtnTooltip, tint = NeonCyan)
-                            }
+            FloatingSearchPill(
+                value = urlInput,
+                onValueChange = { urlInput = it },
+                placeholder = strings.urlInputPlaceholder,
+                label = strings.urlInputLabel,
+                actionButtonText = strings.fetchVideoBtn,
+                activeGradient = Brush.horizontalGradient(listOf(NeonCyan, NeonPink)),
+                accentColor = NeonCyan,
+                leadingIcon = Icons.Default.Bolt,
+                isLoading = isExtracting,
+                onClearClick = { urlInput = "" },
+                onPasteClick = {
+                    val clip = clipboardManager.primaryClip
+                    if (clip != null && clip.itemCount > 0) {
+                        val text = clip.getItemAt(0).text?.toString() ?: ""
+                        if (text.isNotBlank()) urlInput = text
+                    }
+                },
+                onActionClick = {
+                    if (urlInput.isBlank()) {
+                        Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
+                        return@FloatingSearchPill
+                    }
+                    val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.DOWNLOADER)
+                    isExtracting = true
+                    extractedVideo = null
+                    coroutineScope.launch {
+                        val start = System.currentTimeMillis()
+                        val res = TikTokDownloaderService.extractMediaInfo(normalized)
+                        val elapsed = System.currentTimeMillis() - start
+                        if (elapsed < 3000L) {
+                            delay(3000L - elapsed)
                         }
-                    },
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = {
-                        if (urlInput.isBlank()) {
-                            Toast.makeText(context, strings.emptyUrlToast, Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }
-                        val normalized = InputUtils.normalizeTikTokInput(urlInput, InputTargetType.DOWNLOADER)
-                        isExtracting = true
-                        extractedVideo = null
-                        coroutineScope.launch {
-                            val start = System.currentTimeMillis()
-                            val res = TikTokDownloaderService.extractMediaInfo(normalized)
-                            val elapsed = System.currentTimeMillis() - start
-                            if (elapsed < 3000L) {
-                                delay(3000L - elapsed)
+                        delay(250L)
+                        isExtracting = false
+                        res.onSuccess {
+                            extractedVideo = it
+                            Toast.makeText(context, strings.videoExtractSuccessToast, Toast.LENGTH_SHORT).show()
+                        }.onFailure {
+                            val rawMsg = it.localizedMessage ?: ""
+                            val err = when {
+                                rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
+                                rawMsg.isNotBlank() -> rawMsg
+                                else -> strings.downloadFailedToast
                             }
-                            delay(250L)
-                            isExtracting = false
-                            res.onSuccess {
-                                extractedVideo = it
-                                Toast.makeText(context, strings.videoExtractSuccessToast, Toast.LENGTH_SHORT).show()
-                            }.onFailure {
-                                val rawMsg = it.localizedMessage ?: ""
-                                val err = when {
-                                    rawMsg.contains("USER_NOT_FOUND") || rawMsg.contains("غير موجود") || rawMsg.contains("not found") -> strings.userNotFoundOrPrivate
-                                    rawMsg.isNotBlank() -> rawMsg
-                                    else -> strings.downloadFailedToast
-                                }
-                                Toast.makeText(context, err, Toast.LENGTH_LONG).show()
-                            }
+                            Toast.makeText(context, err, Toast.LENGTH_LONG).show()
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonCyan),
-                    enabled = !isExtracting
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Bolt,
-                        contentDescription = null,
-                        tint = OnAccentDark
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        strings.fetchVideoBtn,
-                        color = OnAccentDark,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
+                    }
                 }
-            }
+            )
         }
 
         // Live Animated Algorithm Execution Box (Active during Extraction)
@@ -445,7 +395,8 @@ fun DownloaderScreen(
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(48.dp),
+                                    .height(48.dp)
+                                    .bounceClick(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = NeonPink),
                                 enabled = !downloadProgress.isDownloading
@@ -476,7 +427,8 @@ fun DownloaderScreen(
                                 },
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(48.dp),
+                                    .height(48.dp)
+                                    .bounceClick(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceElevated),
                                 border = BorderStroke(1.dp, NeonCyan),
