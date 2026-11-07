@@ -1107,16 +1107,24 @@ fun InstagramInspectorSection() {
                                         )
                                     }
 
+                                    val badgeColor = when {
+                                        friend.relationType.contains("محادثة") -> Color(0xFF00C853)
+                                        friend.relationType.contains("مقرب") -> Color(0xFFFFD700)
+                                        friend.relationType.contains("ارتباط") -> Color(0xFF00F2FE)
+                                        friend.relationType.contains("تعاون") || friend.relationType.contains("وسم") -> Color(0xFFFF9800)
+                                        else -> Color(0xFFE1306C)
+                                    }
+
                                     Column(horizontalAlignment = Alignment.End) {
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(6.dp))
-                                                .background(Color(0xFFE1306C).copy(alpha = 0.2f))
+                                                .background(badgeColor.copy(alpha = 0.2f))
                                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
                                             Text(
                                                 text = friend.relationType,
-                                                color = Color(0xFFE1306C),
+                                                color = badgeColor,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Bold
                                             )

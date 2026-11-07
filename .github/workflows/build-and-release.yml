@@ -57,7 +57,7 @@ jobs:
           if [ "${{ github.ref_type }}" = "tag" ]; then
             TAG_NAME="${{ github.ref_name }}"
           else
-            TAG_NAME="v2.7.0"
+            TAG_NAME="v2.7.2"
           fi
           echo "Processing release for tag: $TAG_NAME"
 
@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.7.0.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.7.2.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.7.0.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.7.2.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
