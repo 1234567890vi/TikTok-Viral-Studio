@@ -44,6 +44,7 @@ import com.creator.tiktokstudio.ui.components.*
 import com.creator.tiktokstudio.ui.screens.DownloaderScreen
 import com.creator.tiktokstudio.ui.screens.InspectorScreen
 import com.creator.tiktokstudio.ui.screens.InstagramStudioScreen
+import com.creator.tiktokstudio.ui.screens.SnapchatStudioScreen
 import com.creator.tiktokstudio.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -71,6 +72,7 @@ fun MainScreen(
             when (platform) {
                 StudioPlatform.TIKTOK -> TikTokWallpaperBackground()
                 StudioPlatform.INSTAGRAM -> InstagramWallpaperBackground()
+                StudioPlatform.SNAPCHAT -> SnapchatWallpaperBackground()
             }
         }
 
@@ -98,16 +100,26 @@ fun MainScreen(
                             modifier = Modifier.weight(1f, fill = false)
                         ) {
                             // Dynamic Platform Logo
-                            if (currentPlatform == StudioPlatform.TIKTOK) {
-                                TikTokDownloaderLogo(size = 40.dp)
-                            } else {
-                                InstagramStudioLogo(size = 40.dp)
+                            when (currentPlatform) {
+                                StudioPlatform.TIKTOK -> TikTokDownloaderLogo(size = 40.dp)
+                                StudioPlatform.INSTAGRAM -> InstagramStudioLogo(size = 40.dp)
+                                StudioPlatform.SNAPCHAT -> SnapchatStudioLogo(size = 40.dp)
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
+                                val titleText = when (currentPlatform) {
+                                    StudioPlatform.TIKTOK -> strings.appTitle
+                                    StudioPlatform.INSTAGRAM -> strings.igAppTitle
+                                    StudioPlatform.SNAPCHAT -> strings.snapAppTitle
+                                }
+                                val subtitleText = when (currentPlatform) {
+                                    StudioPlatform.TIKTOK -> strings.appSubtitle
+                                    StudioPlatform.INSTAGRAM -> strings.igAppSubtitle
+                                    StudioPlatform.SNAPCHAT -> strings.snapAppSubtitle
+                                }
                                 Text(
-                                    text = if (currentPlatform == StudioPlatform.TIKTOK) strings.appTitle else strings.igAppTitle,
+                                    text = titleText,
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = TextPrimary
@@ -116,7 +128,7 @@ fun MainScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = if (currentPlatform == StudioPlatform.TIKTOK) strings.appSubtitle else strings.igAppSubtitle,
+                                    text = subtitleText,
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = TextSecondary,
                                         fontSize = 11.sp
@@ -252,6 +264,9 @@ fun MainScreen(
                     StudioPlatform.INSTAGRAM -> {
                         InstagramStudioScreen(modifier = Modifier.fillMaxSize())
                     }
+                    StudioPlatform.SNAPCHAT -> {
+                        SnapchatStudioScreen(modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
         }
@@ -308,14 +323,42 @@ fun InstagramWallpaperBackground(
     }
 }
 
+/**
+ * Snapchat Official Full Wallpaper with 28.dp Glass Blur & 55% Dark Dimming Layer
+ */
+@Composable
+fun SnapchatWallpaperBackground(
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.bg_snapchat_wallpaper),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(28.dp)
+        )
+        // 55% Dark Dimming Overlay Layer to ensure clean contrast over the blurred wallpaper
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.55f))
+        )
+    }
+}
+
 @Composable
 fun FloatingGlassBottomDock(
     currentPlatform: StudioPlatform,
     onPlatformSelected: (StudioPlatform) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isTikTok = currentPlatform == StudioPlatform.TIKTOK
-    val targetFraction = if (isTikTok) 0f else 1f
+    val targetFraction = when (currentPlatform) {
+        StudioPlatform.TIKTOK -> 0f
+        StudioPlatform.INSTAGRAM -> 1f
+        StudioPlatform.SNAPCHAT -> 2f
+    }
     val animatedFraction by animateFloatAsState(
         targetValue = targetFraction,
         animationSpec = spring(
@@ -329,7 +372,7 @@ fun FloatingGlassBottomDock(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         BoxWithConstraints(
@@ -343,8 +386,9 @@ fun FloatingGlassBottomDock(
                         1.dp,
                         Brush.horizontalGradient(
                             listOf(
-                                NeonCyan.copy(alpha = if (isTikTok) 0.6f else 0.2f),
-                                Color(0xFFE1306C).copy(alpha = if (!isTikTok) 0.6f else 0.2f)
+                                NeonCyan.copy(alpha = if (currentPlatform == StudioPlatform.TIKTOK) 0.6f else 0.2f),
+                                Color(0xFFE1306C).copy(alpha = if (currentPlatform == StudioPlatform.INSTAGRAM) 0.6f else 0.2f),
+                                Color(0xFFFFFC00).copy(alpha = if (currentPlatform == StudioPlatform.SNAPCHAT) 0.6f else 0.2f)
                             )
                         )
                     ),
@@ -352,7 +396,7 @@ fun FloatingGlassBottomDock(
                 )
                 .padding(4.dp)
         ) {
-            val dockTabWidth = maxWidth / 2
+            val dockTabWidth = maxWidth / 3
 
             // Sliding Glowing Glass Capsule
             Box(
@@ -362,15 +406,19 @@ fun FloatingGlassBottomDock(
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(26.dp))
                     .background(
-                        if (isTikTok) {
-                            Brush.horizontalGradient(listOf(NeonCyan.copy(alpha = 0.35f), NeonPink.copy(alpha = 0.35f)))
-                        } else {
-                            Brush.horizontalGradient(listOf(Color(0x55833AB4), Color(0x55E1306C), Color(0x55FCB045)))
+                        when (currentPlatform) {
+                            StudioPlatform.TIKTOK -> Brush.horizontalGradient(listOf(NeonCyan.copy(alpha = 0.35f), NeonPink.copy(alpha = 0.35f)))
+                            StudioPlatform.INSTAGRAM -> Brush.horizontalGradient(listOf(Color(0x55833AB4), Color(0x55E1306C), Color(0x55FCB045)))
+                            StudioPlatform.SNAPCHAT -> Brush.horizontalGradient(listOf(Color(0x55FFFC00), Color(0x55FFB800), Color(0x55F59E0B)))
                         }
                     )
                     .border(
                         1.dp,
-                        if (isTikTok) NeonCyan.copy(alpha = 0.8f) else Color(0xFFE1306C).copy(alpha = 0.8f),
+                        when (currentPlatform) {
+                            StudioPlatform.TIKTOK -> NeonCyan.copy(alpha = 0.8f)
+                            StudioPlatform.INSTAGRAM -> Color(0xFFE1306C).copy(alpha = 0.8f)
+                            StudioPlatform.SNAPCHAT -> Color(0xFFFFFC00).copy(alpha = 0.9f)
+                        },
                         RoundedCornerShape(26.dp)
                     )
             )
@@ -389,13 +437,13 @@ fun FloatingGlassBottomDock(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        TikTokDownloaderLogo(size = 24.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        TikTokDownloaderLogo(size = 20.dp)
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "TikTok Studio",
-                            color = if (isTikTok) NeonCyan else TextSecondary,
+                            text = "TikTok",
+                            color = if (currentPlatform == StudioPlatform.TIKTOK) NeonCyan else TextSecondary,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
+                            fontSize = 12.sp
                         )
                     }
                 }
@@ -413,13 +461,37 @@ fun FloatingGlassBottomDock(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        RealInstagramIcon(size = 22.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        RealInstagramIcon(size = 20.dp)
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Instagram",
-                            color = if (!isTikTok) Color(0xFFE1306C) else TextSecondary,
+                            color = if (currentPlatform == StudioPlatform.INSTAGRAM) Color(0xFFE1306C) else TextSecondary,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                // Snapchat Studio Tab
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(26.dp))
+                        .bounceClick { onPlatformSelected(StudioPlatform.SNAPCHAT) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        RealSnapchatIcon(size = 20.dp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Snapchat",
+                            color = if (currentPlatform == StudioPlatform.SNAPCHAT) Color(0xFFFFFC00) else TextSecondary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
                         )
                     }
                 }

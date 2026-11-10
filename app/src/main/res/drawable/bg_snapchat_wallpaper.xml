@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="1920dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <!-- Deep Luxe Dark Foundation with Warm Undertone -->
+    <path
+        android:pathData="M0,0h1080v1920h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="540"
+                android:startY="0"
+                android:endX="540"
+                android:endY="1920">
+                <item android:offset="0.0" android:color="#141305" />
+                <item android:offset="0.5" android:color="#0A0903" />
+                <item android:offset="1.0" android:color="#050401" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Top-Left Electric Snapchat Yellow Bloom -->
+    <path
+        android:pathData="M-50,-50m-700,0a700,700 0 1,0 1400,0a700,700 0 1,0 -1400,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="180"
+                android:centerY="220"
+                android:gradientRadius="750">
+                <item android:offset="0.0" android:color="#BBFFFC00" />
+                <item android:offset="0.4" android:color="#66FFB800" />
+                <item android:offset="0.8" android:color="#1A78350F" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center-Right Signature Amber / Honey Gold Glow -->
+    <path
+        android:pathData="M1150,850m-700,0a700,700 0 1,0 1400,0a700,700 0 1,0 -1400,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="950"
+                android:centerY="850"
+                android:gradientRadius="720">
+                <item android:offset="0.0" android:color="#99F59E0B" />
+                <item android:offset="0.45" android:color="#44B45309" />
+                <item android:offset="0.8" android:color="#11451A03" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-Left Sunlight Aura -->
+    <path
+        android:pathData="M-100,1850m-650,0a650,650 0 1,0 1300,0a650,650 0 1,0 -1300,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="120"
+                android:centerY="1750"
+                android:gradientRadius="680">
+                <item android:offset="0.0" android:color="#77FFFC00" />
+                <item android:offset="0.5" android:color="#22D97706" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Subtle Golden Flow Waves -->
+    <path
+        android:pathData="M-200,600 C300,450 700,900 1280,720 L1280,1200 C800,1400 400,1050 -200,1250 Z"
+        android:strokeWidth="1.5">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="-200"
+                android:startY="600"
+                android:endX="1280"
+                android:endY="1250">
+                <item android:offset="0.0" android:color="#08FFFC00" />
+                <item android:offset="0.5" android:color="#06FFB800" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="-200"
+                android:startY="600"
+                android:endX="1280"
+                android:endY="1250">
+                <item android:offset="0.0" android:color="#1AFFE600" />
+                <item android:offset="0.5" android:color="#12F59E0B" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Modern Vignette Edge Protection -->
+    <path
+        android:pathData="M0,0h1080v1920h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="540"
+                android:centerY="960"
+                android:gradientRadius="1100">
+                <item android:offset="0.0" android:color="#00000000" />
+                <item android:offset="0.75" android:color="#15000000" />
+                <item android:offset="1.0" android:color="#77000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+</vector>

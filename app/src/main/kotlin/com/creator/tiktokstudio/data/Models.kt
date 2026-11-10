@@ -157,7 +157,8 @@ data class TikTokDeepInspectionData(
 // ==============================================================================
 enum class StudioPlatform {
     TIKTOK,
-    INSTAGRAM
+    INSTAGRAM,
+    SNAPCHAT
 }
 
 // ==============================================================================
@@ -275,4 +276,56 @@ data class InstagramProfileInfo(
     val bioLinks: List<String> = emptyList(),
     val topConnectedFriends: List<InstagramConnectedFriend> = emptyList(),
     val privacyData: InstagramPrivacyData? = null
+)
+
+// ==============================================================================
+// Snapchat Models (Spotlight, Public Stories, Highlights & Profile)
+// ==============================================================================
+enum class SnapchatContentType(val titleArabic: String, val badgeIcon: String) {
+    SPOTLIGHT("سناب أضواء (Spotlight)", "⚡"),
+    STORY("قصة عامة (Public Story)", "⏱️"),
+    HIGHLIGHT("مقتطف مميز (Curated Highlight)", "⭐"),
+    PROFILE("حساب سناب شات", "👻")
+}
+
+data class SnapchatMediaItem(
+    val id: String = "",
+    val mediaUrl: String = "",
+    val thumbnailUrl: String = "",
+    val isVideo: Boolean = true,
+    val title: String = "",
+    val storyType: String = "Spotlight" // "Spotlight", "Curated", "Story"
+)
+
+data class SnapchatPostInfo(
+    val id: String = "",
+    val originalUrl: String = "",
+    val authorUsername: String = "",
+    val authorDisplayName: String = "",
+    val authorAvatar: String = "",
+    val title: String = "",
+    val description: String = "",
+    val videoUrl: String = "",
+    val thumbnailUrl: String = "",
+    val isVideo: Boolean = true,
+    val likesCount: Long = 0L,
+    val commentsCount: Long = 0L,
+    val sharesCount: Long = 0L
+)
+
+data class SnapchatProfileInfo(
+    val username: String = "",
+    val displayName: String = "",
+    val bio: String = "",
+    val websiteUrl: String = "",
+    val address: String = "",
+    val profilePictureUrl: String = "",
+    val bitmojiAvatarUrl: String = "",
+    val snapcodeImageUrl: String = "",
+    val subscriberCount: Long = 0L,
+    val isVerified: Boolean = false,
+    val categoryStringId: String = "",
+    val publicStories: List<SnapchatMediaItem> = emptyList(),
+    val curatedHighlights: List<SnapchatMediaItem> = emptyList(),
+    val spotlightHighlights: List<SnapchatMediaItem> = emptyList()
 )

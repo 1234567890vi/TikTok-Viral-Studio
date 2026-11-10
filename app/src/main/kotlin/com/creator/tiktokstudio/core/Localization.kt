@@ -194,7 +194,38 @@ data class AppStrings(
     val igCloseFriendsTitle: String,
     val igDirectFriendsTitle: String,
     val igPrivacyNoticeText: String,
-    val igNoFriendsFound: String
+    val igNoFriendsFound: String,
+
+    // Snapchat Studio
+    val snapAppTitle: String,
+    val snapAppSubtitle: String,
+    val snapTabDownloader: String,
+    val snapTabInspector: String,
+    val snapInputPlaceholderDownloader: String,
+    val snapInputPlaceholderInspector: String,
+    val snapFetchBtn: String,
+    val snapInspectBtn: String,
+    val snapSpotlightBadge: String,
+    val snapStoryBadge: String,
+    val snapHighlightBadge: String,
+    val snapDownloadMediaBtn: String,
+    val snapDownloadHdAvatarBtn: String,
+    val snapDownloadSnapcodeBtn: String,
+    val snapSubscribersLabel: String,
+    val snapStoriesCountLabel: String,
+    val snapHighlightsCountLabel: String,
+    val snapCategoryLabel: String,
+    val snapLocationLabel: String,
+    val snapVerifiedLabel: String,
+    val snapWebsiteLabel: String,
+    val snapPublicStoriesTitle: String,
+    val snapSpotlightTitle: String,
+    val snapHighlightsTitle: String,
+    val snapNoMediaFound: String,
+    val snapDownloadSuccessToast: String,
+    val snapExtractErrorFallback: String,
+    val drawerPlatformSnapchat: String,
+    val drawerPlatformSnapchatDesc: String
 )
 
 val ArabicStrings = AppStrings(
@@ -380,7 +411,38 @@ val ArabicStrings = AppStrings(
     igCloseFriendsTitle = "الأصدقاء المقربون (Close Friends)",
     igDirectFriendsTitle = "أكثر الأصدقاء مراسلة (Direct Inbox)",
     igPrivacyNoticeText = "ملاحظة أمنية: الفحص باليوزر يعرض البيانات العامة وتاريخ الإنشاء والأصدقاء المتفاعلين علناً. للوصول إلى قائمة المحظورين والمفضلين ورسائل الديركت، يتطلب إدخال معرف الجلسة الخاص بك.",
-    igNoFriendsFound = "لم يتم رصد إشارات أو وسوم لأصدقاء في المنشورات الأخيرة"
+    igNoFriendsFound = "لم يتم رصد إشارات أو وسوم لأصدقاء في المنشورات الأخيرة",
+
+    // Snapchat Studio
+    snapAppTitle = "استوديو سناب شات",
+    snapAppSubtitle = "تحميل الأضواء والقصص وفحص الحسابات بدون علامة مائية",
+    snapTabDownloader = "تحميل الفيديو والقصص 📥",
+    snapTabInspector = "فحص حسابات سناب 🔍",
+    snapInputPlaceholderDownloader = "الصق رابط سناب أضواء أو قصة (spotlight / story)...",
+    snapInputPlaceholderInspector = "أدخل يوزر سناب شات (@username) للفحص المباشر...",
+    snapFetchBtn = "تحميل السناب فوراً ⚡",
+    snapInspectBtn = "فحص الحساب الشامل 👻",
+    snapSpotlightBadge = "سناب أضواء (Spotlight) ⚡",
+    snapStoryBadge = "قصة عامة (Public Story) ⏱️",
+    snapHighlightBadge = "مقتطف مميز (Highlight) ⭐",
+    snapDownloadMediaBtn = "تحميل الوسائط بجودة عالية 📥",
+    snapDownloadHdAvatarBtn = "تحميل الصورة الشخصية HD 👤",
+    snapDownloadSnapcodeBtn = "تحميل رمز السناب كود (Snapcode SVG) 🟨",
+    snapSubscribersLabel = "المشتركون",
+    snapStoriesCountLabel = "القصص النشطة",
+    snapHighlightsCountLabel = "المقتطفات المميزة",
+    snapCategoryLabel = "التصنيف",
+    snapLocationLabel = "الموقع",
+    snapVerifiedLabel = "حساب موثق بنجمة سناب الرسمية ⭐",
+    snapWebsiteLabel = "الرابط المرفق",
+    snapPublicStoriesTitle = "القصص العامة الحالية (Active Public Stories)",
+    snapSpotlightTitle = "فيديوهات الأضواء (Spotlight Snaps)",
+    snapHighlightsTitle = "المقتطفات المميزة (Curated Highlights)",
+    snapNoMediaFound = "لا توجد قصص أو مقتطفات عامة متاحة لهذا الحساب",
+    snapDownloadSuccessToast = "تم حفظ وسائط سناب شات في الاستوديو بنجاح! 💛",
+    snapExtractErrorFallback = "تعذر استخراج بيانات سناب شات، يرجى التأكد من الرابط أو اسم المستخدم",
+    drawerPlatformSnapchat = "استوديو سناب شات",
+    drawerPlatformSnapchatDesc = "تحميل الأضواء والقصص وفحص الحسابات والـ Snapcode"
 )
 
 val EnglishStrings = AppStrings(
@@ -566,7 +628,38 @@ val EnglishStrings = AppStrings(
     igCloseFriendsTitle = "Close Friends (Besties)",
     igDirectFriendsTitle = "Top Direct Message Friends",
     igPrivacyNoticeText = "Security Notice: Username lookup only analyzes public history and interactions. Blocked list, close friends, and direct messages require session authentication.",
-    igNoFriendsFound = "No friend mentions or tags found in recent posts"
+    igNoFriendsFound = "No friend mentions or tags found in recent posts",
+
+    // Snapchat Studio
+    snapAppTitle = "Snapchat Studio",
+    snapAppSubtitle = "Spotlight & Stories downloader and public profile inspector",
+    snapTabDownloader = "Spotlight & Stories 📥",
+    snapTabInspector = "Snap Inspector 🔍",
+    snapInputPlaceholderDownloader = "Paste Snapchat spotlight or story link...",
+    snapInputPlaceholderInspector = "Enter Snapchat username (@username)...",
+    snapFetchBtn = "Download Snap Now ⚡",
+    snapInspectBtn = "Inspect Snap Profile 👻",
+    snapSpotlightBadge = "Spotlight ⚡",
+    snapStoryBadge = "Public Story ⏱️",
+    snapHighlightBadge = "Curated Highlight ⭐",
+    snapDownloadMediaBtn = "Download High-Res Media 📥",
+    snapDownloadHdAvatarBtn = "Download HD Avatar 👤",
+    snapDownloadSnapcodeBtn = "Download Snapcode (SVG) 🟨",
+    snapSubscribersLabel = "Subscribers",
+    snapStoriesCountLabel = "Active Stories",
+    snapHighlightsCountLabel = "Highlights",
+    snapCategoryLabel = "Category",
+    snapLocationLabel = "Location",
+    snapVerifiedLabel = "Snapchat Official Star Verified ⭐",
+    snapWebsiteLabel = "Website",
+    snapPublicStoriesTitle = "Active Public Stories",
+    snapSpotlightTitle = "Spotlight Snaps",
+    snapHighlightsTitle = "Curated Highlights",
+    snapNoMediaFound = "No active public stories or highlights found for this account",
+    snapDownloadSuccessToast = "Snapchat media saved to gallery successfully! 💛",
+    snapExtractErrorFallback = "Failed to extract Snapchat media, please verify the link or username",
+    drawerPlatformSnapchat = "Snapchat Studio",
+    drawerPlatformSnapchatDesc = "Spotlight & Stories downloader, profiles, and Snapcodes"
 )
 
 val FrenchStrings = AppStrings(
@@ -752,7 +845,38 @@ val FrenchStrings = AppStrings(
     igCloseFriendsTitle = "Amis Proches (Close Friends)",
     igDirectFriendsTitle = "Conversations Directes les Plus Actives",
     igPrivacyNoticeText = "Note de sécurité : La recherche par nom affiche l'historique public et les amis en interaction. Les listes bloquées, amis proches et messages nécessitent une session.",
-    igNoFriendsFound = "Aucune mention ou tag d'amis trouvé dans les publications récentes"
+    igNoFriendsFound = "Aucune mention ou tag d'amis trouvé dans les publications récentes",
+
+    // Snapchat Studio
+    snapAppTitle = "Snapchat Studio",
+    snapAppSubtitle = "Téléchargeur Spotlight & Stories et inspecteur de profils",
+    snapTabDownloader = "Spotlight & Stories 📥",
+    snapTabInspector = "Inspecteur Snap 🔍",
+    snapInputPlaceholderDownloader = "Collez le lien Spotlight ou Story Snapchat...",
+    snapInputPlaceholderInspector = "Entrez le nom d'utilisateur Snap (@username)...",
+    snapFetchBtn = "Télécharger le Snap ⚡",
+    snapInspectBtn = "Inspecter le Profil 👻",
+    snapSpotlightBadge = "Spotlight ⚡",
+    snapStoryBadge = "Story Publique ⏱️",
+    snapHighlightBadge = "Mise en avant ⭐",
+    snapDownloadMediaBtn = "Télécharger le Média HD 📥",
+    snapDownloadHdAvatarBtn = "Télécharger l'Avatar HD 👤",
+    snapDownloadSnapcodeBtn = "Télécharger le Snapcode (SVG) 🟨",
+    snapSubscribersLabel = "Abonnés",
+    snapStoriesCountLabel = "Stories Actives",
+    snapHighlightsCountLabel = "Mises en Avant",
+    snapCategoryLabel = "Catégorie",
+    snapLocationLabel = "Localisation",
+    snapVerifiedLabel = "Compte Certifié Étoile Snapchat ⭐",
+    snapWebsiteLabel = "Site Web",
+    snapPublicStoriesTitle = "Stories Publiques Actives",
+    snapSpotlightTitle = "Vidéos Spotlight",
+    snapHighlightsTitle = "Mises en Avant (Highlights)",
+    snapNoMediaFound = "Aucune story ou mise en avant publique trouvée",
+    snapDownloadSuccessToast = "Média Snapchat enregistré dans la galerie ! 💛",
+    snapExtractErrorFallback = "Échec de l'extraction Snapchat, veuillez vérifier le lien ou le nom d'utilisateur",
+    drawerPlatformSnapchat = "Snapchat Studio",
+    drawerPlatformSnapchatDesc = "Téléchargeur Spotlight & Stories, profils et Snapcodes"
 )
 
 val LocalAppStrings = staticCompositionLocalOf { ArabicStrings }

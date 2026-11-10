@@ -986,3 +986,204 @@ fun RealVerifiedBadgeIcon(
         )
     }
 }
+
+// ==============================================================================
+// 15. Real Snapchat Ghost Vector Icon (Authentic Electric Yellow & Ghost)
+// ==============================================================================
+@Composable
+fun RealSnapchatIcon(
+    modifier: Modifier = Modifier,
+    size: Dp = 24.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+        val w = this.size.width
+        val h = this.size.height
+
+        // Electric Snapchat Yellow Background
+        val snapYellow = Brush.linearGradient(
+            colors = listOf(Color(0xFFFFFC00), Color(0xFFFFE600), Color(0xFFFFB800)),
+            start = Offset(0f, 0f),
+            end = Offset(w, h)
+        )
+        val cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.26f, h * 0.26f)
+        drawRoundRect(
+            brush = snapYellow,
+            topLeft = Offset.Zero,
+            size = Size(w, h),
+            cornerRadius = cornerRadius
+        )
+
+        // Ghost Path
+        val ghost = Path().apply {
+            moveTo(w * 0.36f, h * 0.34f)
+            // Head arch
+            cubicTo(w * 0.36f, h * 0.16f, w * 0.64f, h * 0.16f, w * 0.64f, h * 0.34f)
+            // Right neck
+            cubicTo(w * 0.64f, h * 0.40f, w * 0.66f, h * 0.44f, w * 0.74f, h * 0.44f)
+            // Right arm
+            cubicTo(w * 0.86f, h * 0.44f, w * 0.88f, h * 0.52f, w * 0.80f, h * 0.56f)
+            // Right waist
+            cubicTo(w * 0.72f, h * 0.58f, w * 0.68f, h * 0.62f, w * 0.72f, h * 0.72f)
+            // Skirt right ruffle
+            cubicTo(w * 0.76f, h * 0.82f, w * 0.64f, h * 0.84f, w * 0.58f, h * 0.76f)
+            // Skirt middle ruffle
+            cubicTo(w * 0.54f, h * 0.84f, w * 0.46f, h * 0.84f, w * 0.42f, h * 0.76f)
+            // Skirt left ruffle
+            cubicTo(w * 0.36f, h * 0.84f, w * 0.24f, h * 0.82f, w * 0.28f, h * 0.72f)
+            // Left waist
+            cubicTo(w * 0.32f, h * 0.62f, w * 0.28f, h * 0.58f, w * 0.20f, h * 0.56f)
+            // Left arm
+            cubicTo(w * 0.12f, h * 0.52f, w * 0.14f, h * 0.44f, w * 0.26f, h * 0.44f)
+            // Left neck
+            cubicTo(w * 0.34f, h * 0.44f, w * 0.36f, h * 0.40f, w * 0.36f, h * 0.34f)
+            close()
+        }
+
+        // Fill White Ghost
+        drawPath(ghost, color = Color.White)
+        // Draw Crisp Black Stroke
+        drawPath(
+            ghost,
+            color = Color(0xFF111111),
+            style = Stroke(
+                width = w * 0.055f,
+                cap = StrokeCap.Round,
+                join = androidx.compose.ui.graphics.StrokeJoin.Round
+            )
+        )
+    }
+}
+
+// ==============================================================================
+// 16. Snapchat Studio 3D Badge Logo
+// ==============================================================================
+@Composable
+fun SnapchatStudioLogo(
+    modifier: Modifier = Modifier,
+    size: Dp = 38.dp
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(size * 0.28f))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFFFFC00),
+                        Color(0xFFFFDF00),
+                        Color(0xFFFFB800),
+                        Color(0xFFF59E0B)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(size.value * 2, size.value * 2)
+                )
+            )
+            .border(
+                BorderStroke(
+                    1.2.dp,
+                    Brush.linearGradient(
+                        colors = listOf(Color(0xFFFFF9C4), Color(0xFFD97706))
+                    )
+                ),
+                RoundedCornerShape(size * 0.28f)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(size * 0.18f)
+        ) {
+            if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+            val w = this.size.width
+            val h = this.size.height
+
+            val ghost = Path().apply {
+                moveTo(w * 0.36f, h * 0.34f)
+                cubicTo(w * 0.36f, h * 0.16f, w * 0.64f, h * 0.16f, w * 0.64f, h * 0.34f)
+                cubicTo(w * 0.64f, h * 0.40f, w * 0.66f, h * 0.44f, w * 0.74f, h * 0.44f)
+                cubicTo(w * 0.86f, h * 0.44f, w * 0.88f, h * 0.52f, w * 0.80f, h * 0.56f)
+                cubicTo(w * 0.72f, h * 0.58f, w * 0.68f, h * 0.62f, w * 0.72f, h * 0.72f)
+                cubicTo(w * 0.76f, h * 0.82f, w * 0.64f, h * 0.84f, w * 0.58f, h * 0.76f)
+                cubicTo(w * 0.54f, h * 0.84f, w * 0.46f, h * 0.84f, w * 0.42f, h * 0.76f)
+                cubicTo(w * 0.36f, h * 0.84f, w * 0.24f, h * 0.82f, w * 0.28f, h * 0.72f)
+                cubicTo(w * 0.32f, h * 0.62f, w * 0.28f, h * 0.58f, w * 0.20f, h * 0.56f)
+                cubicTo(w * 0.12f, h * 0.52f, w * 0.14f, h * 0.44f, w * 0.26f, h * 0.44f)
+                cubicTo(w * 0.34f, h * 0.44f, w * 0.36f, h * 0.40f, w * 0.36f, h * 0.34f)
+                close()
+            }
+
+            // Crisp White Ghost with sleek black outline
+            drawPath(ghost, color = Color.White)
+            drawPath(
+                ghost,
+                color = Color(0xFF0F172A),
+                style = Stroke(
+                    width = w * 0.06f,
+                    cap = StrokeCap.Round,
+                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                )
+            )
+        }
+    }
+}
+
+// ==============================================================================
+// 17. Snapchat Official Star Verified Badge
+// ==============================================================================
+@Composable
+fun RealSnapchatStarBadge(
+    modifier: Modifier = Modifier,
+    size: Dp = 18.dp
+) {
+    Canvas(modifier = modifier.size(size)) {
+        if (this.size.width <= 0f || this.size.height <= 0f || this.size.width.isNaN() || this.size.height.isNaN()) return@Canvas
+        val w = this.size.width
+        val h = this.size.height
+        val cx = w / 2f
+        val cy = h / 2f
+        val r = (w.coerceAtMost(h) / 2f) * 0.94f
+
+        // Dark circular base badge
+        drawCircle(
+            color = Color(0xFF1E293B),
+            radius = r,
+            center = Offset(cx, cy)
+        )
+        drawCircle(
+            brush = Brush.linearGradient(
+                colors = listOf(Color(0xFFFFFC00), Color(0xFFF59E0B)),
+                start = Offset(0f, 0f),
+                end = Offset(w, h)
+            ),
+            radius = r,
+            center = Offset(cx, cy),
+            style = Stroke(width = w * 0.08f)
+        )
+
+        // Golden 5-point star
+        val starPath = Path()
+        val points = 5
+        val outerRadius = r * 0.65f
+        val innerRadius = outerRadius * 0.45f
+
+        for (i in 0 until (points * 2)) {
+            val angle = (i * Math.PI / points) - (Math.PI / 2.0)
+            val currentR = if (i % 2 == 0) outerRadius else innerRadius
+            val x = (cx + currentR * kotlin.math.cos(angle)).toFloat()
+            val y = (cy + currentR * kotlin.math.sin(angle)).toFloat()
+            if (i == 0) starPath.moveTo(x, y) else starPath.lineTo(x, y)
+        }
+        starPath.close()
+
+        drawPath(
+            starPath,
+            brush = Brush.linearGradient(
+                colors = listOf(Color(0xFFFFFC00), Color(0xFFFFB800), Color(0xFFF59E0B)),
+                start = Offset(cx, cy - outerRadius),
+                end = Offset(cx, cy + outerRadius)
+            )
+        )
+    }
+}

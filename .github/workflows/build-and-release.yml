@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.8.2.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.9.0.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.8.2.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.9.0.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,31 +101,31 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.8.2' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.8.2' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.0' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.0' }}"
           body: |
-            ## ⚡ Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.8.2' }})
+            ## 👻 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.0' }})
             
-            ترقية شاملة: خلفيات ضبابية حقيقية لتيك توك وإنستغرام وإزالة الشريط الجانبي (v2.8.2):
-            - **خلفية تيك توك الرسمية بالضباب الزجاجي (Full TikTok Blurred Wallpaper)**:
-              * خلفية غنية تضم النوتة الموسيقية والشعار الثلاثي الأبعاد مع موجات نيون وتأثير زجاجي ضبابي (`blur(28.dp)`).
-              * طبقة تعتيم مدروسة (`55% Black Overlay`) لتظهر البطاقات الزجاجية والمحتوى بوضوح فائق.
-            - **خلفية إنستغرام الرسمية بالضباب الزجاجي (Full Instagram Blurred Wallpaper)**:
-              * خلفية فخمة بألوان أورا وتدرج الغروب وشعار الكاميرا بتأثير زجاجي ضبابي ناعم (`blur(28.dp)`).
-            - **انتقال سلس بالـ Crossfade**:
-              * انتقال فائق النعومة بين خلفيات المنصتين عند التبديل من الشريط السفلي.
-            - **إزالة الشريط الجانبي والاعتماد الحصري على الشريط السفلي**:
-              * حذف الـ Drawer وزر القائمة `☰` لتبسيط الواجهة وتركيز تجربة المستخدم بالكامل على الشريط السفلي العائم.
+            إضافة استوديو سناب شات الشامل (Snapchat Studio) في الشريط السفلي العائم (v2.9.0):
+            - **إضافة قسم سناب شات (Snapchat Studio) المتكامل**:
+              * تبويب خاص في الشريط السفلي العائم بجانب تيك توك وإنستغرام مع أيقونة الشبح الصفراء وتأثيرات الإضاءة الذهبية.
+              * خلفية ضبابية زجاجية فاخرة خاصة بسناب شات (`bg_snapchat_wallpaper.xml`) مع تأثير `blur(28.dp)`.
+            - **تحميل فيديوهات الأضواء والقصص (Spotlight & Public Stories Downloader)**:
+              * استخراج وتحميل فيديوهات سناب أضواء (Spotlight) بدقة أصلية عالية وبدون علامة مائية.
+              * دعم الروابط المختصرة وروابط القصص والبروفايل مع حفظ مباشر في ألبوم الكاميرا.
+            - **فحص حسابات سناب شات باليوزر (Snapchat Profile & OSINT Inspector)**:
+              * بيانات حقيقية 100% (Zero Mock Data): الاسم، اليوزر، عدد المشتركين الحقيقي، ونجمة التوثيق الرسمية ⭐.
+              * استخراج وتحميل رمز الـ Snapcode الرسمي والصورة الشخصية بجودة عالية.
+              * استعراض شبكة القصص العامة النشطة (Public Stories) ومقاطع الأضواء والمقتطفات المميزة مع إمكانية التحميل الفوري.
+            - **صندوق المعالجة المتحرك والتنقل الانسيابي**:
+              * مربع معالجة ذكي (3 ثوانٍ) مع خطوات الخوارزمية ودعم كامل للغات الثلاث (AR, EN, FR).
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.8.2.apk`
+               - `TikTok-Viral-Studio-v2.9.0.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.8.2.apk` (رمز الدخول: `Admin2026`)
-               - `TikTok-Studio-Admin.apk`
-               - `TikTok-Studio-Admin-v2.8.0.apk` (رمز الدخول: `Admin2026`)
-               - `TikTok-Studio-Admin.apk`
+               - `TikTok-Studio-Admin-v2.9.0.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false
