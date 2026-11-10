@@ -74,7 +74,7 @@ fun InstagramStudioScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DeepDarkBackground)
+            .background(Color.Transparent)
     ) {
         // Tab Selector with Fluid Spring Glass Pill Indicator
         SpringPillTabBar(

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="1920dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <!-- Deep Space Dark Foundation -->
+    <path
+        android:pathData="M0,0h1080v1920h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="540"
+                android:startY="0"
+                android:endX="540"
+                android:endY="1920">
+                <item android:offset="0.0" android:color="#0D0B18" />
+                <item android:offset="0.5" android:color="#07050E" />
+                <item android:offset="1.0" android:color="#030206" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Top-Left Neon Cyan Nebula Bloom -->
+    <path
+        android:pathData="M-100,-100m-700,0a700,700 0 1,0 1400,0a700,700 0 1,0 -1400,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="200"
+                android:centerY="250"
+                android:gradientRadius="750">
+                <item android:offset="0.0" android:color="#AA00F2FE" />
+                <item android:offset="0.35" android:color="#5500A8FF" />
+                <item android:offset="0.75" android:color="#1A002A55" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-Right Neon Pink/Magenta Aurora Bloom -->
+    <path
+        android:pathData="M1180,1700m-750,0a750,750 0 1,0 1500,0a750,750 0 1,0 -1500,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="880"
+                android:centerY="1550"
+                android:gradientRadius="800">
+                <item android:offset="0.0" android:color="#AAFF007A" />
+                <item android:offset="0.35" android:color="#55E60064" />
+                <item android:offset="0.75" android:color="#1840001E" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Ambient Deep Purple Wave Core -->
+    <path
+        android:pathData="M540,960m-550,0a550,550 0 1,0 1100,0a550,550 0 1,0 -1100,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="540"
+                android:centerY="960"
+                android:gradientRadius="600">
+                <item android:offset="0.0" android:color="#447928CA" />
+                <item android:offset="0.55" android:color="#222B0952" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Diagonal Neon Fluid Wave Top-Right to Center -->
+    <path
+        android:pathData="M1080,200 C800,350 700,600 450,750 C200,900 100,1200 0,1350 L0,1500 C150,1350 350,1100 600,950 C850,800 950,500 1080,350 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="1080"
+                android:startY="200"
+                android:endX="0"
+                android:endY="1500">
+                <item android:offset="0.0" android:color="#6600F2FE" />
+                <item android:offset="0.5" android:color="#447928CA" />
+                <item android:offset="1.0" android:color="#66FF007A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Opposite Fluid Wave Bottom-Left to Top -->
+    <path
+        android:pathData="M0,500 C300,550 500,800 700,1050 C900,1300 950,1600 1080,1800 L1080,1650 C950,1450 850,1150 650,900 C450,650 250,450 0,380 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="400"
+                android:endX="1080"
+                android:endY="1750">
+                <item android:offset="0.0" android:color="#4400F2FE" />
+                <item android:offset="0.6" android:color="#55FF007A" />
+                <item android:offset="1.0" android:color="#33FE0979" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Concentric Audio Beat Wave Rings -->
+    <path
+        android:pathData="M540,900m-360,0a360,360 0 1,0 720,0a360,360 0 1,0 -720,0"
+        android:strokeWidth="3.5"
+        android:strokeColor="#3300F2FE"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M540,900m-480,0a480,480 0 1,0 960,0a480,480 0 1,0 -960,0"
+        android:strokeWidth="2.5"
+        android:strokeColor="#25FF007A"
+        android:fillColor="#00000000" />
+
+    <!-- ============================================================== -->
+    <!-- Giant 3D Chromatic Glitch TikTok Note Emblem (Centered)        -->
+    <!-- ============================================================== -->
+
+    <!-- Cyan Chromatic Shadow Note (Shifted Left & Up) -->
+    <group android:translateX="-28" android:translateY="-22">
+        <path
+            android:fillColor="#8800F2FE"
+            android:pathData="M590,560 L590,950 C570,935 535,925 495,925 C420,925 360,980 360,1050 C360,1120 420,1175 495,1175 C570,1175 630,1120 630,1050 L630,730 C695,785 780,820 870,825 L870,725 C795,720 725,675 680,610 C655,575 640,535 635,490 L590,490 Z" />
+    </group>
+
+    <!-- Red-Pink Chromatic Shadow Note (Shifted Right & Down) -->
+    <group android:translateX="28" android:translateY="22">
+        <path
+            android:fillColor="#88FF007A"
+            android:pathData="M590,560 L590,950 C570,935 535,925 495,925 C420,925 360,980 360,1050 C360,1120 420,1175 495,1175 C570,1175 630,1120 630,1050 L630,730 C695,785 780,820 870,825 L870,725 C795,720 725,675 680,610 C655,575 640,535 635,490 L590,490 Z" />
+    </group>
+
+    <!-- Crisp Pure White Main TikTok Note Core -->
+    <path
+        android:fillColor="#E6FFFFFF"
+        android:pathData="M590,560 L590,950 C570,935 535,925 495,925 C420,925 360,980 360,1050 C360,1120 420,1175 495,1175 C570,1175 630,1120 630,1050 L630,730 C695,785 780,820 870,825 L870,725 C795,720 725,675 680,610 C655,575 640,535 635,490 L590,490 Z" />
+
+    <!-- Musical Rhythm Spectrum Particles -->
+    <path
+        android:fillColor="#7700F2FE"
+        android:pathData="M240,420m-16,0a16,16 0 1,0 32,0a16,16 0 1,0 -32,0" />
+    <path
+        android:fillColor="#66FF007A"
+        android:pathData="M840,380m-20,0a20,20 0 1,0 40,0a20,20 0 1,0 -40,0" />
+    <path
+        android:fillColor="#8800F2FE"
+        android:pathData="M180,1320m-22,0a22,22 0 1,0 44,0a22,22 0 1,0 -44,0" />
+    <path
+        android:fillColor="#77FF007A"
+        android:pathData="M880,1260m-18,0a18,18 0 1,0 36,0a18,18 0 1,0 -36,0" />
+    <path
+        android:fillColor="#99FFFFFF"
+        android:pathData="M320,1600m-12,0a12,12 0 1,0 24,0a12,12 0 1,0 -24,0" />
+
+</vector>

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,15 +22,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.creator.tiktokstudio.R
 import com.creator.tiktokstudio.core.AppLanguage
 import com.creator.tiktokstudio.core.InstagramService
 import com.creator.tiktokstudio.core.Localization
@@ -52,228 +57,51 @@ fun MainScreen(
     val currentLang by ThemeAndLocaleManager.currentLanguage.collectAsState()
 
     var currentPlatform by rememberSaveable { mutableStateOf(StudioPlatform.TIKTOK) }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
 
     val tiktokPagerState = rememberPagerState(pageCount = { 2 })
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = true,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = DarkSurfaceElevated,
-                drawerContentColor = TextPrimary,
-                modifier = Modifier.width(300.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(DarkSurfaceElevated, DeepDarkBackground)
-                            )
-                        )
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
-                        .padding(16.dp)
-                ) {
-                    // 1. Drawer Header (Glassmorphic 3D Emblem Card)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(DarkSurfaceCard)
-                            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
-                            .padding(14.dp)
-                    ) {
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                TikTokDownloaderLogo(size = 40.dp)
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = strings.drawerTitle,
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextPrimary
-                                        )
-                                    )
-                                    Text(
-                                        text = strings.drawerSubtitle,
-                                        style = MaterialTheme.typography.bodySmall.copy(
-                                            color = TextSecondary,
-                                            fontSize = 11.sp
-                                        ),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0x3300F2FE))
-                                    .border(1.dp, NeonCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                            ) {
-                                Text(
-                                    text = strings.drawerVersionBadge,
-                                    color = NeonCyan,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    // 2. Main Platforms Section Title
-                    Text(
-                        text = strings.drawerSectionPlatforms,
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // TikTok Studio Platform Switcher
-                    DrawerPlatformItem(
-                        title = strings.drawerPlatformTikTok,
-                        subtitle = strings.drawerPlatformTikTokDesc,
-                        icon = { TikTokDownloaderLogo(size = 28.dp) },
-                        isSelected = currentPlatform == StudioPlatform.TIKTOK,
-                        activeBrush = Brush.horizontalGradient(listOf(NeonCyan.copy(alpha = 0.25f), NeonPink.copy(alpha = 0.25f))),
-                        activeBorderColor = NeonCyan,
-                        onClick = {
-                            currentPlatform = StudioPlatform.TIKTOK
-                            coroutineScope.launch { drawerState.close() }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Instagram Studio Platform Switcher
-                    DrawerPlatformItem(
-                        title = strings.drawerPlatformInstagram,
-                        subtitle = strings.drawerPlatformInstagramDesc,
-                        icon = { RealInstagramIcon(size = 28.dp) },
-                        isSelected = currentPlatform == StudioPlatform.INSTAGRAM,
-                        activeBrush = Brush.horizontalGradient(listOf(Color(0x40833AB4), Color(0x40E1306C), Color(0x40FCB045))),
-                        activeBorderColor = Color(0xFFE1306C),
-                        onClick = {
-                            currentPlatform = StudioPlatform.INSTAGRAM
-                            coroutineScope.launch { drawerState.close() }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Divider
-                    HorizontalDivider(color = GlassBorder.copy(alpha = 0.5f))
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // 3. Quick Utilities Section Title
-                    Text(
-                        text = strings.drawerSectionUtilities,
-                        color = TextSecondary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Downloads History Item
-                    DrawerUtilityItem(
-                        title = strings.drawerDownloadsHistory,
-                        icon = Icons.Default.History,
-                        onClick = {
-                            currentPlatform = StudioPlatform.TIKTOK
-                            coroutineScope.launch {
-                                tiktokPagerState.animateScrollToPage(0)
-                                drawerState.close()
-                            }
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Clear Cache Item
-                    DrawerUtilityItem(
-                        title = strings.drawerClearCache,
-                        icon = Icons.Default.DeleteSweep,
-                        onClick = {
-                            val freed = InstagramService.clearCache(context)
-                            val freedMB = freed / (1024.0 * 1024.0)
-                            Toast.makeText(context, "${strings.cacheClearedToast} (${String.format("%.1f", freedMB)} MB)", Toast.LENGTH_SHORT).show()
-                            coroutineScope.launch { drawerState.close() }
-                        }
-                    )
-                }
+    Box(modifier = modifier.fillMaxSize()) {
+        // 1. Dynamic Full Wallpaper with Glass Blur (28.dp) & Dark Dimming Overlay Layer (55% Opacity)
+        Crossfade(
+            targetState = currentPlatform,
+            label = "WallpaperCrossfade",
+            modifier = Modifier.fillMaxSize()
+        ) { platform ->
+            when (platform) {
+                StudioPlatform.TIKTOK -> TikTokWallpaperBackground()
+                StudioPlatform.INSTAGRAM -> InstagramWallpaperBackground()
             }
         }
-    ) {
+
+        // 2. Foreground Glassmorphic Interface Layer with Transparent Container
         Scaffold(
-            modifier = modifier.fillMaxSize(),
-            containerColor = DeepDarkBackground,
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
             topBar = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(DeepDarkBackground)
+                        .background(Color.Transparent)
                         .statusBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    // Top Brand & Controls Bar
+                    // Top Brand & Controls Bar (No Drawer Menu Button)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Left Brand: Hamburger Menu, App Emblem & Title
+                        // Left Brand: App Emblem & Title
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f, fill = false)
                         ) {
-                            // Hamburger Menu Icon Button with Bounce Click
-                            IconButton(
-                                onClick = {
-                                    coroutineScope.launch {
-                                        if (drawerState.isClosed) drawerState.open() else drawerState.close()
-                                    }
-                                },
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(DarkSurfaceElevated)
-                                    .border(1.dp, GlassBorder, CircleShape)
-                                    .bounceClick {
-                                        coroutineScope.launch {
-                                            if (drawerState.isClosed) drawerState.open() else drawerState.close()
-                                        }
-                                    }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "Menu",
-                                    tint = if (currentPlatform == StudioPlatform.TIKTOK) NeonCyan else Color(0xFFFCB045),
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
                             // Dynamic Platform Logo
                             if (currentPlatform == StudioPlatform.TIKTOK) {
-                                TikTokDownloaderLogo(size = 38.dp)
+                                TikTokDownloaderLogo(size = 40.dp)
                             } else {
-                                InstagramStudioLogo(size = 38.dp)
+                                InstagramStudioLogo(size = 40.dp)
                             }
 
                             Spacer(modifier = Modifier.width(10.dp))
@@ -312,7 +140,7 @@ fun MainScreen(
                                 modifier = Modifier
                                     .size(38.dp)
                                     .clip(CircleShape)
-                                    .background(DarkSurfaceElevated)
+                                    .background(DarkSurfaceElevated.copy(alpha = 0.85f))
                                     .border(1.dp, GlassBorder, CircleShape)
                                     .bounceClick { ThemeAndLocaleManager.toggleTheme(context) }
                             ) {
@@ -332,7 +160,7 @@ fun MainScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(DarkSurfaceElevated)
+                                        .background(DarkSurfaceElevated.copy(alpha = 0.85f))
                                         .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                                         .bounceClick { showLangMenu = true }
                                         .padding(horizontal = 8.dp, vertical = 7.dp)
@@ -427,6 +255,56 @@ fun MainScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * TikTok Official Full Wallpaper with 28.dp Glass Blur & 55% Dark Dimming Layer
+ */
+@Composable
+fun TikTokWallpaperBackground(
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.bg_tiktok_wallpaper),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(28.dp)
+        )
+        // 55% Dark Dimming Overlay Layer to ensure clean contrast over the blurred wallpaper
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.55f))
+        )
+    }
+}
+
+/**
+ * Instagram Official Full Wallpaper with 28.dp Glass Blur & 55% Dark Dimming Layer
+ */
+@Composable
+fun InstagramWallpaperBackground(
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.bg_instagram_wallpaper),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(28.dp)
+        )
+        // 55% Dark Dimming Overlay Layer to ensure clean contrast over the blurred wallpaper
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.55f))
+        )
     }
 }
 
@@ -546,137 +424,6 @@ fun FloatingGlassBottomDock(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun DrawerPlatformItem(
-    title: String,
-    subtitle: String,
-    icon: @Composable () -> Unit,
-    isSelected: Boolean,
-    activeBrush: Brush,
-    activeBorderColor: Color,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (isSelected) activeBrush else Brush.linearGradient(listOf(DarkSurfaceCard, DarkSurfaceCard)))
-            .border(
-                1.dp,
-                if (isSelected) activeBorderColor else GlassBorder,
-                RoundedCornerShape(14.dp)
-            )
-            .bounceClick(onClick = onClick)
-            .padding(12.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            icon()
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-                Text(
-                    text = subtitle,
-                    color = TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(activeBorderColor)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DrawerUtilityItem(
-    title: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .bounceClick(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 10.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = TextSecondary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = title,
-            color = TextPrimary,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-
-
-@Composable
-fun NavTabItem(
-    modifier: Modifier = Modifier,
-    title: String,
-    icon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val background = if (isSelected) {
-        Brush.horizontalGradient(listOf(NeonCyan, NeonPink))
-    } else {
-        Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
-    }
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(background)
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) OnAccentDark else TextSecondary,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = title,
-                color = if (isSelected) OnAccentDark else TextSecondary,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 13.sp
-            )
         }
     }
 }

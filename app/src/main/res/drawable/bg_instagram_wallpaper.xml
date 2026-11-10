@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="1920dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <!-- Deep Luxe Dark Foundation -->
+    <path
+        android:pathData="M0,0h1080v1920h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="540"
+                android:startY="0"
+                android:endX="540"
+                android:endY="1920">
+                <item android:offset="0.0" android:color="#0F0A18" />
+                <item android:offset="0.5" android:color="#08040F" />
+                <item android:offset="1.0" android:color="#040208" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Top-Left Royal Purple Bloom -->
+    <path
+        android:pathData="M-50,-50m-700,0a700,700 0 1,0 1400,0a700,700 0 1,0 -1400,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="180"
+                android:centerY="220"
+                android:gradientRadius="750">
+                <item android:offset="0.0" android:color="#BB833AB4" />
+                <item android:offset="0.4" android:color="#665B1D8A" />
+                <item android:offset="0.8" android:color="#1A2D0947" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center-Right Signature Instagram Pink/Magenta Bloom -->
+    <path
+        android:pathData="M1150,850m-700,0a700,700 0 1,0 1400,0a700,700 0 1,0 -1400,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="950"
+                android:centerY="850"
+                android:gradientRadius="750">
+                <item android:offset="0.0" android:color="#BBE1306C" />
+                <item android:offset="0.45" android:color="#66AA174A" />
+                <item android:offset="0.8" android:color="#20500720" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-Left Crimson Red Bloom -->
+    <path
+        android:pathData="M-100,1650m-650,0a650,650 0 1,0 1300,0a650,650 0 1,0 -1300,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="150"
+                android:centerY="1550"
+                android:gradientRadius="700">
+                <item android:offset="0.0" android:color="#AAFD1D1D" />
+                <item android:offset="0.4" android:color="#66C40E0E" />
+                <item android:offset="0.75" android:color="#1A5E0303" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-Right Warm Sunset Orange & Gold Bloom -->
+    <path
+        android:pathData="M1150,1750m-700,0a700,700 0 1,0 1400,0a700,700 0 1,0 -1400,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="900"
+                android:centerY="1600"
+                android:gradientRadius="750">
+                <item android:offset="0.0" android:color="#CCFCB045" />
+                <item android:offset="0.35" android:color="#88F77737" />
+                <item android:offset="0.75" android:color="#226E2A08" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Sweeping Instagram Sunset Ribbon Wave -->
+    <path
+        android:pathData="M0,300 C300,450 650,300 850,550 C1000,750 950,1100 1080,1300 L1080,1450 C900,1250 850,900 700,750 C500,550 250,650 0,450 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="300"
+                android:endX="1080"
+                android:endY="1450">
+                <item android:offset="0.0" android:color="#66833AB4" />
+                <item android:offset="0.35" android:color="#77E1306C" />
+                <item android:offset="0.7" android:color="#77FD1D1D" />
+                <item android:offset="1.0" android:color="#66FCB045" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- ============================================================== -->
+    <!-- Giant 3D Instagram Camera Emblem (Centered & Vibrant)          -->
+    <!-- ============================================================== -->
+
+    <!-- Outer Squircle Camera Outline with Sunset Gradient Stroke -->
+    <path
+        android:pathData="M340,680 L740,680 C810,680 860,730 860,800 L860,1200 C860,1270 810,1320 740,1320 L340,1320 C270,1320 220,1270 220,1200 L220,800 C220,730 270,680 340,680 Z"
+        android:strokeWidth="32"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="220"
+                android:startY="680"
+                android:endX="860"
+                android:endY="1320">
+                <item android:offset="0.0" android:color="#CC833AB4" />
+                <item android:offset="0.3" android:color="#FFE1306C" />
+                <item android:offset="0.65" android:color="#FFFD1D1D" />
+                <item android:offset="1.0" android:color="#FFFCB045" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Camera Lens Outer Ring -->
+    <path
+        android:pathData="M540,1000m-140,0a140,140 0 1,0 280,0a140,140 0 1,0 -280,0"
+        android:strokeWidth="28"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="400"
+                android:startY="860"
+                android:endX="680"
+                android:endY="1140">
+                <item android:offset="0.0" android:color="#FFE1306C" />
+                <item android:offset="1.0" android:color="#FFFCB045" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Center Camera Lens Pupil Accent -->
+    <path
+        android:pathData="M540,1000m-60,0a60,60 0 1,0 120,0a60,60 0 1,0 -120,0"
+        android:fillColor="#88FFFFFF" />
+
+    <!-- Top-Right Camera Flash Dot -->
+    <path
+        android:pathData="M760,780m-26,0a26,26 0 1,0 52,0a26,26 0 1,0 -52,0"
+        android:fillColor="#FFFFFFFF" />
+
+    <!-- Ambient Story Ring Circles -->
+    <path
+        android:pathData="M540,1000m-360,0a360,360 0 1,0 720,0a360,360 0 1,0 -720,0"
+        android:strokeWidth="3"
+        android:strokeColor="#30E1306C"
+        android:fillColor="#00000000" />
+
+    <path
+        android:pathData="M540,1000m-480,0a480,480 0 1,0 960,0a480,480 0 1,0 -960,0"
+        android:strokeWidth="2"
+        android:strokeColor="#25FCB045"
+        android:fillColor="#00000000" />
+
+    <!-- Sparkling Golden Story Particles -->
+    <path
+        android:fillColor="#99FCB045"
+        android:pathData="M260,420m-16,0a16,16 0 1,0 32,0a16,16 0 1,0 -32,0" />
+    <path
+        android:fillColor="#88E1306C"
+        android:pathData="M840,400m-20,0a20,20 0 1,0 40,0a20,20 0 1,0 -40,0" />
+    <path
+        android:fillColor="#99833AB4"
+        android:pathData="M180,1260m-22,0a22,22 0 1,0 44,0a22,22 0 1,0 -44,0" />
+    <path
+        android:fillColor="#AAFCB045"
+        android:pathData="M880,1280m-18,0a18,18 0 1,0 36,0a18,18 0 1,0 -36,0" />
+
+</vector>
