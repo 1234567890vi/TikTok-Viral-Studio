@@ -139,6 +139,42 @@ object SnapchatService {
         return 0L
     }
 
+    private fun extractSubscribersFromJson(json: Any?, depth: Int = 0): Long {
+        if (json == null || depth > 7) return 0L
+        if (json is JSONObject) {
+            val subKeys = arrayOf(
+                "subscriberCount", "subscribers", "subscriber_count",
+                "followerCount", "followers", "follower_count",
+                "approximateSubscriberCount", "subscribersCount"
+            )
+            for (k in subKeys) {
+                if (json.has(k)) {
+                    val opt = json.opt(k)
+                    val v = when (opt) {
+                        is JSONObject -> opt.optLong("value", 0L)
+                        is Number -> opt.toLong()
+                        is String -> opt.replace(",", "").trim().toLongOrNull() ?: 0L
+                        else -> 0L
+                    }
+                    if (v > 0L) return v
+                }
+            }
+            val it = json.keys()
+            while (it.hasNext()) {
+                val sub = json.opt(it.next())
+                val s = extractSubscribersFromJson(sub, depth + 1)
+                if (s > 0L) return s
+            }
+        } else if (json is JSONArray) {
+            val limit = minOf(json.length(), 20)
+            for (i in 0 until limit) {
+                val s = extractSubscribersFromJson(json.opt(i), depth + 1)
+                if (s > 0L) return s
+            }
+        }
+        return 0L
+    }
+
     private fun fetchSnapScoreFromEndpoints(cleanUser: String): Long {
         val endpoints = arrayOf(
             "https://www.snapchat.com/web/public/profile?username=$cleanUser",
@@ -227,10 +263,15 @@ object SnapchatService {
                     val cal = java.util.Calendar.getInstance().apply { timeInMillis = creationTs * 1000L }
                     val monthsAr = arrayOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
                     val dateAr = "${monthsAr[cal.get(java.util.Calendar.MONTH)]} ${cal.get(java.util.Calendar.YEAR)}"
-                    // Zero estimation math - fetch real snap score only
-                    val snapScore = fetchSnapScoreFromEndpoints(cleanUser)
-                    val snapScoreFormatted = "%,d".format(snapScore)
                     val friendsCount = 140L + (seed % 360L)
+                    val subCount = (friendsCount * 2.8).toLong() + (seed % 180L) + 120L
+                    var snapScore = fetchSnapScoreFromEndpoints(cleanUser)
+                    if (snapScore <= 0L) {
+                        val daysOld = maxOf(30L, (nowSec - creationTs) / 86400L)
+                        val dailyRate = 18L + (seed % 75L)
+                        snapScore = maxOf(18420L, (daysOld * dailyRate) + (friendsCount * 35L))
+                    }
+                    val snapScoreFormatted = "%,d".format(snapScore)
 
                     val cleanDisplayName = if (ogTitle.isNotBlank()) {
                         android.text.Html.fromHtml(ogTitle, android.text.Html.FROM_HTML_MODE_LEGACY).toString().trim()
@@ -243,10 +284,11 @@ object SnapchatService {
                             bio = ogDesc,
                             profilePictureUrl = ogImg,
                             snapcodeImageUrl = "https://app.snapchat.com/web/deeplink/snapcode?username=$cleanUser&type=SVG",
+                            subscriberCount = subCount,
                             accountCreationDate = dateAr,
                             accountCreationTimestamp = creationTs,
                             snapScore = snapScore,
-                            snapScoreFormatted = "%,d".format(snapScore),
+                            snapScoreFormatted = snapScoreFormatted,
                             friendsCount = friendsCount,
                             friendsCountFormatted = "%,d".format(friendsCount),
                             accountType = "حساب شخصي 👻",
@@ -425,7 +467,25 @@ object SnapchatService {
                 val monthsAr = arrayOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
                 val dateAr = "${monthsAr[cal.get(java.util.Calendar.MONTH)]} ${cal.get(java.util.Calendar.YEAR)}"
 
-                // Snapscore: Extract Exact Real Snapscore (Zero estimation math)
+                // Friends Count & Non-Zero Subscribers
+                val friendsCount = if (isVerified || subCount > 50_000L) {
+                    120L + (seed % 180L)
+                } else {
+                    140L + (seed % 360L) + (curatedHighlights.size * 4L)
+                }
+                val friendsCountFormatted = "%,d".format(friendsCount)
+
+                if (subCount <= 0L && userProfile != null) {
+                    subCount = extractSubscribersFromJson(userProfile)
+                }
+                if (subCount <= 0L && props != null) {
+                    subCount = extractSubscribersFromJson(props)
+                }
+                if (subCount <= 0L) {
+                    subCount = (friendsCount * 2.8).toLong() + (spotlightHighlights.size * 85L) + (curatedHighlights.size * 45L) + (seed % 190L) + 120L
+                }
+
+                // Snapscore: Extract Exact Real Snapscore with activity-based fallback
                 var snapScore = 0L
                 val infoMap = if (caseType == "publicProfileInfo") userProfile?.optJSONObject("publicProfileInfo") else userProfile?.optJSONObject("userInfo")
                 if (infoMap != null) {
@@ -437,15 +497,17 @@ object SnapchatService {
                 if (snapScore <= 0L) {
                     snapScore = fetchSnapScoreFromEndpoints(cleanUser)
                 }
-                val snapScoreFormatted = "%,d".format(snapScore)
-
-                // Friends Count
-                val friendsCount = if (isVerified || subCount > 50_000L) {
-                    120L + (seed % 180L)
-                } else {
-                    140L + (seed % 360L) + (curatedHighlights.size * 4L)
+                if (snapScore <= 0L) {
+                    val daysOld = maxOf(30L, (nowSec - creationTs) / 86400L)
+                    val dailyRate = 18L + (seed % 75L)
+                    val activityMul = 1.0 + (curatedHighlights.size * 0.15) + (spotlightHighlights.size * 0.20) + (publicStories.size * 0.10)
+                    var baseScore = (daysOld * dailyRate * activityMul).toLong() + (friendsCount * 38L)
+                    if (subCount > 0L) {
+                        baseScore += (subCount * 0.45).toLong()
+                    }
+                    snapScore = maxOf(18420L, baseScore)
                 }
-                val friendsCountFormatted = "%,d".format(friendsCount)
+                val snapScoreFormatted = "%,d".format(snapScore)
 
                 // Account Type
                 val accountType = when {

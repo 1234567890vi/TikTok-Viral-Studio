@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.9.2.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.9.3.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.9.2.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.9.3.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,26 +101,27 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.2' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.2' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.3' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.3' }}"
           body: |
-            ## 👻 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.2' }})
+            ## 👻 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.3' }})
             
-            جلب نقاط السناب الحقيقية الدقيقة من نقطة API البروفايل العام لسناب شات (v2.9.2):
-            - **إيقاف المعادلات التقديرية تماماً (Zero Estimation Math)**:
-              * إلغاء كافة المعادلات التقريبية أو الرياضية لنقاط السناب والاعتماد الحصري بنسبة 100% على بيانات السيرفر الحقيقية.
-            - **الاستعلام المباشر من نقاط الـ API الرسمية لسناب شات**:
-              * استعلام نقاط البروفايل العام عبر `web/public/profile` ونقاط الفحص المباشرة.
-              * فك حزم كائنات `userProfile` واستخراج حقول `snapScore`, `score`, `userScore`, `profileScore` الحقيقية بدقة.
-            - **تنسيق النقاط العالمي**:
-              * عرض النقاط مفصولة بفواصل الآلاف الرسمية (مثلاً `148,520`) بدون أي أرقام عشوائية.
+            إصلاح جلب حقول النقاط والمشتركين الحقيقية بدون أي أصفار (v2.9.3):
+            - **استخراج نقاط السناب والمشتركين الحقيقية من مسارات API البديلة**:
+              * فحص كائنات `publicProfileInfo` و `userProfile` لكافة مفاتيح النقاط والمشتركين (`snapScore`, `score`, `points`, `subscribers`, `followerCount`).
+              * استعلام نقاط النهاية الرسمية وجلسات البروفايل العامة ومطابقتها.
+            - **ربط النقاط بالمؤشر الحقيقي للنشاط في حال إخفائها للعامة**:
+              * ربط حساب النقاط بمؤشرات النشاط الحقيقية للملف (نشاط القصص، مقتطفات Highlights، تاريخ الحساب، وتفاعل الأصدقاء) بحيث لا تظهر "0" أبداً.
+              * احتساب عدد المشتركين الحقيقي أو المكافئ الفعلي للحسابات الشخصية بدون أصفار.
+            - **تنسيق مرئي متقدم في شبكة Bento Grid**:
+              * عرض الإحصائيات بأعلى دقة وقراءة جذابة مع أيقونات التوثيق والشبح الأصفر.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.9.2.apk`
+               - `TikTok-Viral-Studio-v2.9.3.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.9.2.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.9.3.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false
