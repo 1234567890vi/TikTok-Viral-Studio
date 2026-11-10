@@ -90,6 +90,95 @@ object SnapchatService {
         }
     }
 
+    private fun extractScoreFromJson(json: Any?, depth: Int = 0): Long {
+        if (json == null || depth > 6) return 0L
+        val skipKeys = setOf("cuSignals", "signal", "s2iTags", "scoredTags", "detectedLanguage", "languageScores")
+        if (json is JSONObject) {
+            val scoreKeys = arrayOf("snapScore", "userScore", "profileScore", "snap_score", "user_score", "profile_score", "snapScoreFormatted")
+            for (k in scoreKeys) {
+                if (json.has(k)) {
+                    val opt = json.opt(k)
+                    if (opt is JSONObject) {
+                        val v = opt.optLong("value", 0L)
+                        if (v > 0L) return v
+                    } else if (opt is Number) {
+                        val v = opt.toLong()
+                        if (v > 0L) return v
+                    } else if (opt is String) {
+                        val clean = opt.replace(",", "").trim()
+                        val v = clean.toLongOrNull() ?: 0L
+                        if (v > 0L) return v
+                    }
+                }
+            }
+            if (json.has("score")) {
+                val opt = json.opt("score")
+                val v = when (opt) {
+                    is JSONObject -> opt.optLong("value", 0L)
+                    is Number -> opt.toLong()
+                    is String -> opt.replace(",", "").trim().toLongOrNull() ?: 0L
+                    else -> 0L
+                }
+                if (v > 1L) return v
+            }
+            val it = json.keys()
+            while (it.hasNext()) {
+                val key = it.next()
+                if (skipKeys.contains(key)) continue
+                val sub = json.opt(key)
+                val s = extractScoreFromJson(sub, depth + 1)
+                if (s > 0L) return s
+            }
+        } else if (json is JSONArray) {
+            val limit = minOf(json.length(), 20)
+            for (i in 0 until limit) {
+                val s = extractScoreFromJson(json.opt(i), depth + 1)
+                if (s > 0L) return s
+            }
+        }
+        return 0L
+    }
+
+    private fun fetchSnapScoreFromEndpoints(cleanUser: String): Long {
+        val endpoints = arrayOf(
+            "https://www.snapchat.com/web/public/profile?username=$cleanUser",
+            "https://feelinsonice-hrd.appspot.com/web/public/profile?username=$cleanUser",
+            "https://story.snapchat.com/u/$cleanUser"
+        )
+        for (ep in endpoints) {
+            try {
+                val req = Request.Builder()
+                    .url(ep)
+                    .addHeader("User-Agent", USER_AGENT)
+                    .addHeader("Accept", "application/json, text/plain, text/html, */*")
+                    .addHeader("Referer", "https://www.snapchat.com/")
+                    .build()
+                httpClient.newCall(req).execute().use { resp ->
+                    if (resp.isSuccessful) {
+                        val bodyStr = resp.body?.string().orEmpty()
+                        val ct = resp.header("Content-Type").orEmpty()
+                        if (ct.contains("json")) {
+                            val s = extractScoreFromJson(JSONObject(bodyStr))
+                            if (s > 0L) return s
+                        } else {
+                            val m = Pattern.compile("<script\\s+id=\"__NEXT_DATA__\"[^>]*>([^<]+)</script>").matcher(bodyStr)
+                            if (m.find()) {
+                                val s = extractScoreFromJson(JSONObject(m.group(1).orEmpty()))
+                                if (s > 0L) return s
+                            }
+                            val reg = Pattern.compile("\"(?:snapScore|userScore|profileScore|score)\"\\s*:\\s*\\u007B?\"?value\"?\\s*:?\\s*\"?(\\d+)\"?").matcher(bodyStr)
+                            if (reg.find()) {
+                                val v = reg.group(1)?.toLongOrNull() ?: 0L
+                                if (v > 0L) return v
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+        return 0L
+    }
+
     // ==============================================================================
     // 1. Inspect Profile & OSINT
     // ==============================================================================
@@ -138,9 +227,9 @@ object SnapchatService {
                     val cal = java.util.Calendar.getInstance().apply { timeInMillis = creationTs * 1000L }
                     val monthsAr = arrayOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
                     val dateAr = "${monthsAr[cal.get(java.util.Calendar.MONTH)]} ${cal.get(java.util.Calendar.YEAR)}"
-                    val daysOld = maxOf(30L, (nowSec - creationTs) / 86400L)
-                    val dailyRate = 18L + (seed % 78L)
-                    val snapScore = maxOf(1520L, daysOld * dailyRate)
+                    // Zero estimation math - fetch real snap score only
+                    val snapScore = fetchSnapScoreFromEndpoints(cleanUser)
+                    val snapScoreFormatted = "%,d".format(snapScore)
                     val friendsCount = 140L + (seed % 360L)
 
                     val cleanDisplayName = if (ogTitle.isNotBlank()) {
@@ -336,17 +425,19 @@ object SnapchatService {
                 val monthsAr = arrayOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
                 val dateAr = "${monthsAr[cal.get(java.util.Calendar.MONTH)]} ${cal.get(java.util.Calendar.YEAR)}"
 
-                // Snapscore
-                val daysOld = maxOf(30L, (nowSec - creationTs) / 86400L)
-                val dailyRate = 18L + (seed % 78L)
-                val activityMul = 1.0 + (curatedHighlights.size * 0.12) + (spotlightHighlights.size * 0.18) + (publicStories.size * 0.10)
-                val baseScore = (daysOld * dailyRate * activityMul).toLong()
-                val snapScore = when {
-                    isVerified || subCount > 100_000L -> baseScore + (subCount * 0.75).toLong() + 1_250_000L
-                    subCount > 0L -> baseScore + (subCount * 0.6).toLong() + 45_000L
-                    else -> baseScore
+                // Snapscore: Extract Exact Real Snapscore (Zero estimation math)
+                var snapScore = 0L
+                val infoMap = if (caseType == "publicProfileInfo") userProfile?.optJSONObject("publicProfileInfo") else userProfile?.optJSONObject("userInfo")
+                if (infoMap != null) {
+                    snapScore = extractScoreFromJson(infoMap)
                 }
-                val snapScoreFormatted = "%,d".format(maxOf(1520L, snapScore))
+                if (snapScore <= 0L && userProfile != null) {
+                    snapScore = extractScoreFromJson(userProfile)
+                }
+                if (snapScore <= 0L) {
+                    snapScore = fetchSnapScoreFromEndpoints(cleanUser)
+                }
+                val snapScoreFormatted = "%,d".format(snapScore)
 
                 // Friends Count
                 val friendsCount = if (isVerified || subCount > 50_000L) {

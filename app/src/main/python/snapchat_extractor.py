@@ -101,6 +101,123 @@ def format_creation_date(epoch_sec: int) -> dict:
             "timestamp": 1633046400
         }
 
+def extract_score_from_dict(d, depth=0) -> int:
+    """
+    Recursively inspects dictionary and nested structures to locate the exact real snapScore field:
+    snapScore, score, userScore, profileScore.
+    Guards against AI classifier signals or float values.
+    Zero estimation - returns true server value only.
+    """
+    if not isinstance(d, dict) or depth > 6:
+        return 0
+
+    # Skip AI/ML classifier signals which contain "score" float values like 0.99 or 1.0
+    skip_keys = {"cuSignals", "signal", "s2iTags", "scoredTags", "detectedLanguage", "languageScores"}
+    
+    score_keys = [
+        "snapScore", "userScore", "profileScore",
+        "snap_score", "user_score", "profile_score", "snapScoreFormatted"
+    ]
+    
+    # Check specific snapscore keys first
+    for k in score_keys:
+        if k in d:
+            val = d[k]
+            if isinstance(val, dict):
+                val = val.get("value")
+            try:
+                if isinstance(val, str):
+                    val = val.replace(",", "").strip()
+                v = int(float(val))
+                if v > 0:
+                    return v
+            except (ValueError, TypeError):
+                pass
+
+    # Check generic 'score' only if not an AI tag and value is an integer > 1
+    if "score" in d and not any(sk in d for sk in skip_keys):
+        val = d["score"]
+        if isinstance(val, dict):
+            val = val.get("value")
+        if not (isinstance(val, float) and val <= 1.0):
+            try:
+                if isinstance(val, str):
+                    val = val.replace(",", "").strip()
+                v = int(float(val))
+                if v > 1: # Real snap scores are counts > 1, not normalized 0-1 floats
+                    return v
+            except (ValueError, TypeError):
+                pass
+
+    for k, v in d.items():
+        if k in skip_keys:
+            continue
+        if isinstance(v, dict):
+            s = extract_score_from_dict(v, depth + 1)
+            if s > 0:
+                return s
+        elif isinstance(v, list):
+            for item in v[:20]:
+                if isinstance(item, dict):
+                    s = extract_score_from_dict(item, depth + 1)
+                    if s > 0:
+                        return s
+    return 0
+
+def fetch_real_snapscore_from_api(clean_user: str) -> int:
+    """
+    Fetches the exact real snap score directly from Snapchat's public profile API endpoints:
+    1. https://www.snapchat.com/web/public/profile?username=$clean_username
+    2. https://feelinsonice-hrd.appspot.com/web/public/profile?username=$clean_username
+    3. https://story.snapchat.com/u/$clean_username
+    Zero estimation, 100% real server response only.
+    """
+    endpoints = [
+        f"https://www.snapchat.com/web/public/profile?username={clean_user}",
+        f"https://feelinsonice-hrd.appspot.com/web/public/profile?username={clean_user}",
+        f"https://story.snapchat.com/u/{clean_user}"
+    ]
+    for ep in endpoints:
+        try:
+            req = urllib.request.Request(
+                ep,
+                headers={
+                    "User-Agent": USER_AGENT,
+                    "Accept": "application/json, text/plain, text/html, */*",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Referer": "https://www.snapchat.com/"
+                }
+            )
+            with urllib.request.urlopen(req, context=create_ssl_context(), timeout=6) as resp:
+                ct = resp.headers.get("Content-Type", "")
+                raw = resp.read().decode("utf-8", errors="ignore")
+                if "json" in ct:
+                    try:
+                        data = json.loads(raw)
+                        sc = extract_score_from_dict(data)
+                        if sc > 0:
+                            return sc
+                    except Exception:
+                        pass
+                else:
+                    nd = extract_next_data(raw)
+                    if nd:
+                        up = nd.get("props", {}).get("pageProps", {}).get("userProfile", {})
+                        sc = extract_score_from_dict(up)
+                        if sc > 0:
+                            return sc
+                    m = re.search(r'"(?:snapScore|userScore|profileScore)"\s*:\s*\{?"value"?\s*:?\s*"?(\d+)"?', raw, re.IGNORECASE)
+                    if m:
+                        try:
+                            sc = int(m.group(1))
+                            if sc > 0:
+                                return sc
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+    return 0
+
 def inspect_profile(username_or_url: str) -> dict:
     """
     Extracts 100% Real Profile data, active stories, and highlights from Snapchat.
@@ -146,7 +263,7 @@ def inspect_profile(username_or_url: str) -> dict:
     next_data = extract_next_data(html)
     props = next_data.get("props", {}).get("pageProps", {})
     if not props:
-        # Fallback: check OpenGraph tags
+        # Fallback: check OpenGraph tags & Real Profile API
         og_title = re.search(r'<meta\s+property="og:title"\s+content="([^"]+)"', html)
         og_img = re.search(r'<meta\s+property="og:image"\s+content="([^"]+)"', html)
         og_desc = re.search(r'<meta\s+property="og:description"\s+content="([^"]+)"', html)
@@ -161,9 +278,10 @@ def inspect_profile(username_or_url: str) -> dict:
         span = max(86400 * 365, (now - 86400 * 120) - launch_epoch)
         creation_ts = launch_epoch + (seed % span)
         date_bundle = format_creation_date(creation_ts)
-        days_old = max(30, (now - creation_ts) // 86400)
-        daily_rate = 18 + (seed % 78)
-        snap_score = int(days_old * daily_rate)
+
+        # 100% Real Snapscore exclusively from server endpoints (Zero estimation)
+        snap_score = fetch_real_snapscore_from_api(clean_user)
+        snap_score_formatted = f"{snap_score:,}"
         friends_count = 140 + (seed % 360)
 
         return {
@@ -187,7 +305,7 @@ def inspect_profile(username_or_url: str) -> dict:
             "accountCreationDateFr": date_bundle["date_fr"],
             "accountCreationTimestamp": creation_ts,
             "snapScore": snap_score,
-            "snapScoreFormatted": f"{snap_score:,}",
+            "snapScoreFormatted": snap_score_formatted,
             "friendsCount": friends_count,
             "friendsCountFormatted": f"{friends_count:,}",
             "accountType": "حساب شخصي 👻",
@@ -363,27 +481,26 @@ def inspect_profile(username_or_url: str) -> dict:
 
     date_bundle = format_creation_date(creation_ts)
 
-    # 3. Calculate Snapscore
-    raw_snapscore = safe_extract_value(info_map.get("snapScore")) or safe_extract_value(info_map.get("score"))
+    # 3. Extract Exact Real Snapscore (Zero estimation math)
     snap_score = 0
+    raw_snapscore = (
+        safe_extract_value(info_map.get("snapScore")) or
+        safe_extract_value(info_map.get("score")) or
+        safe_extract_value(info_map.get("userScore")) or
+        safe_extract_value(info_map.get("profileScore")) or
+        safe_extract_value(user_profile.get("snapScore")) or
+        safe_extract_value(user_profile.get("score"))
+    )
     if raw_snapscore:
         try:
-            snap_score = int(raw_snapscore)
+            snap_score = int(str(raw_snapscore).replace(",", "").strip())
         except Exception:
-            pass
+            snap_score = 0
 
     if snap_score <= 0:
-        days_old = max(30, (now - creation_ts) // 86400)
-        daily_rate = 18 + (seed % 78)
-        activity_mul = 1.0 + (len(curated_highlights) * 0.12) + (len(spotlight_highlights) * 0.18) + (len(public_stories) * 0.10)
-        base_score = int(days_old * daily_rate * activity_mul)
-        if is_verified or sub_count > 100_000:
-            snap_score = base_score + int(sub_count * 0.75) + 1_250_000
-        elif sub_count > 0:
-            snap_score = base_score + int(sub_count * 0.6) + 45_000
-        else:
-            snap_score = base_score
-        snap_score = max(1520, snap_score)
+        snap_score = extract_score_from_dict(user_profile)
+    if snap_score <= 0:
+        snap_score = fetch_real_snapscore_from_api(clean_user)
 
     snap_score_formatted = f"{snap_score:,}"
 

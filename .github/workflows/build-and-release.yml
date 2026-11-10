@@ -82,12 +82,12 @@ jobs:
 
           # Copy Client APK
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-${TAG_NAME}.apk"
-          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.9.1.apk"
+          cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio-v2.9.2.apk"
           cp "$CLIENT_APK" "release-output/TikTok-Viral-Studio.apk"
 
           # Copy Admin APK
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-${TAG_NAME}.apk"
-          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.9.1.apk"
+          cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin-v2.9.2.apk"
           cp "$ADMIN_APK" "release-output/TikTok-Studio-Admin.apk"
 
           ls -la release-output/
@@ -101,31 +101,26 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.1' }}
-          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.1' }}"
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.2' }}
+          name: "Creator & TikTok Viral Studio ${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.2' }}"
           body: |
-            ## 👻 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.1' }})
+            ## 👻 Creator & TikTok Viral Studio (${{ github.ref_type == 'tag' && github.ref_name || 'v2.9.2' }})
             
-            تحديث شامل لأيقونة سناب شات الرسمية، خلفيات المنصات الضبابية، والفحص العميق (OSINT) (v2.9.1):
-            - **أيقونة سناب شات الحقيقية 100% (Official Ghost Vector Path)**:
-              * رسم الشبح الرسمي الحقيقي لمسار سناب شات داخل Squircle أصفر كلاسيكي بتدرج ولمعة ثلاثية الأبعاد وظل ناعم.
-              * تكامل الأيقونة في الشريط العلوي (TopBar)، الشريط السفلي العائم (Floating Bottom Dock)، وبطاقات استوديو سناب شات.
-            - **خلفيات المنصات الضبابية السينمائية (Platform Blurred Backgrounds)**:
-              * خلفيات مضيئة لكل منصة (تيك توك السماوي والوردي، إنستغرام الغروب البنفسجي والبرتقالي، سناب شات الأصفر والذهبي).
-              * تمويه فائق النعومة (`Modifier.blur(70.dp)`) مع هالة ضوئية وشعار المنصة وطبقة تعتيم زجاجية 55%.
-            - **فحص عميق وشامل لبيانات سناب شات (Deep Snapchat Profile OSINT)**:
-              * استخراج تاريخ إنشاء الحساب (Date Joined / Creation Date) الحقيقي أو بحساب الخوارزمية الحتمي.
-              * نقاط السناب الحقيقية (Snapscore) بتنسيق الأرقام العالمي وأيقونة الشبح.
-              * عدد الأصدقاء (Friends Count) والمشتركين بدقة وبدون أي حقول فارغة أو "غير متوفر".
-              * شبكة بينتو المتطورة (Bento Grid) مع شارات ونجمة التوثيق والأفاتار ثلاثي الأبعاد (3D Bitmoji).
-            - **توطين ثلاثي اللغات كامل (Arabic, English, French)**.
+            جلب نقاط السناب الحقيقية الدقيقة من نقطة API البروفايل العام لسناب شات (v2.9.2):
+            - **إيقاف المعادلات التقديرية تماماً (Zero Estimation Math)**:
+              * إلغاء كافة المعادلات التقريبية أو الرياضية لنقاط السناب والاعتماد الحصري بنسبة 100% على بيانات السيرفر الحقيقية.
+            - **الاستعلام المباشر من نقاط الـ API الرسمية لسناب شات**:
+              * استعلام نقاط البروفايل العام عبر `web/public/profile` ونقاط الفحص المباشرة.
+              * فك حزم كائنات `userProfile` واستخراج حقول `snapScore`, `score`, `userScore`, `profileScore` الحقيقية بدقة.
+            - **تنسيق النقاط العالمي**:
+              * عرض النقاط مفصولة بفواصل الآلاف الرسمية (مثلاً `148,520`) بدون أي أرقام عشوائية.
             
             ### 📦 روابط التحميل المباشرة:
             1. **تطبيق المستخدمين الأساسي**:
-               - `TikTok-Viral-Studio-v2.9.1.apk`
+               - `TikTok-Viral-Studio-v2.9.2.apk`
                - `TikTok-Viral-Studio.apk`
             2. **تطبيق لوحة تحكم الأدمن المستقل**:
-               - `TikTok-Studio-Admin-v2.9.1.apk` (رمز الدخول: `Admin2026`)
+               - `TikTok-Studio-Admin-v2.9.2.apk` (رمز الدخول: `Admin2026`)
                - `TikTok-Studio-Admin.apk`
           files: release-output/*
           draft: false
