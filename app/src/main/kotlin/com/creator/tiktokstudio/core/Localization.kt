@@ -225,7 +225,12 @@ data class AppStrings(
     val snapDownloadSuccessToast: String,
     val snapExtractErrorFallback: String,
     val drawerPlatformSnapchat: String,
-    val drawerPlatformSnapchatDesc: String
+    val drawerPlatformSnapchatDesc: String,
+    val snapCreationDateLabel: String,
+    val snapScoreLabel: String,
+    val snapFriendsCountLabel: String,
+    val snapAccountTypeLabel: String,
+    val snap3dBitmojiLabel: String
 )
 
 val ArabicStrings = AppStrings(
@@ -442,7 +447,12 @@ val ArabicStrings = AppStrings(
     snapDownloadSuccessToast = "تم حفظ وسائط سناب شات في الاستوديو بنجاح! 💛",
     snapExtractErrorFallback = "تعذر استخراج بيانات سناب شات، يرجى التأكد من الرابط أو اسم المستخدم",
     drawerPlatformSnapchat = "استوديو سناب شات",
-    drawerPlatformSnapchatDesc = "تحميل الأضواء والقصص وفحص الحسابات والـ Snapcode"
+    drawerPlatformSnapchatDesc = "تحميل الأضواء والقصص وفحص الحسابات والـ Snapcode",
+    snapCreationDateLabel = "تاريخ فتح الحساب",
+    snapScoreLabel = "نقاط السناب (Snapscore)",
+    snapFriendsCountLabel = "عدد الأصدقاء",
+    snapAccountTypeLabel = "نوع الحساب",
+    snap3dBitmojiLabel = "أفاتار 3D مخصص"
 )
 
 val EnglishStrings = AppStrings(
@@ -659,7 +669,12 @@ val EnglishStrings = AppStrings(
     snapDownloadSuccessToast = "Snapchat media saved to gallery successfully! 💛",
     snapExtractErrorFallback = "Failed to extract Snapchat media, please verify the link or username",
     drawerPlatformSnapchat = "Snapchat Studio",
-    drawerPlatformSnapchatDesc = "Spotlight & Stories downloader, profiles, and Snapcodes"
+    drawerPlatformSnapchatDesc = "Spotlight & Stories downloader, profiles, and Snapcodes",
+    snapCreationDateLabel = "Account Creation Date",
+    snapScoreLabel = "Snapscore",
+    snapFriendsCountLabel = "Friends Count",
+    snapAccountTypeLabel = "Account Type",
+    snap3dBitmojiLabel = "Custom 3D Bitmoji"
 )
 
 val FrenchStrings = AppStrings(
@@ -876,7 +891,12 @@ val FrenchStrings = AppStrings(
     snapDownloadSuccessToast = "Média Snapchat enregistré dans la galerie ! 💛",
     snapExtractErrorFallback = "Échec de l'extraction Snapchat, veuillez vérifier le lien ou le nom d'utilisateur",
     drawerPlatformSnapchat = "Snapchat Studio",
-    drawerPlatformSnapchatDesc = "Téléchargeur Spotlight & Stories, profils et Snapcodes"
+    drawerPlatformSnapchatDesc = "Téléchargeur Spotlight & Stories, profils et Snapcodes",
+    snapCreationDateLabel = "Date de création du compte",
+    snapScoreLabel = "Score Snap (Snapscore)",
+    snapFriendsCountLabel = "Nombre d'amis",
+    snapAccountTypeLabel = "Type de compte",
+    snap3dBitmojiLabel = "Bitmoji 3D personnalisé"
 )
 
 val LocalAppStrings = staticCompositionLocalOf { ArabicStrings }

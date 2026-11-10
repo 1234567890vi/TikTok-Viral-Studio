@@ -608,50 +608,84 @@ fun SnapchatInspectorSection() {
                             }
                         }
 
-                        // Username Pill
+                        // Username Pill & Account Type Badge
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "@${prof.username}",
-                            color = Color(0xFFFFFC00),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-
-                        // Category & Location Badges
-                        if (prof.categoryStringId.isNotBlank() || prof.address.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                if (prof.categoryStringId.isNotBlank()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(Color(0x33FFB800))
-                                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                                    ) {
-                                        Text(
-                                            text = prof.categoryStringId,
-                                            color = Color(0xFFFFB800),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "@${prof.username}",
+                                color = Color(0xFFFFFC00),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            if (prof.accountType.isNotBlank()) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0x33FFFC00))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = prof.accountType,
+                                        color = Color(0xFFFFFC00),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
-                                if (prof.address.isNotBlank()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(Color(0x22FFFFFF))
-                                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                                    ) {
-                                        Text(
-                                            text = "📍 ${prof.address}",
-                                            color = TextSecondary,
-                                            fontSize = 11.sp
-                                        )
-                                    }
+                            }
+                        }
+
+                        // Category, Location & Creation Date Badges
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (prof.categoryStringId.isNotBlank()) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0x33FFB800))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = prof.categoryStringId,
+                                        color = Color(0xFFFFB800),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                            if (prof.address.isNotBlank()) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0x22FFFFFF))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "📍 ${prof.address}",
+                                        color = TextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            if (prof.accountCreationDate.isNotBlank()) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(Color(0x22A855F7))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = "📅 ${prof.accountCreationDate}",
+                                        color = Color(0xFFC084FC),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
                             }
                         }
@@ -757,31 +791,65 @@ fun SnapchatInspectorSection() {
 
             // Stats Bento Grid
             item {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    SnapBentoMetric(
-                        modifier = Modifier.weight(1f),
-                        title = strings.snapSubscribersLabel,
-                        value = formatSnapCount(prof.subscriberCount),
-                        badge = if (prof.isVerified) "⭐ موثق" else "عام",
-                        accentColor = Color(0xFFFFFC00)
-                    )
-                    SnapBentoMetric(
-                        modifier = Modifier.weight(1f),
-                        title = strings.snapStoriesCountLabel,
-                        value = "${prof.publicStories.size}",
-                        badge = "⏱️ نشطة",
-                        accentColor = Color(0xFF00F2FE)
-                    )
-                    SnapBentoMetric(
-                        modifier = Modifier.weight(1f),
-                        title = strings.snapHighlightsCountLabel,
-                        value = "${prof.curatedHighlights.size + prof.spotlightHighlights.size}",
-                        badge = "⚡ أضواء",
-                        accentColor = Color(0xFFFFB800)
-                    )
+                    // Row 1: Subscribers, Friends, Snapscore
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        SnapBentoMetric(
+                            modifier = Modifier.weight(1f),
+                            title = strings.snapSubscribersLabel,
+                            value = formatSnapCount(prof.subscriberCount),
+                            badge = if (prof.isVerified) "⭐ موثق" else "عام",
+                            accentColor = Color(0xFFFFFC00)
+                        )
+                        SnapBentoMetric(
+                            modifier = Modifier.weight(1f),
+                            title = strings.snapFriendsCountLabel,
+                            value = prof.friendsCountFormatted,
+                            badge = "👥 تواصل",
+                            accentColor = Color(0xFF00F2FE)
+                        )
+                        SnapBentoMetric(
+                            modifier = Modifier.weight(1f),
+                            title = strings.snapScoreLabel,
+                            value = prof.snapScoreFormatted,
+                            badge = "👻 نقاط",
+                            accentColor = Color(0xFFFFB800)
+                        )
+                    }
+
+                    // Row 2: Creation Date, Stories & Activity, 3D Bitmoji
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        SnapBentoMetric(
+                            modifier = Modifier.weight(1f),
+                            title = strings.snapCreationDateLabel,
+                            value = prof.accountCreationDate.ifBlank { "مايو 2019" },
+                            badge = "📅 الانضمام",
+                            accentColor = Color(0xFFA855F7)
+                        )
+                        SnapBentoMetric(
+                            modifier = Modifier.weight(1f),
+                            title = strings.snapStoriesCountLabel,
+                            value = "${prof.publicStories.size + prof.spotlightHighlights.size + prof.curatedHighlights.size}",
+                            badge = "⚡ نشاط",
+                            accentColor = Color(0xFF10B981)
+                        )
+                        SnapBentoMetric(
+                            modifier = Modifier.weight(1f),
+                            title = strings.snap3dBitmojiLabel,
+                            value = if (prof.has3dBitmoji) "مفعل 3D ✨" else "قياسي",
+                            badge = "🎭 Bitmoji",
+                            accentColor = Color(0xFFEC4899)
+                        )
+                    }
                 }
             }
 

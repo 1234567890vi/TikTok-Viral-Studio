@@ -69,11 +69,7 @@ fun MainScreen(
             label = "WallpaperCrossfade",
             modifier = Modifier.fillMaxSize()
         ) { platform ->
-            when (platform) {
-                StudioPlatform.TIKTOK -> TikTokWallpaperBackground()
-                StudioPlatform.INSTAGRAM -> InstagramWallpaperBackground()
-                StudioPlatform.SNAPCHAT -> SnapchatWallpaperBackground()
-            }
+            PlatformBlurredBackground(platform = platform)
         }
 
         // 2. Foreground Glassmorphic Interface Layer with Transparent Container
@@ -274,21 +270,57 @@ fun MainScreen(
 }
 
 /**
- * TikTok Official Full Wallpaper with 28.dp Glass Blur & 55% Dark Dimming Layer
+ * Platform Blurred Icon Backgrounds (PlatformBlurredBackground)
+ * Large platform icon in depth with glowing auras and heavy smooth blur (Modifier.blur(70.dp))
+ * + dark glassmorphic layer for all 3 platforms (TikTok neon cyan/pink, Instagram sunset, Snapchat yellow/amber).
+ */
+@Composable
+fun PlatformBlurredBackground(
+    platform: StudioPlatform,
+    modifier: Modifier = Modifier
+) {
+    when (platform) {
+        StudioPlatform.TIKTOK -> TikTokWallpaperBackground(modifier)
+        StudioPlatform.INSTAGRAM -> InstagramWallpaperBackground(modifier)
+        StudioPlatform.SNAPCHAT -> SnapchatWallpaperBackground(modifier)
+    }
+}
+
+/**
+ * TikTok Official Full Wallpaper with 70.dp Ambient Blur & 55% Dark Dimming Layer
  */
 @Composable
 fun TikTokWallpaperBackground(
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(id = R.drawable.bg_tiktok_wallpaper),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-                .blur(28.dp)
+                .blur(30.dp)
         )
+        // Glowing Neon Cyan/Pink Aura with 70.dp blur
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            NeonCyan.copy(alpha = 0.35f),
+                            NeonPink.copy(alpha = 0.25f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
+                .blur(70.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            TikTokDownloaderLogo(size = 220.dp)
+        }
         // 55% Dark Dimming Overlay Layer to ensure clean contrast over the blurred wallpaper
         Box(
             modifier = Modifier
@@ -299,21 +331,41 @@ fun TikTokWallpaperBackground(
 }
 
 /**
- * Instagram Official Full Wallpaper with 28.dp Glass Blur & 55% Dark Dimming Layer
+ * Instagram Official Full Wallpaper with 70.dp Ambient Blur & 55% Dark Dimming Layer
  */
 @Composable
 fun InstagramWallpaperBackground(
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(id = R.drawable.bg_instagram_wallpaper),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-                .blur(28.dp)
+                .blur(30.dp)
         )
+        // Glowing Sunset Aura with 70.dp blur
+        Box(
+            modifier = Modifier
+                .size(320.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFE1306C).copy(alpha = 0.40f),
+                            Color(0xFF833AB4).copy(alpha = 0.30f),
+                            Color(0xFFFCB045).copy(alpha = 0.20f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
+                .blur(70.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            RealInstagramIcon(size = 220.dp)
+        }
         // 55% Dark Dimming Overlay Layer to ensure clean contrast over the blurred wallpaper
         Box(
             modifier = Modifier
@@ -324,21 +376,45 @@ fun InstagramWallpaperBackground(
 }
 
 /**
- * Snapchat Official Full Wallpaper with 28.dp Glass Blur & 55% Dark Dimming Layer
+ * Snapchat Official Full Wallpaper with 70.dp Ambient Blur & 55% Dark Dimming Layer
  */
 @Composable
 fun SnapchatWallpaperBackground(
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(id = R.drawable.bg_snapchat_wallpaper),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxSize()
-                .blur(28.dp)
+                .blur(30.dp)
         )
+        // Glowing Electric Yellow/Gold Aura with 70.dp blur
+        Box(
+            modifier = Modifier
+                .size(340.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFFFFC00).copy(alpha = 0.45f),
+                            Color(0xFFFFB800).copy(alpha = 0.30f),
+                            Color(0xFFF59E0B).copy(alpha = 0.15f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
+                .blur(70.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_snapchat_official),
+                contentDescription = null,
+                modifier = Modifier.size(240.dp)
+            )
+        }
         // 55% Dark Dimming Overlay Layer to ensure clean contrast over the blurred wallpaper
         Box(
             modifier = Modifier

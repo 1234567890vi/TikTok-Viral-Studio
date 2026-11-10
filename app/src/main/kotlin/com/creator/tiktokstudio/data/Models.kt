@@ -327,5 +327,15 @@ data class SnapchatProfileInfo(
     val categoryStringId: String = "",
     val publicStories: List<SnapchatMediaItem> = emptyList(),
     val curatedHighlights: List<SnapchatMediaItem> = emptyList(),
-    val spotlightHighlights: List<SnapchatMediaItem> = emptyList()
+    val spotlightHighlights: List<SnapchatMediaItem> = emptyList(),
+
+    // Full OSINT & Account History fields (v2.9.1)
+    val accountCreationDate: String = "",
+    val accountCreationTimestamp: Long = 0L,
+    val snapScore: Long = 0L,
+    val snapScoreFormatted: String = "",
+    val friendsCount: Long = 0L,
+    val friendsCountFormatted: String = "",
+    val accountType: String = "حساب شخصي 👻",
+    val has3dBitmoji: Boolean = false
 )
